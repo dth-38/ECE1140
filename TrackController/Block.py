@@ -1,6 +1,7 @@
 
 
 class Block:
+    id = ""
     forwardAuthority = 0
     backwardAuthority = 0
     suggestedSpeed = 0
@@ -11,6 +12,9 @@ class Block:
     switches = []
     lights = []
     gates = []
+
+    def __init__(self):
+        pass
 
     #adds a switch to the block
     def addSwitch(self):
