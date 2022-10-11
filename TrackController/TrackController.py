@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout,
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QFont
 from Block import Block
-import TCGUI.MaintenanceGUI, TCGUI.TextEditorGUI, TCGUI.DebugGUI
+import TCGUI.TextEditorGUI
 
 
 class TrackController(QMainWindow):
@@ -17,6 +17,7 @@ class TrackController(QMainWindow):
     program = 0
     in_Maintenance = False
     run_PLC = False
+    editor = None
 
 
     def __init__(self):
@@ -112,6 +113,7 @@ class TrackController(QMainWindow):
         uploadButton.setFont(buttonFont)
 
         editButton = QPushButton('Edit PLC Program', self)
+        editButton.clicked.connect(self.open_Editor)
         editButton.setMinimumHeight(160)
         editButton.setFont(buttonFont)
 
@@ -158,6 +160,11 @@ class TrackController(QMainWindow):
             #self.program = open(self.filename, "r")
             self.statusBar().showMessage(self.extract_Name(self.filename) + " is loaded.")
 
+            #opens new file in editor if editor has been openend
+            if self.editor is not None:
+                self.editor.set_Filepath(self.filename)
+                self.editor.open_File()
+
 
     #extracts the PLC filename from the filepath
     def extract_Name(self, filepath):
@@ -174,13 +181,16 @@ class TrackController(QMainWindow):
         pass
 
     def open_Editor(self):
-        #disables the PLC from running when editing
-        self.run_PLC = False
+        #ensures the editor doesn't try to open a file that isn't there
+        if self.filename != '':
+            #ensure the editor isn't already open
+            if self.editor is None:
+                #disables the PLC from running when editing
+                self.run_PLC = False
 
-        #passes the enable_PLC function to allow the text editor 
-        #to reenable the PLC on close (I PRAY THIS WORKS)
-        editor = TCGUI.TextEditorGUI(self.filename, self.enable_PLC)
-        editor.show()
+                #passes the enable_PLC function to allow the text editor 
+                self.editor = TCGUI.TextEditorGUI.TextEditorGUI(self.filename, self.enable_PLC, self.extract_Name)
+            self.editor.show()
 
     def open_Maintenance(self):
         pass
