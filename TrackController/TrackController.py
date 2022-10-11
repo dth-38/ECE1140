@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout,
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QFont
 from Block import Block
-import TCGUI.TextEditorGUI
+import TCGUI.TextEditorGUI, TCGUI.DebugGUI, TCGUI.MaintenanceGUI
 
 
 class TrackController(QMainWindow):
@@ -18,6 +18,7 @@ class TrackController(QMainWindow):
     in_Maintenance = False
     run_PLC = False
     editor = None
+    debug = None
 
 
     def __init__(self):
@@ -118,6 +119,7 @@ class TrackController(QMainWindow):
         editButton.setFont(buttonFont)
 
         debugButton = QPushButton('Open Debug Menu', self)
+        debugButton.clicked.connect(self.open_Debug)
         debugButton.setMinimumHeight(160)
         debugButton.setFont(buttonFont)
 
@@ -176,10 +178,14 @@ class TrackController(QMainWindow):
 
         return filepath[filepath_Pos+1:len(filepath)]
 
-
+    #opens Debug menu
     def open_Debug(self):
-        pass
+        if self.debug is None:
+            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.update_Sync_Track)
 
+        self.debug.show()
+
+    #opens text editor
     def open_Editor(self):
         #ensures the editor doesn't try to open a file that isn't there
         if self.filename != '':
@@ -195,7 +201,39 @@ class TrackController(QMainWindow):
     def open_Maintenance(self):
         pass
 
+    #used to pass the track state to the debug and maintenance guis
+    def get_Track(self):
+        return self.current_Track_State
 
+    #updates a value in 
+    def set_Track(self, block, var, val):
+        
+        match var:
+            case "spd":
+                self.next_Track_State[block].speed = val
+            case "fAuth":
+                self.next_Track_State[block].forward_Authority = val
+            case "bAuth":
+                self.next_Track_State[block].backward_Authority = val
+            case "occ":
+                self.next_Track_State[block].occupied = val
+            case "cls":
+                self.next_Track_State[block].closed = val
+            case "fail":
+                self.next_Track_State[block].failed = val
+            case _:
+                pass
+
+
+    #runs PLC on next_Track_State and syncs current_Track_State
+    def update_Sync_Track(self):
+        if self.run_PLC:
+            #TODO: run logic here
+
+            self.current_Track_State = self.next_Track_State
+
+
+    #function for reenabling logic after editing a file
     def enable_PLC(self):
         self.run_PLC = True
 
