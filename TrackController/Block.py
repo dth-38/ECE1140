@@ -52,4 +52,39 @@ class Block:
         self.lights[lightNum] = temp
         return self.lights[lightNum]
 
+    #gets a light's color as a string
+    def light_To_Str(self, lightNum):
+        light = self.lights[lightNum]
 
+        if light == [1, 0, 0]:
+            color = "RED"
+        elif light == [0, 1, 0]:
+            color = "YELLOW"
+        elif light == [0, 0, 1]:
+            color = "GREEN"
+        else:
+            color = "NONE"
+
+        return color
+
+    #gets a switch's position as a string
+    def switch_To_Str(self, switchNum):
+        switch = self.switches[switchNum]
+
+        if switch:
+            switch_Str = "ON"
+        else:
+            switch_Str = "OFF"
+
+        return switch_Str
+
+    #gets a gate's status as a string
+    def gate_To_Str(self, gateNum):
+        gate = self.gates[gateNum]
+
+        if gate:
+            gate_Str = "OPEN"
+        else:
+            gate_Str = "CLOSED"
+
+        return gate_Str

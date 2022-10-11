@@ -13,6 +13,7 @@ class TrackController(QMainWindow):
     #track states separated to make things threadsafe probably
     current_Track_State = {}
     next_Track_State = {}
+    id = 0
     filename = ""
     program = 0
     in_Maintenance = False
@@ -21,7 +22,9 @@ class TrackController(QMainWindow):
     debug = None
 
 
-    def __init__(self):
+    def __init__(self, tc_ID=0):
+        id = tc_ID
+
         super().__init__()
 
         self.build_Track()
@@ -31,19 +34,6 @@ class TrackController(QMainWindow):
         self.setup_Main_Window()
 
         self.show()
-        
-
-        #run tick() on loop
-        #doesn't need a timer since PLC should be running as fast as possible and all data transfers are event based
-        while self.run_PLC:
-            #TODO: create thread to handle all reads since they can be safely done without locking data
-
-            self.tick()
-
-
-        #closes the plc program on exit if there was one loaded
-        if self.program != 0:
-            self.program.close()
 
 
 
@@ -87,6 +77,8 @@ class TrackController(QMainWindow):
             #sets filename from filepath and displays PLC message
             self.filename = str(filepath)
             message = self.extract_Name(self.filename) + " is loaded."
+
+            #enables PLC logic if a program is found
         else:
             message = "No PLC program is loaded."
 
@@ -98,7 +90,7 @@ class TrackController(QMainWindow):
     def setup_Main_Window(self):
         #Main Window setup 
         self.setGeometry(80, 80, 500, 400) #sets the window size
-        self.setWindowTitle('Track Controller')
+        self.setWindowTitle('Track Controller ' + str(self.id))
         self.setMinimumSize(400, 400)
 
         #sets up central widget that the layout will be placed on
@@ -124,6 +116,7 @@ class TrackController(QMainWindow):
         debugButton.setFont(buttonFont)
 
         maintenanceButton = QPushButton('Open Maintenance Menu', self)
+        maintenanceButton.clicked.connect(self.open_Maintenance)
         maintenanceButton.setMinimumHeight(160)
         maintenanceButton.setFont(buttonFont)
 
@@ -189,12 +182,14 @@ class TrackController(QMainWindow):
     def open_Editor(self):
         #ensures the editor doesn't try to open a file that isn't there
         if self.filename != '':
+            #disables the PLC from running when editing
+            self.run_PLC = False
+
             #ensure the editor isn't already open
             if self.editor is None:
-                #disables the PLC from running when editing
-                self.run_PLC = False
 
-                #passes the enable_PLC function to allow the text editor 
+                #passes the enable_PLC function to allow the text editor
+                #to reenable PLC logic on close
                 self.editor = TCGUI.TextEditorGUI.TextEditorGUI(self.filename, self.enable_PLC, self.extract_Name)
             self.editor.show()
 
