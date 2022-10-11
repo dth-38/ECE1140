@@ -205,21 +205,33 @@ class TrackController(QMainWindow):
     def get_Track(self):
         return self.current_Track_State
 
-    #updates a value in 
+    #updates a value in next_Track_State
     def set_Track(self, block, var, val):
-        
+
         match var:
             case "spd":
-                self.next_Track_State[block].speed = val
+                self.next_Track_State[block].suggested_Speed = val
             case "fAuth":
                 self.next_Track_State[block].forward_Authority = val
             case "bAuth":
                 self.next_Track_State[block].backward_Authority = val
             case "occ":
+                if val == 'Y':
+                    val = True
+                elif val == 'N':
+                    val = False
                 self.next_Track_State[block].occupied = val
             case "cls":
+                if val == 'Y':
+                    val = True
+                elif val == 'N':
+                    val = False
                 self.next_Track_State[block].closed = val
             case "fail":
+                if val == 'Y':
+                    val = True
+                elif val == 'N':
+                    val = False
                 self.next_Track_State[block].failed = val
             case _:
                 pass
