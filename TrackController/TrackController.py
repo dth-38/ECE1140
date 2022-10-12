@@ -2,11 +2,12 @@ import sys
 import shutil
 import pathlib
 import os
+import copy
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QFont
 from Block import Block
-import TCGUI.TextEditorGUI, TCGUI.DebugGUI, TCGUI.MaintenanceGUI
+import TCGUI.TextEditorGUI, TCGUI.DebugGUI, TCGUI.MaintenanceGUI, TCGUI.ModifyGUI
 
 
 class TrackController(QMainWindow):
@@ -23,6 +24,7 @@ class TrackController(QMainWindow):
         self.editor = None
         self.debug = None
         self.maintenance = None
+        self.modify = None
         
 
         super().__init__()
@@ -58,7 +60,7 @@ class TrackController(QMainWindow):
         tempTrack["red_A_3"].add_Light()
 
 
-        self.current_Track_State = tempTrack
+        self.current_Track_State = copy.deepcopy(tempTrack)
         self.next_Track_State = tempTrack
 
         #END TEMPORARY SOLUTION FOR ITERATION 2
@@ -121,10 +123,16 @@ class TrackController(QMainWindow):
         maintenanceButton.setMinimumHeight(160)
         maintenanceButton.setFont(buttonFont)
 
+        modifyButton = QPushButton('Modify Track', self)
+        modifyButton.clicked.connect(self.open_Modify)
+        modifyButton.setMinimumHeight(80)
+        modifyButton.setFont(buttonFont)
+
+
         tcLayout = QGridLayout()
         #add widgets to layout here
-        tcLayout.addWidget(uploadButton, 1, 0)
-        tcLayout.addWidget(editButton, 0, 0)
+        tcLayout.addWidget(uploadButton, 0, 0)
+        tcLayout.addWidget(editButton, 1, 0)
         tcLayout.addWidget(debugButton, 0, 1)
         tcLayout.addWidget(maintenanceButton, 1, 1)
 
@@ -201,39 +209,48 @@ class TrackController(QMainWindow):
 
         self.maintenance.show()
 
+    def open_Modify(self):
+        if self.modify is None:
+            self.modify = TCGUI.ModifyGUI.ModifyGUI(self.get_Next_Track)
+
+        self.modify.show()
+
     #used to pass the track state to the debug and maintenance guis
     def get_Track(self):
         return self.current_Track_State
 
+    #used to modify track blocks
+    def get_Next_Track(self):
+        return self.next_Track_State
 
     #updates a value in next_Track_State
     def set_Track(self, block, var, val):
 
         match var:
             case "spd":
-                self.next_Track_State[block].suggested_Speed = val
+                self.next_Track_State[block].suggested_Speed = copy.copy(val)
             case "fAuth":
-                self.next_Track_State[block].forward_Authority = val
+                self.next_Track_State[block].forward_Authority = copy.copy(val)
             case "bAuth":
-                self.next_Track_State[block].backward_Authority = val
+                self.next_Track_State[block].backward_Authority = copy.copy(val)
             case "occ":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.next_Track_State[block].occupied = val
+                self.next_Track_State[block].occupied = copy.copy(val)
             case "cls":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.next_Track_State[block].closed = val
+                self.next_Track_State[block].closed = copy.copy(val)
             case "fail":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.next_Track_State[block].failed = val
+                self.next_Track_State[block].failed = copy.copy(val)
             case _:
                 pass
 
@@ -245,14 +262,15 @@ class TrackController(QMainWindow):
 
             #this might be changed later
             for block in self.next_Track_State:
-                self.next_Track_State[block].commanded_Speed = self.next_Track_State[block].suggested_Speed
+                self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
 
-            self.current_Track_State = self.next_Track_State
+            self.current_Track_State = copy.deepcopy(self.next_Track_State)
 
 
     #function for reenabling logic after editing a file
     def enable_PLC(self):
         self.run_PLC = True
+
 
 #main for the whole Track Controller, simply creates an instance of TrackController
 if __name__ == '__main__':

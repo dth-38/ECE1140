@@ -1,0 +1,4 @@
+red_A_1(
+    AND lights[0][0], occupied, red_A_3:occupied
+    
+)

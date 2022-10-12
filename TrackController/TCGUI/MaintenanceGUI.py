@@ -1,3 +1,4 @@
+import functools
 from PyQt5.QtWidgets import QWidget, QGridLayout
 from PyQt5.QtWidgets import QComboBox, QLabel
 
@@ -43,8 +44,6 @@ class MaintenanceGUI(QWidget):
         self.grid.addWidget(self.block_Dd, 0, 1)
 
 
-    #TODO: fix lambdas, passing i only passes last value of i used in loop
-    #rather than the current i in loop
 
     #creates widgets for block output interactivity
     def open_Block(self, block):
@@ -63,6 +62,13 @@ class MaintenanceGUI(QWidget):
         else:
             self.is_Drawn = True
 
+
+        #Functools.partial is used as a workaround
+        #to be able to send the current loop index to the connect function
+        #as a parameter.
+        #For lights this is combined with a lambda that passes the 
+        #early bound loop index with the runtime bound text
+
         #shows switches
         #row_Pos handles tracking row for adding widgets
         row_Pos = 1
@@ -73,20 +79,22 @@ class MaintenanceGUI(QWidget):
             sw_State.setEditable(True)
             sw_State.addItems(['OFF', 'ON'])
             sw_State.setCurrentText(self.get_Track()[block].switch_To_Str(i))
-            sw_State.currentTextChanged.connect(lambda: self.get_Track()[block].toggle_Switch(i))
+            sw_State.currentTextChanged.connect(functools.partial(self.get_Track()[block].toggle_Switch, i))
             sw_State.setMaximumWidth(50)
             self.grid.addWidget(sw_Label, row_Pos, 0)
             self.grid.addWidget(sw_State, row_Pos, 1)
 
         #shows lights
         for i in range(len(self.get_Track()[block].lights)):
+            #light_Lambdas.append(lambda: self.get_Track()[block].set_Light(i, l_State.currentText()))
             row_Pos = row_Pos + 1
             l_Label = QLabel("Light #" + str(i) + ":")
             l_State = QComboBox()
             l_State.setEditable(True)
             l_State.addItems(["RED", "YELLOW", "GREEN"])
             l_State.setCurrentText(self.get_Track()[block].light_To_Str(i))
-            l_State.currentTextChanged.connect(lambda: self.get_Track()[block].set_Light(i, l_State.currentText()))
+            set_Light_Part = functools.partial(self.get_Track()[block].set_Light, i)
+            l_State.currentTextChanged.connect(lambda: set_Light_Part(l_State.currentText()))
             l_State.setMaximumWidth(80)
             self.grid.addWidget(l_Label, row_Pos, 0)
             self.grid.addWidget(l_State, row_Pos, 1)
@@ -99,7 +107,7 @@ class MaintenanceGUI(QWidget):
             g_State.setEditable(True)
             g_State.addItems(["CLOSED", "OPEN"])
             g_State.setCurrentText(self.get_Track()[block].gate_To_Str(i))
-            g_State.currentTextChanged.connect(lambda: self.get_Track()[block].toggle_Gate(i))
+            g_State.currentTextChanged.connect(functools.partial(self.get_Track()[block].toggle_Gate, i))
             g_State.setMaximumWidth(80)
             self.grid.addWidget(g_Label, row_Pos, 0)
             self.grid.addWidget(g_State, row_Pos, 1)

@@ -24,7 +24,6 @@ class Block:
     #toggles the state of the specified switch
     def toggle_Switch(self, switchNum):
         self.switches[switchNum] = ~self.switches[switchNum]
-        return self.switches[switchNum]
 
     #adds a gate to the block
     def add_Gate(self):
@@ -33,7 +32,7 @@ class Block:
     #toggles the state of the specified gate
     def toggle_Gate(self, gateNum):
         self.gates[gateNum] = ~self.gates[gateNum]
-        return self.gates[gateNum]
+
     
 
     #adds a light to the block
@@ -51,7 +50,6 @@ class Block:
             temp = [1, 0, 0]
 
         self.lights[lightNum] = temp
-        return self.lights[lightNum]
 
     #gets a light's color as a string
     def light_To_Str(self, lightNum):
