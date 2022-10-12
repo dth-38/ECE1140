@@ -1,20 +1,21 @@
 
 
 class Block:
-    id = ""
-    forward_Authority = 0
-    backward_Authority = 0
-    suggested_Speed = 0
-    commanded_Speed = 0
-    occupied = False
-    failed = False
-    closed = False
-    switches = []
-    lights = []
-    gates = []
 
     def __init__(self):
-        pass
+        self.id = ""
+        self.forward_Authority = 0
+        self.backward_Authority = 0
+        self.suggested_Speed = 0
+        self.commanded_Speed = 0
+        self.occupied = False
+        self.failed = False
+        self.closed = False
+        self.switches = []
+        self.lights = []
+        self.gates = []
+        
+        
 
     #adds a switch to the block
     def add_Switch(self):
@@ -42,9 +43,9 @@ class Block:
     #possible colors are (r)ed, (y)ellow, or (g)reen
     #they are represented as an array of 3 bits, each bit corresponding to a color
     def set_Light(self, lightNum, color):
-        if color == 'y':
+        if color == 'YELLOW':
             temp = [0, 1, 0]
-        elif color == 'g':
+        elif color == 'GREEN':
             temp = [0, 0, 1]
         else:
             temp = [1, 0, 0]

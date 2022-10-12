@@ -3,10 +3,12 @@ from PyQt5.QtWidgets import QComboBox, QLabel, QLineEdit, QPushButton
 from PyQt5.QtGui import QFont
 
 class DebugGUI(QWidget):
-    inputs_Drawn = 0
-    outputs_Drawn = 0
 
     def __init__(self, get_Track, set_Track, update_Track):
+        self.inputs_Drawn = 0
+        self.outputs_Drawn = 0
+
+
         super().__init__()
 
         #creates local Track functions
@@ -46,6 +48,7 @@ class DebugGUI(QWidget):
 
         #Combobox for selecting block outputs to view
         self.out_Blocks_Dd = QComboBox()
+        self.out_Blocks_Dd.setEditable(True)
         self.out_Blocks_Dd.addItems(block_List)
         self.update_Outputs(self.out_Blocks_Dd.currentText())
         self.out_Blocks_Dd.currentTextChanged.connect(lambda: self.update_Outputs(self.out_Blocks_Dd.currentText()))
@@ -76,7 +79,7 @@ class DebugGUI(QWidget):
         self.update_Button.setFont(QFont('Times', 13))
         self.update_Button.setMaximumWidth(100)
         self.update_Button.clicked.connect(lambda: self.update_Track_Outputs())
-        self.grid_Layout.addWidget(self.update_Button, 7, 3)
+        self.grid_Layout.addWidget(self.update_Button, 8, 0)
 
 
     #creates input UI based on block
@@ -161,7 +164,7 @@ class DebugGUI(QWidget):
     def update_Outputs(self, block):
         #deletes old widgets before drawing new ones
         if self.outputs_Drawn:
-            for i in range(2, self.grid_Layout.rowCount()-1):
+            for i in range(2, self.grid_Layout.rowCount()):
                 #checks that there is a widget there since row amount is variable
                 if self.grid_Layout.itemAtPosition(i, 2) is not None:
                     temp_Widget1 = self.grid_Layout.itemAtPosition(i, 2).widget()
@@ -180,13 +183,14 @@ class DebugGUI(QWidget):
         self.grid_Layout.addWidget(com_Speed, 2, 3)
 
         #switches Labels
-        absolute_Row_Pos = 0
+        #absolute_Row_Pos handles tracking rows for adding widgets
+        absolute_Row_Pos = 2
         for i in range(len(self.get_Track()[block].switches)):
+            absolute_Row_Pos = absolute_Row_Pos + 1
             sw_Label = QLabel("Switch #" + str(i) + ":")
             sw_State = QLabel(self.get_Track()[block].switch_To_Str(i))
-            self.grid_Layout.addWidget(sw_Label, i+3, 2)
-            self.grid_Layout.addWidget(sw_State, i+3, 3)
-            absolute_Row_Pos = i+3
+            self.grid_Layout.addWidget(sw_Label, absolute_Row_Pos, 2)
+            self.grid_Layout.addWidget(sw_State, absolute_Row_Pos, 3)
             
         #lights labels
         for i in range(len(self.get_Track()[block].lights)):

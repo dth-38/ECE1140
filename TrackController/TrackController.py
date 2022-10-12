@@ -10,20 +10,20 @@ import TCGUI.TextEditorGUI, TCGUI.DebugGUI, TCGUI.MaintenanceGUI
 
 
 class TrackController(QMainWindow):
-    #track states separated to make things threadsafe probably
-    current_Track_State = {}
-    next_Track_State = {}
-    id = 0
-    filename = ""
-    program = 0
-    in_Maintenance = False
-    run_PLC = False
-    editor = None
-    debug = None
-
 
     def __init__(self, tc_ID=0):
-        id = tc_ID
+        self.current_Track_State = {}
+        self.next_Track_State = {}
+        self.id = tc_ID
+        self.filename = ""
+        self.program = 0
+        self.in_Maintenance = False
+        self.in_Debug = False
+        self.run_PLC = True
+        self.editor = None
+        self.debug = None
+        self.maintenance = None
+        
 
         super().__init__()
 
@@ -44,23 +44,24 @@ class TrackController(QMainWindow):
         #probe track model for switches, gates, lights, possibly state of other block vars
         
         #BEGIN TEMPORARY SOLUTION FOR ITERATION 2
-        tempTrack = {"red_A_1": Block(), "red_A_2": Block(), "red_A_3": Block()}
-        tempTrack["red_A_1"].add_Switch()
+        block1 = Block()
+        block2 = Block()
+        block3 = Block()
+        tempTrack = {"red_A_1": block1, "red_A_2": block2, "red_A_3": block3}
         tempTrack["red_A_1"].id = "red_A_1"
-        tempTrack["red_A_2"].add_Gate()
         tempTrack["red_A_2"].id = "red_A_2"
-        tempTrack["red_A_3"].add_Light()
         tempTrack["red_A_3"].id = "red_A_3"
+        tempTrack["red_A_1"].add_Switch()
+        tempTrack["red_A_1"].add_Switch()
+        tempTrack["red_A_1"].add_Switch()
+        tempTrack["red_A_2"].add_Gate()
+        tempTrack["red_A_3"].add_Light()
+
 
         self.current_Track_State = tempTrack
         self.next_Track_State = tempTrack
 
         #END TEMPORARY SOLUTION FOR ITERATION 2
-
-
-    def tick(self):
-        #TODO: runs PLC logic modifying nextTrackState while also handling sets from other modules
-        pass
 
 
     #loads the saved PLC program if there is one
@@ -175,7 +176,7 @@ class TrackController(QMainWindow):
     def open_Debug(self):
         if self.debug is None:
             self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.update_Sync_Track)
-
+ 
         self.debug.show()
 
     #opens text editor
@@ -193,12 +194,17 @@ class TrackController(QMainWindow):
                 self.editor = TCGUI.TextEditorGUI.TextEditorGUI(self.filename, self.enable_PLC, self.extract_Name)
             self.editor.show()
 
+    #opens maintenance menu
     def open_Maintenance(self):
-        pass
+        if self.maintenance is None:
+            self.maintenance = TCGUI.MaintenanceGUI.MaintenanceGUI(self.get_Track)
+
+        self.maintenance.show()
 
     #used to pass the track state to the debug and maintenance guis
     def get_Track(self):
         return self.current_Track_State
+
 
     #updates a value in next_Track_State
     def set_Track(self, block, var, val):
@@ -236,6 +242,10 @@ class TrackController(QMainWindow):
     def update_Sync_Track(self):
         if self.run_PLC:
             #TODO: run logic here
+
+            #this might be changed later
+            for block in self.next_Track_State:
+                self.next_Track_State[block].commanded_Speed = self.next_Track_State[block].suggested_Speed
 
             self.current_Track_State = self.next_Track_State
 
