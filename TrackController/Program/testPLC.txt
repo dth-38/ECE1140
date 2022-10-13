@@ -1,0 +1,12 @@
+;PLC supports NOT, AND, OR operations
+;semicolons mark comments
+;blocks are specified using the format "line_section_number"
+;block variables are specified in the format "block:variable"
+;ten temporary registers are available for intermediate calculations
+
+;block red_A_2
+OR red_A_2:lights[0].YELLOW, red_A_1:occupied, red_A_3:occupied
+NOT red_A_2:lights[0].RED, red_A_2:lights[0].YELLOW
+NOT t[0], red_A_2:lights[0].RED
+NOT t[1], red_A_2:lights[0].YELLOW
+AND red_A_2:lights[0].GREEN, t[0], t[1]
