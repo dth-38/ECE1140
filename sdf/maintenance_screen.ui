@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>610</y>
+     <width>241</width>
+     <height>171</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>- Track Status: 
+
+- Line: 
+
+- Section: 
+
+- Block #: 
+
+- Maintenance Signal:</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Track_Status_Selection">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>620</y>
+     <width>104</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Line_Selection">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>650</y>
+     <width>104</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Section_Selection">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>690</y>
+     <width>104</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Block_Selection">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>720</y>
+     <width>104</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="Maintenance_Signal_Selection">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>750</y>
+     <width>104</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="Main_button">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>560</y>
+     <width>871</width>
+     <height>221</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Back to Main Window</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
