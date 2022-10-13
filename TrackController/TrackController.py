@@ -18,8 +18,9 @@ class TrackController(QMainWindow):
         self.id = tc_ID
         self.filename = ""
         self.program = 0
-        self.in_Maintenance = False
         self.in_Debug = False
+        self.in_Maintenance = False
+        self.in_Modify = False
         self.run_PLC = True
         self.editor = None
         self.debug = None
@@ -45,25 +46,7 @@ class TrackController(QMainWindow):
         #generate blocks and add to trackState
         #probe track model for switches, gates, lights, possibly state of other block vars
         
-        #BEGIN TEMPORARY SOLUTION FOR ITERATION 2
-        block1 = Block()
-        block2 = Block()
-        block3 = Block()
-        tempTrack = {"red_A_1": block1, "red_A_2": block2, "red_A_3": block3}
-        tempTrack["red_A_1"].id = "red_A_1"
-        tempTrack["red_A_2"].id = "red_A_2"
-        tempTrack["red_A_3"].id = "red_A_3"
-        tempTrack["red_A_1"].add_Switch()
-        tempTrack["red_A_1"].add_Switch()
-        tempTrack["red_A_1"].add_Switch()
-        tempTrack["red_A_2"].add_Gate()
-        tempTrack["red_A_3"].add_Light()
-
-
-        self.current_Track_State = copy.deepcopy(tempTrack)
-        self.next_Track_State = tempTrack
-
-        #END TEMPORARY SOLUTION FOR ITERATION 2
+        pass
 
 
     #loads the saved PLC program if there is one
@@ -92,9 +75,9 @@ class TrackController(QMainWindow):
     #sets up main window GUI elements
     def setup_Main_Window(self):
         #Main Window setup 
-        self.setGeometry(80, 80, 500, 400) #sets the window size
+        self.setGeometry(80, 80, 500, 450) #sets the window size
         self.setWindowTitle('Track Controller ' + str(self.id))
-        self.setMinimumSize(400, 400)
+        self.setMinimumSize(500, 450)
 
         #sets up central widget that the layout will be placed on
         mainWidget = QWidget()
@@ -125,16 +108,17 @@ class TrackController(QMainWindow):
 
         modifyButton = QPushButton('Modify Track', self)
         modifyButton.clicked.connect(self.open_Modify)
-        modifyButton.setMinimumHeight(80)
+        modifyButton.setMinimumHeight(60)
         modifyButton.setFont(buttonFont)
 
 
         tcLayout = QGridLayout()
         #add widgets to layout here
-        tcLayout.addWidget(uploadButton, 0, 0)
-        tcLayout.addWidget(editButton, 1, 0)
-        tcLayout.addWidget(debugButton, 0, 1)
-        tcLayout.addWidget(maintenanceButton, 1, 1)
+        tcLayout.addWidget(modifyButton, 0, 0)
+        tcLayout.addWidget(uploadButton, 1, 0)
+        tcLayout.addWidget(editButton, 2, 0)
+        tcLayout.addWidget(debugButton, 1, 1)
+        tcLayout.addWidget(maintenanceButton, 2, 1)
 
         #applies the layout to the main widget and sets it as central
         mainWidget.setLayout(tcLayout)
@@ -183,9 +167,11 @@ class TrackController(QMainWindow):
     #opens Debug menu
     def open_Debug(self):
         if self.debug is None:
-            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.update_Sync_Track)
+            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.update_Sync_Track, self.leave_Debug)
  
-        self.debug.show()
+        if self.in_Modify is False:
+            self.in_Debug = True
+            self.debug.show()
 
     #opens text editor
     def open_Editor(self):
@@ -205,15 +191,19 @@ class TrackController(QMainWindow):
     #opens maintenance menu
     def open_Maintenance(self):
         if self.maintenance is None:
-            self.maintenance = TCGUI.MaintenanceGUI.MaintenanceGUI(self.get_Track)
+            self.maintenance = TCGUI.MaintenanceGUI.MaintenanceGUI(self.get_Track, self.leave_Maintenance)
 
-        self.maintenance.show()
+        if self.in_Modify is False:
+            self.in_Maintenance = True
+            self.maintenance.show()
 
     def open_Modify(self):
         if self.modify is None:
-            self.modify = TCGUI.ModifyGUI.ModifyGUI(self.get_Next_Track)
+            self.modify = TCGUI.ModifyGUI.ModifyGUI(self.get_Next_Track, self.update_Sync_Track, self.leave_Modify)
 
-        self.modify.show()
+        if self.in_Debug is False and self.in_Maintenance is False:
+            self.in_Modify = True
+            self.modify.show()
 
     #used to pass the track state to the debug and maintenance guis
     def get_Track(self):
@@ -259,17 +249,35 @@ class TrackController(QMainWindow):
     def update_Sync_Track(self):
         if self.run_PLC:
             #TODO: run logic here
+            pass
 
-            #this might be changed later
-            for block in self.next_Track_State:
-                self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
+        #this might be changed later
+        for block in self.next_Track_State:
+            self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
 
-            self.current_Track_State = copy.deepcopy(self.next_Track_State)
+        self.current_Track_State = copy.deepcopy(self.next_Track_State)
 
 
     #function for reenabling logic after editing a file
     def enable_PLC(self):
         self.run_PLC = True
+
+    #resets the in_Debug flag when the menu is closed
+    def leave_Debug(self):
+        self.in_Debug = False
+
+    #resets the in_Maintenance flag when the menu is closed
+    def leave_Maintenance(self):
+        self.in_Maintenance = False
+
+    #resets the in_Modify flag when the menu is closed
+    def leave_Modify(self):
+        self.in_Modify = False
+        self.update_Sync_Track()
+        if self.maintenance is not None:
+            self.maintenance.parse_Blocks()
+        if self.debug is not None:
+            self.debug.parse_Track_Blocks()
 
 
 #main for the whole Track Controller, simply creates an instance of TrackController

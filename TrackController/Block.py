@@ -21,6 +21,11 @@ class Block:
     def add_Switch(self):
         self.switches.append(0)
 
+    #removes the last switch from the list
+    def remove_Switch(self):
+        if self.switches != []:
+            self.switches.pop()
+
     #toggles the state of the specified switch
     def toggle_Switch(self, switchNum):
         self.switches[switchNum] = ~self.switches[switchNum]
@@ -29,15 +34,24 @@ class Block:
     def add_Gate(self):
         self.gates.append(0)
 
+    #removes the last gate from the list
+    def remove_Gate(self):
+        if self.gates != []:
+            self.gates.pop()
+
     #toggles the state of the specified gate
     def toggle_Gate(self, gateNum):
         self.gates[gateNum] = ~self.gates[gateNum]
 
     
-
     #adds a light to the block
     def add_Light(self):
         self.lights.append([1, 0, 0])
+
+    #removes a light from the list
+    def remove_Light(self):
+        if self.lights != []:
+            self.lights.pop()
 
     #possible colors are (r)ed, (y)ellow, or (g)reen
     #they are represented as an array of 3 bits, each bit corresponding to a color

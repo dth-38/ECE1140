@@ -14,7 +14,7 @@ class TextEditorGUI(QMainWindow):
         self.reenable_PLC = reenable_PLC
         self.extract_Name = extract_Name
 
-        self.setGeometry(80, 480, 500, 400)
+        self.setGeometry(80, 560, 500, 400)
 
         #creates a text field editor and sets its font
         self.editor = QPlainTextEdit()
