@@ -3,11 +3,13 @@ import shutil
 import pathlib
 import os
 import copy
+import time
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QFont
 from Block import Block
 import TCGUI.TextEditorGUI, TCGUI.DebugGUI, TCGUI.MaintenanceGUI, TCGUI.ModifyGUI
+from Token import Token
 
 
 class TrackController(QMainWindow):
@@ -26,6 +28,10 @@ class TrackController(QMainWindow):
         self.debug = None
         self.maintenance = None
         self.modify = None
+        self.track_Lock = False
+        self.target_Time = 0.5
+        self.jump_Table = {}
+        self.logic = []
         
 
         super().__init__()
@@ -148,7 +154,7 @@ class TrackController(QMainWindow):
             #self.program = open(self.filename, "r")
             self.statusBar().showMessage(self.extract_Name(self.filename) + " is loaded.")
 
-            #opens new file in editor if editor has been openend
+            #opens new file in editor if editor has been opened
             if self.editor is not None:
                 self.editor.set_Filepath(self.filename)
                 self.editor.open_File()
@@ -207,7 +213,9 @@ class TrackController(QMainWindow):
 
     #used to pass the track state to the debug and maintenance guis
     def get_Track(self):
-        return self.current_Track_State
+        #refuses access to the track if it is locked
+        if self.track_Lock == False:
+            return self.current_Track_State
 
     #used to modify track blocks
     def get_Next_Track(self):
@@ -219,10 +227,8 @@ class TrackController(QMainWindow):
         match var:
             case "spd":
                 self.next_Track_State[block].suggested_Speed = copy.copy(val)
-            case "fAuth":
+            case "auth":
                 self.next_Track_State[block].forward_Authority = copy.copy(val)
-            case "bAuth":
-                self.next_Track_State[block].backward_Authority = copy.copy(val)
             case "occ":
                 if val == 'Y':
                     val = True
@@ -247,15 +253,244 @@ class TrackController(QMainWindow):
 
     #runs PLC on next_Track_State and syncs current_Track_State
     def update_Sync_Track(self):
-        if self.run_PLC:
-            #TODO: run logic here
-            pass
-
         #this might be changed later
         for block in self.next_Track_State:
             self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
 
         self.current_Track_State = copy.deepcopy(self.next_Track_State)
+
+
+    #main plc loop continuously generating outputs using logic
+    #should be run on another thread
+    def run_Logic(self):
+        if self.filename != "":
+            #opens plc file
+            logic_File = open(self.filename, 'r')
+
+            self.tokenize(logic_File)
+
+            while True:
+                #starts timer for fps control
+                start_Time = time.perf_counter()
+
+                #locks track state before copying
+                self.track_Lock = True
+                #copies track state inputs to next state
+                for block in self.current_Track_State:
+                    self.next_Track_State[block].suggested_Speed = copy.copy(self.current_Track_State[block].suggested_Speed)
+                    self.next_Track_State[block].authority = copy.copy(self.current_Track_State[block].authority)
+                    self.next_Track_State[block].occupied = copy.copy(self.current_Track_State[block].occupied)
+                    self.next_Track_State[block].failed = copy.copy(self.current_Track_State[block].failed)
+                    self.next_Track_State[block].closed = copy.copy(self.current_Track_State[block].closed)
+                #unlocks track state so other modules can modify inputs/read outputs
+                self.track_Lock = False
+                
+                #runs logic
+                if self.run_PLC:
+                    pass
+
+                    
+
+                    #god help me
+                
+
+                #maybe put some safety logic here idk
+
+                #locks track state before updating
+                self.track_Lock = True
+                #copies newly generated outputs back to track state
+                for block in self.current_Track_State:
+                    self.current_Track_State.commanded_Authority = copy.copy(self.next_Track_State[block].commanded_Authority)
+                    
+                    for switch in self.current_Track_State[block].switches:
+                        self.current_Track_State[block].switches[switch] = copy.copy(self.next_Track_State[block].switches[switch])
+                    
+                    for light in self.current_Track_State[block].lights:
+                        self.current_Track_State[block].lights[light] = copy.copy(self.next_Track_State[block].lights[light])
+
+                    for gate in self.current_Track_State[block].gates:
+                        self.current_Track_State[block].gates[gate] = copy.copy(self.next_Track_State[block].gates[gate])
+                #unlocks track state
+                self.track_Lock = False
+
+                #calculates the amount of time to sleep to achieve target fps
+                time_Diff = time.perf_counter() - start_Time
+                wait_Time = self.target_Time - time_Diff
+                time.sleep(wait_Time)
+
+
+    #tokenizes plc logic to make runtime interpretation faster
+    def tokenize(self, file):
+        logic_Count = 0
+
+        #gets the first line
+        line = file.readline()
+
+        #continues until the end of the file
+        while line:
+            add_Logic = True
+            comm = ""
+            i = 0
+
+            #ignores leading whitespace
+            while line[i] == " ":
+                i += 1
+
+            #gets the command by parsing until a space is found
+            for j in range(i, len(line)):
+                if line[j] != " ":
+                    comm += line[j]
+                else:
+                    i = j
+                    break
+
+            #matches the command string and generates token
+            #token format [4] where:
+            #[0] = number corresponding to command
+            #[1] = var1 (string)
+            #[2] = var2 (string)
+            #[3] = var3 (string)
+            token = Token()
+            match comm:
+                #adds a jump point to the table
+                case "SET":
+                    label = ""
+
+                    #iterates through the current line starting from the end of the command
+                    for i in range(j, len(line)):
+                        #checks for the end of the label
+                        if line[i] != " ":
+                            label += line[i]
+                        else:
+                            break
+
+                    #adds position in logic array to dictionary with label as key
+                    self.jump_Table[label] = logic_Count
+                    add_Logic = False
+
+                #command num = 2, uses var1, 2, and 3
+                #format "AND var1, var2, var3"
+                case "AND":
+                    pass
+                #command num = 3, uses var1, 2, and 3
+                #format "OR var1, var2, var3"
+                case "OR":
+                    pass
+                #command num = 0, uses var1 and var2
+                #format "EQ var1, var2"
+                case "EQ":
+                    pass
+                #command num = 1, uses var1 and var2
+                #format "NOT var1, var2"
+                case "NOT":
+                    pass
+
+                #command num = 4, uses var1
+                #format "B label"
+                case "B":
+                    var1 = ""
+
+                    #iterates until a space or endline to get the label to jump to
+                    for i in range(j, len(line)):
+                        if line[i] != " ":
+                            var1 += line[i]
+                        else:
+                            break
+                    
+                    #ignore trailing whitespace
+                    for j in range(i, len(line)):
+                        #if there is anything other than whitespace, the line is invalid
+                        if line[j] != " ":
+                            self.run_PLC = False
+                            print("\nTokenizing failed: Invalid formatting at line " + str(file.tell()))
+                            return False
+
+                    #creates token
+                    token.set_Opcode(4)
+                    token.var1 = [label]
+                    token.var1_Type = "label"
+
+                #command num = 5, uses var1, 2, and 3
+                #format "BEQ label, var1, var2"
+                case "BEQ":
+                    var1 = ""
+                    var2 = ""
+                    var3 = ""
+
+                    #iterates until a comma is found
+                    for i in range(j, len(line)):
+                        if line[i] != ",":
+                            var1 += line[i]
+
+                    i += 1
+                    #ignores whitespace
+                    for j in range(i, len(line)):
+                        if line[j] != " ":
+                            break
+
+                    #gets var2
+                    for i in range(j, len(line)):
+                        if line[i] != ",":
+                            var2 += line[i]
+
+                    i += 1
+                    #ignores whitespace
+                    for j in range(i, len(line)):
+                        if line[j] != " ":
+                            break
+
+                    #gets var3
+                    for i in range(j, len(line)):
+                        if line[i] != ",":
+                            var3 += line[i]
+
+                    i += 1
+                    #ignores trailing whitespace and checks for improper formatting
+                    for j in range(i, len(line)):
+                        if line[j] != " ":
+                            self.run_PLC = False
+                            print("\nTokenizing failed: Invalid formatting in line " + str(file.tell()))
+                            return False
+
+                    #checks that 3 operands were found
+                    if var1 == "" or var2 == "" or var3 == "":
+                        self.run_PLC = False
+                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(file.tell()))
+                        return False
+
+                    #creates token
+                    token.set_Opcode(5)
+                    token.var1 = [var1]
+                    token.var1_Type = "label"
+
+                    if not token.set_Var(2, var2) or not token.set_Var(3, var3):
+                        self.run_PLC = False
+                    
+
+                #command num = 6, uses var1, 2, and 3
+                #format "BNE label, var1, var2"
+                case "BNE":
+                    pass
+                case _:
+                    #handles comments, invalid commands
+                    if comm[0] != ";":
+                        self.run_PLC = False
+                        print("\nTokenizing failed: Invalid command at line " + str(file.tell()))
+                        return False
+
+            #checks if the token was generated (since SET command does not generate logic)
+            if add_Logic:
+                #adds the new token to the logic array and increments the count
+                self.logic.append(token)
+                logic_Count += 1
+
+            #gets the next line
+            line = file.nextline()
+
+        #returns False if tokenizing failed at any point
+        #returns True if tokenizing was successful
+        return True
+        
 
 
     #function for reenabling logic after editing a file

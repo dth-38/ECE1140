@@ -4,8 +4,7 @@ class Block:
 
     def __init__(self):
         self.id = ""
-        self.forward_Authority = 0
-        self.backward_Authority = 0
+        self.authority = 0
         self.suggested_Speed = 0
         self.commanded_Speed = 0
         self.occupied = False

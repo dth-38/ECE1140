@@ -67,7 +67,7 @@ class DebugGUI(QWidget):
         self.update_Button.setFont(QFont('Times', 13))
         self.update_Button.setMaximumWidth(100)
         self.update_Button.clicked.connect(lambda: self.update_Track_Outputs())
-        self.grid_Layout.addWidget(self.update_Button, 8, 0)
+        self.grid_Layout.addWidget(self.update_Button, 7, 0)
 
         #Combobox for selecting input block
         self.blocks_Dropdown = QComboBox()
@@ -92,7 +92,7 @@ class DebugGUI(QWidget):
     def update_Inputs(self, block, redraw=True):
         #deletes old widgets before drawing new ones
         if self.inputs_Drawn:
-            for i in range(2, 8):
+            for i in range(2, 7):
                 temp_Widget1 = self.grid_Layout.itemAtPosition(i, 0).widget()
                 temp_Widget2 = self.grid_Layout.itemAtPosition(i, 1).widget()
                 self.grid_Layout.removeWidget(temp_Widget1)
@@ -107,11 +107,10 @@ class DebugGUI(QWidget):
 
             #creates input labels
             self.grid_Layout.addWidget(QLabel("Speed(mph):"), 2, 0)
-            self.grid_Layout.addWidget(QLabel("Forward Authority(blocks):"), 3, 0)
-            self.grid_Layout.addWidget(QLabel("Backward Authority(blocks):"), 4, 0)
-            self.grid_Layout.addWidget(QLabel("Occupied:"), 5, 0)
-            self.grid_Layout.addWidget(QLabel("Closed:"), 6, 0)
-            self.grid_Layout.addWidget(QLabel("Failed:"), 7, 0)
+            self.grid_Layout.addWidget(QLabel("Authority(blocks):"), 3, 0)
+            self.grid_Layout.addWidget(QLabel("Occupied:"), 4, 0)
+            self.grid_Layout.addWidget(QLabel("Closed:"), 5, 0)
+            self.grid_Layout.addWidget(QLabel("Failed:"), 6, 0)
 
             #speed QLineEdit
             speed_Line = QLineEdit()
@@ -122,20 +121,13 @@ class DebugGUI(QWidget):
             self.grid_Layout.addWidget(speed_Line, 2, 1)
 
             #forward authority QLineEdit
-            f_Auth = QLineEdit()
-            f_Auth.setMaxLength(2)
-            f_Auth.setMaximumWidth(40)
-            f_Auth.setText(str(self.get_Track()[block].forward_Authority))
-            f_Auth.returnPressed.connect(lambda: self.set_Track(block, "fAuth", f_Auth.text()))
-            self.grid_Layout.addWidget(f_Auth, 3, 1)
+            auth = QLineEdit()
+            auth.setMaxLength(2)
+            auth.setMaximumWidth(40)
+            auth.setText(str(self.get_Track()[block].authority))
+            auth.returnPressed.connect(lambda: self.set_Track(block, "auth", auth.text()))
+            self.grid_Layout.addWidget(auth, 3, 1)
 
-            #backward authority QLineEdit
-            b_Auth = QLineEdit()
-            b_Auth.setMaxLength(2)
-            b_Auth.setMaximumWidth(40)
-            b_Auth.setText(str(self.get_Track()[block].backward_Authority))
-            b_Auth.returnPressed.connect(lambda: self.set_Track(block, "bAuth", b_Auth.text()))
-            self.grid_Layout.addWidget(b_Auth, 4, 1)
 
             #Occupied QFontComboBox
             occ = QComboBox()
@@ -145,7 +137,7 @@ class DebugGUI(QWidget):
             if self.get_Track()[block].occupied == True:
                 occ.setCurrentText('Y')
             occ.currentTextChanged.connect(lambda: self.set_Track(block, "occ", occ.currentText()))
-            self.grid_Layout.addWidget(occ, 5, 1)
+            self.grid_Layout.addWidget(occ, 4, 1)
 
             #Closed QFontComboBox
             cls = QComboBox()
@@ -155,7 +147,7 @@ class DebugGUI(QWidget):
             if self.get_Track()[block].closed == True:
                 cls.setCurrentText('Y')
             cls.currentTextChanged.connect(lambda: self.set_Track(block, "cls", cls.currentText()))
-            self.grid_Layout.addWidget(cls, 6, 1)
+            self.grid_Layout.addWidget(cls, 5, 1)
 
             #Failed QFontComboBox
             fail = QComboBox()
@@ -165,7 +157,7 @@ class DebugGUI(QWidget):
             if self.get_Track()[block].failed == True:
                 fail.setCurrentText('Y')
             fail.currentTextChanged.connect(lambda: self.set_Track(block, "fail", fail.currentText()))
-            self.grid_Layout.addWidget(fail, 7, 1)
+            self.grid_Layout.addWidget(fail, 6, 1)
         
 
     #updates output GUI elements from current track state
