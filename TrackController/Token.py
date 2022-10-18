@@ -1,7 +1,8 @@
 #defines the token used to optimize the plc interpreter
 #vars contain parsed variables
 #opcodes: EQ=0, NOT=1, AND=2, OR=3, B=4, BEQ=5, BNE=6
-#var types: Temporary register: "temp", Occupation: "occupied", Light: "light", Gate: "gate", Failure: "failed", Closed: "closed", Switch: "switch", label: "label"
+#var types: Temporary register: "temp", Occupation: "occupied", Light: "light", 
+#           Gate: "gate", Failure: "failed", Closed: "closed", Switch: "switch", label: "label", constant: "constant"
 
 #for example:
 #AND t[0], red_A_1:light[0].RED, red_A_2:occupied
@@ -27,6 +28,17 @@ class Token:
 
     def set_Opcode(self, code):
         self.opcode = code
+
+    def get_Var_Type(self, num):
+        match num:
+            case 1:
+                return self.var1_Type
+            case 2:
+                return self.var2_Type
+            case 3:
+                return self.var3_Type
+            case _:
+                pass
 
     def get_Var(self, num):
         match num:
@@ -57,7 +69,12 @@ class Token:
             else:
                 temp_Var.append(int(reg))
                 temp_Type = "temp"
-
+        elif name == "TRUE":
+            temp_Type = "constant"
+            temp_Var.append(True)
+        elif name == "FALSE":
+            temp_Type = "constant"
+            temp_Var.append(False)
         else:
             #block variable
             
