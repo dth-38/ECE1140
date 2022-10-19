@@ -1,12 +1,15 @@
-;PLC supports NOT, AND, OR operations
-;semicolons mark comments
-;blocks are specified using the format "line_section_number"
-;block variables are specified in the format "block:variable"
-;ten temporary registers are available for intermediate calculations
+;this is a comment
+    ;this is also a comment
+SET branch_point
+EQ t[0], FALSE
+NOT t[1], t[0]
+BNE branch_point, t[1], t[0]
+OR red_A_1:light[0].RED, red_A_1:occupied, red_A_1:closed
+NOT red_A_1:light[0].YELLOW, red_A_1:light[0].RED
 
-;block red_A_2
-OR red_A_2:lights[0].YELLOW, red_A_1:occupied, red_A_3:occupied
-NOT red_A_2:lights[0].RED, red_A_2:lights[0].YELLOW
-NOT t[0], red_A_2:lights[0].RED
-NOT t[1], red_A_2:lights[0].YELLOW
-AND red_A_2:lights[0].GREEN, t[0], t[1]
+AND red_A_1:gate[0], red_A_1:closed, t[0]
+SET branch2
+BEQ branch2, t[0], t[1]
+B branch2
+        
+   SET branch_point

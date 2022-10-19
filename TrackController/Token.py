@@ -58,6 +58,9 @@ class Token:
     def set_Var(self, num, name):
         temp_Var = []
         temp_Type = ""
+        i = 0
+        j = 0
+
 
         if name[0] == "t":
             #temporary register
@@ -83,14 +86,17 @@ class Token:
             for i in range(len(name)):
                 if name[i] != ":":
                     block += name[i]
+                else:
+                    break
 
 
             i += 1
             #parses variable type
-            type_Name = ""
             for j in range(i, len(name)):
                 if name[j] != "[":
-                    type_Type += name[j]
+                    temp_Type += name[j]
+                else:
+                    break
 
             #increments counter to make next parse easier
             j += 1
@@ -188,6 +194,8 @@ class Token:
                 case "closed":
                     temp_Var.append(block)
                 case "failed":
+                    temp_Var.append(block)
+                case "constant":
                     temp_Var.append(block)
                 case _:
                     print("\nTokenization failed: Invalid track variable")

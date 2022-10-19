@@ -46,6 +46,7 @@ class TrackController(QMainWindow):
         self.setup_Main_Window()
 
         self.logic_Thread = threading.Thread(target=self.run_Logic)
+        self.logic_Thread.start()
 
         self.show()
 
@@ -281,12 +282,16 @@ class TrackController(QMainWindow):
             #opens plc file
             logic_File = open(self.filename, 'r')
 
+            t1 = time.perf_counter()
             self.run_PLC = self.tokenize(logic_File)
+            tdiff = time.perf_counter() - t1
+            print("Time to tokenize: " + str(tdiff))
             logic_File.close()
+
+            self.run_Vital = self.run_PLC
         else:
             self.run_PLC = False
 
-        self.run_Vital = True
 
         while self.run_Vital:
             #starts timer for fps control
@@ -341,6 +346,7 @@ class TrackController(QMainWindow):
     #tokenizes plc logic to make runtime interpretation faster
     def tokenize(self, file):
         logic_Count = 0
+        line_Count = 1
 
         #gets the first line
         line = file.readline()
@@ -350,6 +356,7 @@ class TrackController(QMainWindow):
             add_Logic = True
             comm = ""
             i = 0
+            j = 0
 
             #ignores leading whitespace
             while line[i] == " ":
@@ -368,6 +375,8 @@ class TrackController(QMainWindow):
             var1 = ""
             var2 = ""
             var3 = ""
+
+            j += 1
             #this switch block is ~350 lines, im sorry
             match comm:
                 #adds a jump point to the table
@@ -377,7 +386,7 @@ class TrackController(QMainWindow):
                     #iterates through the current line starting from the end of the command
                     for i in range(j, len(line)):
                         #checks for the end of the label
-                        if line[i] != " ":
+                        if line[i] != " " and line[i] != "\n":
                             label += line[i]
                         else:
                             break
@@ -391,9 +400,11 @@ class TrackController(QMainWindow):
                 case "AND":
 
                     #iterates until a comma is found
-                    for i in range(j, len(line)):
+                    for i in range(j+1, len(line)):
                         if line[i] != ",":
                             var1 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -405,6 +416,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var2 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -414,19 +427,21 @@ class TrackController(QMainWindow):
 
                     #gets var3
                     for i in range(j, len(line)):
-                        if line[i] != " ":
+                        if line[i] != " " and line[i] != "\n":
                             var3 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores trailing whitespace and checks for improper formatting
                     for j in range(i, len(line)):
-                        if line[j] != " ":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(file.tell()))
+                        if line[j] != " " and line[j] != "\n":
+                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
                             return False
 
                     #checks that 3 operands were found
                     if var1 == "" or var2 == "" or var3 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(file.tell()))
+                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
                         return False
 
                     #creates token
@@ -443,6 +458,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var1 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -454,6 +471,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var2 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -463,19 +482,21 @@ class TrackController(QMainWindow):
 
                     #gets var3
                     for i in range(j, len(line)):
-                        if line[i] != " ":
+                        if line[i] != " " and line[i] != "\n":
                             var3 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores trailing whitespace and checks for improper formatting
                     for j in range(i, len(line)):
-                        if line[j] != " ":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(file.tell()))
+                        if line[j] != " " and line[j] != "\n":
+                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
                             return False
 
                     #checks that 3 operands were found
                     if var1 == "" or var2 == "" or var3 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(file.tell()))
+                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
                         return False
 
                     #creates token
@@ -492,6 +513,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var1 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -501,25 +524,28 @@ class TrackController(QMainWindow):
 
                     #gets var2
                     for i in range(j, len(line)):
-                        if line[i] != " ":
+                        if line[i] != " " and line[i] != "\n":
                             var2 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores trailing whitespace and checks for improper formatting
                     for j in range(i, len(line)):
-                        if line[j] != " ":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(file.tell()))
+                        if line[j] != " " and line[j] != "\n":
+                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
                             return False
 
-                    #checks that 3 operands were found
+                    #checks that 2 operands were found
                     if var1 == "" or var2 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(file.tell()))
+                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
                         return False
 
                     #creates token
                     token.set_Opcode(0)
 
-                    if not token.set_Var(1, var1) or not token.set_Var(2, var2):
+                    if (not token.set_Var(1, var1)) or (not token.set_Var(2, var2)):
+                        print(var2 + "a")
                         return False
 
                     
@@ -531,6 +557,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var1 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -540,19 +568,21 @@ class TrackController(QMainWindow):
 
                     #gets var2
                     for i in range(j, len(line)):
-                        if line[i] != " ":
+                        if line[i] != " " and line[i] != "\n":
                             var2 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores trailing whitespace and checks for improper formatting
                     for j in range(i, len(line)):
-                        if line[j] != " ":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(file.tell()))
+                        if line[j] != " " and line[j] != "\n":
+                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
                             return False
 
                     #checks that 3 operands were found
                     if var1 == "" or var2 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(file.tell()))
+                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
                         return False
 
                     #creates token
@@ -567,16 +597,16 @@ class TrackController(QMainWindow):
 
                     #iterates until a space or endline to get the label to jump to
                     for i in range(j, len(line)):
-                        if line[i] != " ":
+                        if line[i] != " " and line[i] != "\n":
                             var1 += line[i]
                         else:
                             break
                     
                     #ignore trailing whitespace
-                    for j in range(i, len(line)):
+                    for j in range(i+1, len(line)):
                         #if there is anything other than whitespace, the line is invalid
-                        if line[j] != " ":
-                            print("\nTokenizing failed: Invalid formatting at line " + str(file.tell()))
+                        if line[j] != " " and line[j] != "\n":
+                            print("\nTokenizing failed: Invalid formatting at line " + str(line_Count))
                             return False
 
                     #creates token
@@ -592,6 +622,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var1 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -603,6 +635,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var2 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -612,19 +646,21 @@ class TrackController(QMainWindow):
 
                     #gets var3
                     for i in range(j, len(line)):
-                        if line[i] != " ":
+                        if line[i] != " " and line[i] != "\n":
                             var3 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores trailing whitespace and checks for improper formatting
                     for j in range(i, len(line)):
-                        if line[j] != " ":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(file.tell()))
+                        if line[j] != " " and line[j] != "\n":
+                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
                             return False
 
                     #checks that 3 operands were found
                     if var1 == "" or var2 == "" or var3 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(file.tell()))
+                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
                         return False
 
                     #creates token
@@ -644,6 +680,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var1 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -655,6 +693,8 @@ class TrackController(QMainWindow):
                     for i in range(j, len(line)):
                         if line[i] != ",":
                             var2 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores whitespace
@@ -664,19 +704,21 @@ class TrackController(QMainWindow):
 
                     #gets var3
                     for i in range(j, len(line)):
-                        if line[i] != " ":
+                        if line[i] != " " and line[i] != "\n":
                             var3 += line[i]
+                        else:
+                            break
 
                     i += 1
                     #ignores trailing whitespace and checks for improper formatting
                     for j in range(i, len(line)):
-                        if line[j] != " ":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(file.tell()))
+                        if line[j] != " " and line[j] != "\n":
+                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
                             return False
 
                     #checks that 3 operands were found
                     if var1 == "" or var2 == "" or var3 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(file.tell()))
+                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
                         return False
 
                     #creates token
@@ -689,22 +731,22 @@ class TrackController(QMainWindow):
 
                 case _:
                     #handles comments, invalid commands
-                    if comm[0] != ";":
-                        print("\nTokenizing failed: Invalid command at line " + str(file.tell()))
+                    if comm[0] != ";" and comm != "\n":
+                        print("\nTokenizing failed: Invalid command at line " + str(line_Count))
                         return False
+                    else:
+                        add_Logic = False
 
             #checks if the token was generated (since SET command does not generate logic)
             if add_Logic:
-                #DEBUG
-                print("\nOP: " + token.get_Opcode + ", var1(" + token.get_Var_Type(1) + "):" + token.get_Var(1)[0] + ", var2(" + token.get_Var_Type(2) + "):" + token.get_Var(2)[0])
-                print(", var3(" + token.get_Var_Type(3) + "):" + token.get_Var(3)[0])
 
                 #adds the new token to the logic array and increments the count
                 self.logic.append(token)
                 logic_Count += 1
 
             #gets the next line
-            line = file.nextline()
+            line = file.readline()
+            line_Count += 1
 
         #returns False if tokenizing failed at any point
         #returns True if tokenizing was successful
