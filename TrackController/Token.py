@@ -7,7 +7,7 @@
 #for example:
 #AND t[0], red_A_1:light[0].RED, red_A_2:occupied
 #would be stored as: 
-#opcode = 2, var1_Type = temp, var1 = [0], var2_Type = light, var2 = ["red_A_1", 0, "RED"], var2_Type = occ, var2 = ["red_A_2"]
+#opcode = 2, var1_Type = temp, var1 = [0], var2_Type = light, var2 = ["red_A_1", 0, 0], var2_Type = occ, var2 = ["red_A_2"]
 
 #this SHOULD make runtime interpretation easier
 
@@ -138,18 +138,18 @@ class Token:
                     #checks that the light color is valid
                     match color:
                         case "RED":
-                            pass
+                            color_Val = 0
                         case "YELLOW":
-                            pass
+                            color_Val = 1
                         case "GREEN":
-                            pass
+                            color_Val = 2
                         case _:
                             print("\nTokenization Failed: Invalid light color specification.")
                             return False
 
                     temp_Var.append(block)
                     temp_Var.append(l_real_Num)
-                    temp_Var.append(color)
+                    temp_Var.append(color_Val)
 
                 case "gate":
                     #parses the gate number
@@ -194,8 +194,6 @@ class Token:
                 case "closed":
                     temp_Var.append(block)
                 case "failed":
-                    temp_Var.append(block)
-                case "constant":
                     temp_Var.append(block)
                 case _:
                     print("\nTokenization failed: Invalid track variable")
