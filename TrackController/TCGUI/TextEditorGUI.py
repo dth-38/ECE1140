@@ -1,18 +1,15 @@
-import os
-import sys
 from PyQt5.QtWidgets import QMainWindow, QPlainTextEdit, QWidget
 from PyQt5.QtWidgets import QAction, QVBoxLayout
 from PyQt5.QtGui import QFont
 
 class TextEditorGUI(QMainWindow):
 
-    def __init__(self, loaded_File, reenable_PLC, extract_Name):
+    def __init__(self, reenable_PLC, loaded_File = ""):
         super().__init__()
 
         #creates a reenable_PLC function in the TextEditorGUI
         #so it can be used in the close function
         self.reenable_PLC = reenable_PLC
-        self.extract_Name = extract_Name
 
         self.setGeometry(80, 560, 500, 400)
 
@@ -63,6 +60,17 @@ class TextEditorGUI(QMainWindow):
         program_File = open(self.path, 'w')
         program_File.write(text)
         program_File.close()
+
+
+    #extracts the PLC filename from the filepath
+    def extract_Name(self, filepath):
+        temp = ''
+        filepath_Pos = len(filepath)
+        while temp != '/' and temp != '\\':
+            filepath_Pos = filepath_Pos - 1
+            temp = filepath[filepath_Pos]
+
+        return filepath[filepath_Pos+1:len(filepath)]
 
     #default closeEvent behavior is overwritten to reenable PLC logic on exit
     def closeEvent(self, event):

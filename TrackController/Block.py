@@ -2,8 +2,8 @@
 
 class Block:
 
-    def __init__(self):
-        self.id = ""
+    def __init__(self, id = ""):
+        self.id = id
         self.authority = 0
         self.suggested_Speed = 0
         self.commanded_Speed = 0
@@ -52,7 +52,7 @@ class Block:
         if self.lights != []:
             self.lights.pop()
 
-    #possible colors are (r)ed, (y)ellow, or (g)reen
+    #possible colors are red, yellow, or green
     #they are represented as an array of 3 bits, each bit corresponding to a color
     def set_Light(self, lightNum, color):
         if color == 'YELLOW':
