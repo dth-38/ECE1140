@@ -15,6 +15,45 @@ class Block:
         self.gates = []
         
         
+    def set_Field(self, field, index=0, color=0, val=0):
+        match field:
+            case "occupied":
+                self.occupied = val
+            case "light":
+                self.lights[index][color] = val
+            case "gate":
+                self.gates[index] = val
+            case "failed":
+                self.failed = val
+            case "closed":
+                self.closed = val
+            case "switch":
+                self.switches[index] = val
+            case _:
+                return False
+
+        return True
+    
+    def get_Field(self, field, index=0, color=0):
+        val = 0
+
+        match field:
+            case "occupied":
+                val = self.occupied
+            case "light":
+                val = self.lights[index][color]
+            case "gate":
+                val = self.gates[index]
+            case "failed":
+                val = self.failed
+            case "closed":
+                val = self.closed
+            case "switch":
+                val = self.switches[index]
+            case _:
+                pass
+
+        return val
 
     #adds a switch to the block
     def add_Switch(self):
