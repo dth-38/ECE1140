@@ -1,4 +1,3 @@
-from re import A
 import time
 from PLCInterpreter import Token
 
@@ -544,6 +543,8 @@ class PLCInterpreter:
                         return False
 
                 case _:
+                    file.close()
+
                     #handles comments, invalid commands
                     if comm[0] != ";" and comm != "\n":
                         print("\nTokenizing failed: Invalid command at line " + str(line_Count))

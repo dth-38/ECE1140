@@ -1,0 +1,15 @@
+DEFINE TRACK
+BLOCK red_A_1
+SWITCHES 1
+LIGHTS 2
+GATES 1
+MAX_SPD 30
+END
+
+;comment
+DEFINE LOGIC
+AND t[0], red_A_1:occupied, red_A_1:failed
+OR red_A_1:switch[0], t[0], red_A_1:light[0].RED
+EQ t[1], t[0]
+NOT red_A_1:gate[0], t[1]
+END

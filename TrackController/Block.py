@@ -7,6 +7,7 @@ class Block:
         self.authority = 0
         self.suggested_Speed = 0
         self.commanded_Speed = 0
+        self.max_Speed = 0
         self.occupied = False
         self.failed = False
         self.closed = False

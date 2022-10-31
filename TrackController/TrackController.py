@@ -30,7 +30,6 @@ class TrackController(QMainWindow):
         #tracks what menus are open
         self.in_Debug = False
         self.in_Maintenance = False
-        self.in_Modify = False
         #tracks which parts of the logic thread to run
         self.run_PLC = False
         self.run_Vital = True
@@ -38,7 +37,6 @@ class TrackController(QMainWindow):
         self.editor = None
         self.debug = None
         self.maintenance = None
-        #self.modify = None
         #semaphore for track state access
         self.track_Lock = False
         #target fps = 1/target_Time
@@ -60,16 +58,15 @@ class TrackController(QMainWindow):
         self.setup_Main_Window()
 
         if auto_Run == True:
-            self.start_Logic()
+            self.logic_Thread.start()
         else:
             self.show()
 
 
 
-    def build_Track(self):
+    def build_Track(self, fl = ""):
         #TODO:
-        #probe track model for blocks
-        #probe track model for switche, gate, and light amounts
+        #read track from plc
 
         #for testing
         tempBlock = Block("red_A_1")
@@ -194,13 +191,8 @@ class TrackController(QMainWindow):
         maintenanceButton.setMinimumHeight(160)
         maintenanceButton.setFont(buttonFont)
 
-        #modifyButton = QPushButton('Modify Track', self)
-        #modifyButton.clicked.connect(self.open_Modify)
-        #modifyButton.setMinimumHeight(60)
-        #modifyButton.setFont(buttonFont)
-
         self.run_Button = QPushButton('RUN PLC', self)
-        self.run_Button.clicked.connect(self.start_Logic)
+        self.run_Button.clicked.connect(self.run_Logic)
         self.run_Button.setMinimumHeight(60)
         self.run_Button.setFont(buttonFont)
         self.run_Button.setCheckable(True)
@@ -230,7 +222,6 @@ class TrackController(QMainWindow):
 
         tcLayout = QGridLayout()
         #add widgets to layout here
-        #tcLayout.addWidget(modifyButton, 0, 0)
         tcLayout.addWidget(self.run_Button, 0, 0)
         tcLayout.addWidget(self.stop_Button, 0, 1)
         tcLayout.addWidget(self.vitals_Label, 1, 0)
@@ -292,9 +283,8 @@ class TrackController(QMainWindow):
         if self.debug is None:
             self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.update_Sync_Track, self.leave_Debug)
  
-        if self.in_Modify is False:
-            self.in_Debug = True
-            self.debug.show()
+        self.in_Debug = True
+        self.debug.show()
 
     #opens text editor
     def open_Editor(self):
@@ -316,18 +306,10 @@ class TrackController(QMainWindow):
         if self.maintenance is None:
             self.maintenance = TCGUI.MaintenanceGUI.MaintenanceGUI(self.get_Track, self.leave_Maintenance)
 
-        if self.in_Modify is False:
-            self.in_Maintenance = True
-            self.maintenance.show()
+        
+        self.in_Maintenance = True
+        self.maintenance.show()
 
-    #opens modify menu
-    #def open_Modify(self):
-    #    if self.modify is None:
-    #        self.modify = TCGUI.ModifyGUI.ModifyGUI(self.get_Next_Track, self.update_Sync_Track, self.leave_Modify)
-    #
-    #    if self.in_Debug is False and self.in_Maintenance is False:
-    #        self.in_Modify = True
-    #        self.modify.show()
 
     #used to pass the track state to the debug and maintenance guis
     def get_Track(self):
@@ -392,13 +374,7 @@ class TrackController(QMainWindow):
         else:
             self.run_PLC = False
 
-
-        self.vitals_Label.setText("Vitals: Running")
-        self.stop_Button.setStyleSheet("background-color: red")
-        self.run_Button.setStyleSheet("background-color: gray")
-        if self.run_PLC == True:
-            self.plc_Label.setText("Logic: Running")
-
+        self.update_Run_UI(True)
 
         while self.run_Vital == True:
             #starts timer for fps control
@@ -469,22 +445,6 @@ class TrackController(QMainWindow):
     def leave_Maintenance(self):
         self.in_Maintenance = False
 
-    #resets the in_Modify flag when the menu is closed
-    def leave_Modify(self):
-        self.in_Modify = False
-        self.update_Sync_Track()
-        if self.maintenance is not None:
-            self.maintenance.parse_Blocks()
-        if self.debug is not None:
-            self.debug.parse_Track_Blocks()
-
-    #starts logic thread
-    def start_Logic(self):
-        self.run_Button.setEnabled(False)
-        self.stop_Button.setEnabled(True)
-
-        if self.logic_Thread.is_alive() == False:
-            self.logic_Thread.start()
 
     #stops logic thread
     def stop_Logic(self):
@@ -495,10 +455,36 @@ class TrackController(QMainWindow):
         self.vitals_Label.setText("Vitals: Stopped")
         self.plc_Label.setText("Logic: Stopped")
 
-        self.run_Button.setEnabled(True)
-        self.run_Button.setStyleSheet("background-color: green")
-        self.stop_Button.setEnabled(False)
-        self.stop_Button.setStyleSheet("background-color: gray")
+        self.update_Run_UI(False)
+
+    #updates the state of the run/stop buttons and status lines
+    #based on the whether the logic is starting or stopping
+    #and if the vital or nonvital logic is running
+    def update_Run_UI(self, start):
+        if start == True:
+            self.run_Button.setEnabled(False)
+            self.stop_Button.setEnabled(True)
+            if self.run_PLC == True:
+                self.plc_Label.setText("Logic: Running")
+            else:
+                self.plc_Label.setText("Logic: Stopped")
+            if self.run_Vital == True:
+                self.vitals_Label.setText("Vitals: Running")
+                self.stop_Button.setStyleSheet("background-color: red")
+                self.run_Button.setStyleSheet("background-color: gray")
+            else:
+                self.vitals_Label.setText("Vitals: Stopped")
+                self.stop_Button.setStyleSheet("background-color: gray")
+                self.run_Button.setStyleSheet("background-color: green")
+        else:
+            self.run_Button.setEnabled(True)
+            self.stop_Button.setEnabled(False)
+            self.stop_Button.setStyleSheet("background-color: gray")
+            self.run_Button.setStyleSheet("background-color: green")
+
+            
+
+
 
 #main for the whole Track Controller, simply creates an instance of TrackController
 if __name__ == '__main__':
