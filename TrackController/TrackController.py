@@ -15,7 +15,6 @@ from PLCInterpreter import PLCInterpreter
 #TODO:
 #modify gui elements to disable run_Vitals not run_PLC
 #execute logic on debug test
-#write track building function (depends on track model so idk yet)
 
 class TrackController(QMainWindow):
 
@@ -63,75 +62,104 @@ class TrackController(QMainWindow):
             self.show()
 
 
-
+    #builds the track_state dictionaries from the uploaded plc file or a specified one
+    #returns True on success, False on failure
     def build_Track(self, fl = ""):
-        #TODO:
-        #read track from plc
+        success = False
+        temp_Track = {}
 
-        #for testing
-        tempBlock = Block("red_A_1")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_1"] = copy.deepcopy(tempBlock)
+        #allows a plc program to be directly parsed, mainly for testing purposes
+        if fl != "":
+            self.filename = fl
+            self.statusBar().showMessage(self.extract_Name(self.filename) + " is loaded.")
 
-        tempBlock = Block("red_A_2")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_2"] = copy.deepcopy(tempBlock)
 
-        tempBlock = Block("red_A_3")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_3"] = copy.deepcopy(tempBlock)
+        #checks that there is a plc program loaded
+        if self.filename != "":
+            program = open(self.filename, "r")
 
-        tempBlock = Block("red_A_4")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_4"] = copy.deepcopy(tempBlock)
+            line = program.readline()
 
-        tempBlock = Block("red_A_5")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_5"] = copy.deepcopy(tempBlock)
+            while line:
 
-        tempBlock = Block("red_A_6")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_6"] = copy.deepcopy(tempBlock)
+                #parses each line looking for DEFINE TRACK
+                define_Statement = ""
+                for i in range(len(line)):
+                    if line[i] != " " and line[i] != "\n":
+                        define_Statement += line[i]
 
-        tempBlock = Block("red_A_7")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_7"] = copy.deepcopy(tempBlock)
+                if define_Statement == "DEFINETRACK":
+                    #DEFINE TRACK has been found
 
-        tempBlock = Block("red_A_8")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_8"] = copy.deepcopy(tempBlock)
+                    #checks if a track section has already been parsed
+                    if success == True:
+                        print("Track initialization failed: Multiple track sections found.")
+                        success = False
+                        return False
+                        
 
-        tempBlock = Block("red_A_9")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_9"] = copy.deepcopy(tempBlock)
+                    line = program.readline()
 
-        tempBlock = Block("red_A_10")
-        tempBlock.add_Switch()
-        tempBlock.add_Light()
-        tempBlock.add_Gate()
-        self.current_Track_State["red_A_10"] = copy.deepcopy(tempBlock)
+                    #parses DEFINE TRACK section until an END TRACK is found
+                    while line != "ENDTRACK" and line:
 
-        self.next_Track_State = copy.deepcopy(self.current_Track_State)
-        
+                        #looks for a BLOCK statement
+                        block_Statement = ""
+                        for i in range(len(line)):
+                            if line[i] != " " and line[i] != "\n":
+                                block_Statement += line[i]
 
+                        if block_Statement[0:5] == "BLOCK":
+                            #BLOCK statement has been found
+
+                            #extracts block name and creates new block
+                            block_Name = block_Statement[5:]
+                            temp_Track[block_Name] = Block()
+
+                            line = program.readline()
+
+                            #section for parsing track equipment definitions in a block
+                            while line != "ENDBLOCK" and line:
+                                
+                                statement = ""
+                                for i in range(len(line)):
+                                    if line[i] != " " and line[i] != "\n":
+                                        statement += line[i]
+
+                                #try block here since the match substring or int typecasts could fail
+                                try:
+                                    #only matches the first 5 letters of the since im lazy and dont want to write variable length checks
+                                    match statement[:5]:
+                                        case "SWITC":
+                                            for j in range(int(statement[8:])):
+                                                temp_Track[block_Name].add_Switch()
+                                        case "GATES":
+                                            for j in range(int(statement[5:])):
+                                                temp_Track[block_Name].add_Gate()
+                                        case "LIGHT":
+                                            for j in range(int(statement[6:])):
+                                                temp_Track[block_Name].add_Light()
+                                        case "MAXSP":
+                                            temp_Track[block_Name].max_Speed = int(statement[6:])
+                                        case _:
+                                            raise Exception("Failed to intialize track: Invalid statement in block definition.")
+                                except Exception as e:
+                                    print(e)
+                                    program.close()
+                                    return False
+
+                                line = program.readline()
+                        line = program.readline()
+                    success = True
+            line = program.readline()
+
+
+        #matches the track states to the newly created one if parsing is successful
+        if success == True:
+            self.current_Track_State = copy.deepcopy(temp_Track)
+            self.next_Track_State = copy.deepcopy(temp_Track)
+
+        return success
 
 
     #loads the saved PLC program if there is one
@@ -149,7 +177,6 @@ class TrackController(QMainWindow):
             self.filename = str(filepath)
             message = self.extract_Name(self.filename) + " is loaded."
 
-            #enables PLC logic if a program is found
         else:
             message = "No PLC program is loaded."
 
@@ -321,6 +348,7 @@ class TrackController(QMainWindow):
     def get_Next_Track(self):
         return self.next_Track_State
 
+    #this is due for a refactor
     #updates a value in next_Track_State
     def set_Track(self, block, var, val):
 
@@ -350,7 +378,7 @@ class TrackController(QMainWindow):
             case _:
                 pass
 
-
+    #also due for a refactor
     #runs PLC on next_Track_State and syncs current_Track_State
     def update_Sync_Track(self):
         #this might be changed later
