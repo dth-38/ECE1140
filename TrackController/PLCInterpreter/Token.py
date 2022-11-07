@@ -55,6 +55,9 @@ class Token:
     #returns true if successful, false otherwise
     #DO NOT PASS IT A BRANCH LABEL, IT WILL BREAK
     def set_Var(self, num, name):
+        if name == "":
+            return True
+
         temp_Var = []
         temp_Type = ""
         i = 0

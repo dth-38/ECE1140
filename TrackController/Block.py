@@ -9,6 +9,7 @@ class Block:
         self.commanded_Speed = 0
         self.max_Speed = 0
         self.previous_Block = ""
+        self.next_Block = ""
         self.occupied = False
         self.failed = False
         self.closed = False

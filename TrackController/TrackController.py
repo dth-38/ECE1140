@@ -3,8 +3,8 @@ import shutil
 import pathlib
 import os
 import copy
-import time
-import threading
+#import time
+#import threading
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel
 from PyQt5.QtGui import QFont
 from Block import Block
@@ -14,9 +14,6 @@ from PLCInterpreter import PLCInterpreter
 
 #TODO:
 #FIX logic jankyness, getting there...
-#add initial logic block search to PLCInterpreter
-#execute logic on debug test
-#add next_Block field to block
 #add edge case to safety logic for changing track controllers
 #might still need a start_PLC function idk look into it
 #make room for update function calls to other modules maybe???
@@ -61,6 +58,7 @@ class TrackController(QMainWindow):
 
         super().__init__()
 
+
         self.load_Saved_Program()
 
         self.build_Track()
@@ -93,7 +91,7 @@ class TrackController(QMainWindow):
 
             line = program.readline()
 
-            while line:
+            while len(line) != 0 and success == False:
 
                 #parses each line looking for DEFINE TRACK
                 define_Statement = self.ignore_Whitespace(line)
@@ -127,10 +125,10 @@ class TrackController(QMainWindow):
 
                             #section for parsing track equipment definitions in a block
                             while statement != "ENDBLOCK":
-                                
+
                                 #try block here since the match substring or int typecasts could fail
                                 try:
-                                    match statement[:1]:
+                                    match statement[0]:
                                         case "S":
                                             for j in range(int(statement[1:])):
                                                 temp_Track[block_Name].add_Switch()
@@ -144,15 +142,22 @@ class TrackController(QMainWindow):
                                             temp_Track[block_Name].max_Speed = int(statement[1:])
                                         case "P":
                                             temp_Track[block_Name].previous_Block = statement[1:]
+                                        case "N":
+                                            temp_Track[block_Name].next_Block = statement[1:]
+                                        case ";":
+                                            pass
                                         case _:
-                                            if statement[0] != ";":
-                                                raise Exception("Failed to intialize track: Invalid statement in block definition.")
+                                            raise Exception("Failed to intialize track: Invalid statement in block definition.")
                                 except Exception as e:
                                     print(e)
                                     program.close()
                                     return False
 
                                 line = program.readline()
+                                if len(line) == 0:
+                                    print("Failed to initialize track: Reached EOF while parsing.")
+                                    program.close()
+                                    return False
                                 statement = self.ignore_Whitespace(line)
                         else:
                             #checks if the line is a comment and fails the function if it isnt
@@ -162,13 +167,20 @@ class TrackController(QMainWindow):
                                 return False
 
                         line = program.readline()
+                        if len(line) == 0:
+                            print("Failed to initialize track: Reached EOF while parsing.")
+                            program.close()
+                            return False
                         block_Statement = self.ignore_Whitespace(line)
+
 
                     #if it makes it here a track has been successfully parsed
                     #continues iterating to ensure only one track is defined
                     success = True
 
-            line = program.readline()
+                line = program.readline()
+
+            program.close()
 
 
         #matches the track states to the newly created one if parsing is successful
@@ -181,10 +193,12 @@ class TrackController(QMainWindow):
             self.interpreter.set_Environment(self.next_Track_State)
 
             #returns the program to the first line and calls the tokenizer
-
-            self.run_PLC = self.interpreter.tokenize(program)
+            self.run_PLC = self.interpreter.tokenize(self.filename)
 
             self.run_Vitals = True
+        
+        else:
+            self.statusBar().showMessage("No PLC program is loaded.")
 
         return success
 
@@ -340,7 +354,7 @@ class TrackController(QMainWindow):
     #opens Debug menu
     def open_Debug(self):
         if self.debug is None:
-            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.update_Sync_Track, self.leave_Debug)
+            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.tick, self.leave_Debug)
  
         self.in_Debug = True
         self.debug.show()
@@ -350,7 +364,7 @@ class TrackController(QMainWindow):
         #ensures the editor doesn't try to open a file that isn't there
         if self.filename != '':
             #disables the PLC from running when editing
-            self.run_Vital = False
+            self.run_Vitals = False
 
             #ensure the editor isn't already open
             if self.editor is None:
@@ -369,6 +383,8 @@ class TrackController(QMainWindow):
         self.in_Maintenance = True
         self.maintenance.show()
 
+    def enable_Vitals(self):
+        self.run_Vitals = True
 
     #used to pass the track state to the debug and maintenance guis
     def get_Track(self):
@@ -410,29 +426,11 @@ class TrackController(QMainWindow):
             case _:
                 pass
 
-    #also due for a refactor
-    #runs PLC on next_Track_State and syncs current_Track_State
-    def update_Sync_Track(self):
-        #this might be changed later
-        for block in self.next_Track_State:
-            self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
-
-        self.current_Track_State = copy.deepcopy(self.next_Track_State)
 
 
     #main plc loop continuously generating outputs using logic
     #is run on another thread
     def tick(self):
-
-        if self.filename != "":
-            #opens plc file
-            logic_File = open(self.filename, 'r')
-            self.run_PLC = self.interpreter.tokenize(logic_File)
-            logic_File.close()
-        else:
-            self.run_PLC = False
-
-        self.update_Run_UI(True)
 
         if self.run_Vital == True:
 
@@ -482,12 +480,15 @@ class TrackController(QMainWindow):
                 #since that is identical to dispatching as far as the track controller can tell
                 if self.next_Track_State[block].occupied == True:
                     previous = self.next_Track_State[block].previous_Block
-                    if previous != "yard":
+                    if previous != "YARD" and previous != "END":
                         previous_Second = self.next_Track_State[previous].previous_Block
                     else:
                         self.previous_Occupations.append(previous)
                     next_Bl = self.next_Track_State[block].next_Block
-                    next_Bl_Second = self.next_Track_State[next_Bl].next_Block
+                    if next_Bl != "YARD" and next_Bl != "END":
+                        next_Bl_Second = self.next_Track_State[next_Bl].next_Block
+                    else:
+                        self.previous_Occupation.append(next_Bl)
 
                     #updates previously occupied blocks and checks for track failure
                     #if a currently occupied block does not have a previous in the list it has failed
@@ -526,7 +527,7 @@ class TrackController(QMainWindow):
 
                 #train padding check: creates a safety zone with all recently occupied block
                 for bl in self.previous_Occupations:
-                    if bl != "yard":
+                    if bl != "yard" and bl != "END":
                         self.next_Track_State[bl].authority = 0
 
                 #copies next track back to current track
@@ -559,6 +560,10 @@ class TrackController(QMainWindow):
     def leave_Maintenance(self):
         self.in_Maintenance = False
 
+    def run_Logic(self):
+        self.run_PLC = True
+        self.plc_Label.setText("Logic: Running")
+        self.update_Run_UI(True)
 
     #stops logic thread
     def stop_Logic(self):

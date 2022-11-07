@@ -6,6 +6,8 @@ L 2
 ;comment in block
 G 1
 M 30
+P yard
+N red_A_2
 END BLOCK
 END TRACK
 
@@ -15,4 +17,4 @@ AND t[0], red_A_1:occupied, red_A_1:failed
 OR red_A_1:switch[0], t[0], red_A_1:light[0].RED
 EQ t[1], t[0]
 NOT red_A_1:gate[0], t[1]
-END
+END LOGIC
