@@ -1,10 +1,13 @@
 DEFINE TRACK
+;comment in track
 BLOCK red_A_1
-SWITCHES 1
-LIGHTS 2
-GATES 1
-MAX_SPD 30
-END
+S 1
+L 2
+;comment in block
+G 1
+M 30
+END BLOCK
+END TRACK
 
 ;comment
 DEFINE LOGIC

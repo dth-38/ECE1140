@@ -15,8 +15,6 @@ class PLCInterpreter:
 
 
 
-        #dictionary storing program counter values using labels as keys
-        self.jump_Table = {}
         #logic tokens
         self.logic = []
         #tracks if a program has been successfully tokenized
@@ -28,6 +26,7 @@ class PLCInterpreter:
         #temporary registers
         self.t = [0] * 10
     
+
     def set_Environment(self, env):
         self.environment = env
 
@@ -91,14 +90,6 @@ class PLCInterpreter:
                 else:
                     new_Val = self.get_Token_Val(tok, 2) or self.get_Token_Val(tok, 3)
                     self.environment[tok.get_Var(1)[0]].set_Field(field, index, color, new_Val)
-            case self.CONST_B:
-                self.pc = self.jump_Table[tok.get_Var(1)[0]]
-            case self.CONST_BEQ:
-                if self.get_Token_Val(tok, 2) == self.get_Token_Val(tok, 3):
-                    self.pc = self.jump_Table[tok.get_Var(1)[0]]
-            case self.CONST_BNE:
-                if self.get_Token_Val(tok, 2) != self.get_Token_Val(tok, 3):
-                    self.pc = self.jump_Table[tok.get_Var(1)[0]]
             case _:
                 pass
 
@@ -132,19 +123,17 @@ class PLCInterpreter:
         return val
 
 
-
     #tokenizes plc logic
-    def tokenize(self, file):
+    def tokenize(self, filename):
         self.status = False
-        logic_Count = 0
         line_Count = 1
+
+        file = open(filename, "r")
 
         #gets the first line
         line = file.readline()
 
-        #continues until the end of the file
         while line:
-            add_Logic = True
             comm = ""
             i = 0
             j = 0
@@ -167,401 +156,108 @@ class PLCInterpreter:
             var2 = ""
             var3 = ""
 
-            j += 1
-            #this switch block is ~350 lines, im sorry
-            match comm:
-                #adds a jump point to the table
-                case "SET":
-                    label = ""
-
-                    #iterates through the current line starting from the end of the command
-                    for i in range(j, len(line)):
-                        #checks for the end of the label
-                        if line[i] != " " and line[i] != "\n":
-                            label += line[i]
-                        else:
-                            break
-
-                    #adds position in logic array to dictionary with label as key
-                    #offsets the logic_Count by one since the exeution loop is interpret then increment
-                    self.jump_Table[label] = logic_Count - 1
-                    add_Logic = False
-
-                #command num = 2
-                #format "AND var1, var2, var3"
-                case "AND":
-
-                    #iterates until a comma is found
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var1 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var2
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var2 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var3
-                    for i in range(j, len(line)):
-                        if line[i] != " " and line[i] != "\n":
-                            var3 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores trailing whitespace and checks for improper formatting
-                    for j in range(i, len(line)):
-                        if line[j] != " " and line[j] != "\n":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
-                            return False
-
-                    #checks that 3 operands were found
-                    if var1 == "" or var2 == "" or var3 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
-                        return False
-
-
-                    #creates token
-                    token.set_Opcode(self.CONST_AND)
-
-                    if not token.set_Var(1, var1) or not token.set_Var(2, var2) or not token.set_Var(3, var3):
-                        return False
-
-                    #ensures an input is not being assigned to
-                    if self.check_Output(token.get_Var_Type(1)) == False:
-                        print("\nTokenization failed: Cannot assign to an input.")
-                        return False
-
-                #command num = 3
-                #format "OR var1, var2, var3"
-                case "OR":
-
-                    #iterates until a comma is found
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var1 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var2
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var2 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var3
-                    for i in range(j, len(line)):
-                        if line[i] != " " and line[i] != "\n":
-                            var3 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores trailing whitespace and checks for improper formatting
-                    for j in range(i, len(line)):
-                        if line[j] != " " and line[j] != "\n":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
-                            return False
-
-                    #checks that 3 operands were found
-                    if var1 == "" or var2 == "" or var3 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
-                        return False
-
-                    #creates token
-                    token.set_Opcode(self.CONST_OR)
-
-                    if not token.set_Var(1, var1) or not token.set_Var(2, var2) or not token.set_Var(3, var3):
-                        return False
-
-                    #ensures an input is not being assigned to
-                    if self.check_Output(token.get_Var_Type(1)) == False:
-                        print("\nTokenization failed: Cannot assign to an input.")
-                        return False
-
-                #command num = 0
-                #format "EQ var1, var2"
-                case "EQ":
-
-                    #iterates until a comma is found
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var1 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var2
-                    for i in range(j, len(line)):
-                        if line[i] != " " and line[i] != "\n":
-                            var2 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores trailing whitespace and checks for improper formatting
-                    for j in range(i, len(line)):
-                        if line[j] != " " and line[j] != "\n":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
-                            return False
-
-                    #checks that 2 operands were found
-                    if var1 == "" or var2 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
-                        return False
-
-                    #creates token
-                    token.set_Opcode(self.CONST_EQ)
-
-                    if (not token.set_Var(1, var1)) or (not token.set_Var(2, var2)):
-                        return False
-
-                    #ensures an input is not being assigned to
-                    if self.check_Output(token.get_Var_Type(1)) == False:
-                        print("\nTokenization failed: Cannot assign to an input.")
-                        return False
-
-                    
-                #command num = 1
-                #format "NOT var1, var2"
-                case "NOT":
-                    
-                    #iterates until a comma is found
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var1 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var2
-                    for i in range(j, len(line)):
-                        if line[i] != " " and line[i] != "\n":
-                            var2 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores trailing whitespace and checks for improper formatting
-                    for j in range(i, len(line)):
-                        if line[j] != " " and line[j] != "\n":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
-                            return False
-
-                    #checks that 3 operands were found
-                    if var1 == "" or var2 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
-                        return False
-
-                    #creates token
-                    token.set_Opcode(self.CONST_NOT)
-
-                    if not token.set_Var(1, var1) or not token.set_Var(2, var2):
-                        return False
-
-                    #ensures an input is not being assigned to
-                    if self.check_Output(token.get_Var_Type(1)) == False:
-                        print("\nTokenization failed: Cannot assign to an input.")
-                        return False
-
-                #command num = 4
-                #format "B label"
-                case "B":
-
-                    #iterates until a space or endline to get the label to jump to
-                    for i in range(j, len(line)):
-                        if line[i] != " " and line[i] != "\n":
-                            var1 += line[i]
-                        else:
-                            break
-                    
-                    #ignore trailing whitespace
-                    for j in range(i+1, len(line)):
-                        #if there is anything other than whitespace, the line is invalid
-                        if line[j] != " " and line[j] != "\n":
-                            print("\nTokenizing failed: Invalid formatting at line " + str(line_Count))
-                            return False
-
-                    #creates token
-                    token.set_Opcode(self.CONST_B)
-                    token.var1 = [label]
-                    token.var1_Type = "label"
-
-                #command num = 5
-                #format "BEQ label, var1, var2"
-                case "BEQ":
-
-                    #iterates until a comma is found
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var1 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var2
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var2 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var3
-                    for i in range(j, len(line)):
-                        if line[i] != " " and line[i] != "\n":
-                            var3 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores trailing whitespace and checks for improper formatting
-                    for j in range(i, len(line)):
-                        if line[j] != " " and line[j] != "\n":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
-                            return False
-
-                    #checks that 3 operands were found
-                    if var1 == "" or var2 == "" or var3 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
-                        return False
-
-                    #creates token
-                    token.set_Opcode(self.CONST_BEQ)
-                    token.var1 = [var1]
-                    token.var1_Type = "label"
-
-                    if not token.set_Var(2, var2) or not token.set_Var(3, var3):
-                        return False
-                    
-
-                #command num = 6
-                #format "BNE label, var1, var2"
-                case "BNE":
-
-                    #iterates until a comma is found
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var1 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var2
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var2 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var3
-                    for i in range(j, len(line)):
-                        if line[i] != " " and line[i] != "\n":
-                            var3 += line[i]
-                        else:
-                            break
-
-                    i += 1
-                    #ignores trailing whitespace and checks for improper formatting
-                    for j in range(i, len(line)):
-                        if line[j] != " " and line[j] != "\n":
-                            print("\nTokenizing failed: Invalid formatting in line " + str(line_Count))
-                            return False
-
-                    #checks that 3 operands were found
-                    if var1 == "" or var2 == "" or var3 == "":
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
-                        return False
-
-                    #creates token
-                    token.set_Opcode(self.CONST_BNE)
-                    token.var1 = [var1]
-                    token.var1_Type = "label"
-
-                    if not token.set_Var(2, var2) or not token.set_Var(3, var3):
-                        self.status = False
-                        return False
-
-                case _:
-                    file.close()
-
-                    #handles comments, invalid commands
-                    if comm[0] != ";" and comm != "\n":
-                        print("\nTokenizing failed: Invalid command at line " + str(line_Count))
-                        return False
+            indicator = comm[0]
+            #only runs if not a comment or newline
+            if indicator != ";" and indicator != "\n":
+                #removes whitespace from line
+                line = self.ignore_Whitespace(line)
+                line = line[i:]
+
+
+                varNum = 1
+                #extracts operands from line
+                for i in range(len(line)):
+                    if line[i] != ",":
+                        match varNum:
+                            case 1:
+                                var1 += line[i]
+                            case 2:
+                                var2 += line[i]
+                            case 3:
+                                var3 += line[i]
+                            case _:
+                                print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
+                                file.close()
+                                return False
                     else:
-                        add_Logic = False
+                        varNum += 1
 
-            #checks if the token was generated (since SET command does not generate logic)
-            if add_Logic:
+                #sets variables in token and tracks whether the operation was successful
+                set_Var1_Success = token.set_Var(1, var1)
+                set_Var2_Success = token.set_Var(2, var2)
+                set_Var3_Success = token.set_Var(3, var3)
+
+                if (set_Var1_Success and set_Var2_Success and set_Var3_Success) != True:
+                    print("\nTokenizing failed: Unable to create token in line " + str(line_Count))
+                    file.close()
+                    return False
+
+                #ensures an input is not being assigned to
+                if self.check_Output(token.get_Var_Type(1)) == False:
+                    print("\nTokenization failed: Cannot assign to input. line " + str(line_Count))
+                    file.close()
+                    return False
+
+
+                match comm:
+                    #command num = 2
+                    #format "AND var1, var2, var3"
+                    case "AND":
+                        #checks that 3 operands were found
+                        if var1 == "" or var2 == "" or var3 == "":
+                            print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
+                            file.close()
+                            return False
+
+                        token.set_Opcode(self.CONST_AND)
+
+                    #command num = 3
+                    #format "OR var1, var2, var3"
+                    case "OR":
+                        #checks that 3 operands were found
+                        if var1 == "" or var2 == "" or var3 == "":
+                            print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
+                            file.close()
+                            return False
+
+                        token.set_Opcode(self.CONST_OR)
+
+                    #command num = 0
+                    #format "EQ var1, var2"
+                    case "EQ":
+                        #checks that 2 operands were found
+                        if var1 == "" or var2 == "":
+                            print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
+                            file.close()
+                            return False
+
+                        token.set_Opcode(self.CONST_EQ)
+                    
+                    #command num = 1
+                    #format "NOT var1, var2"
+                    case "NOT":
+                        #checks that 3 operands were found
+                        if var1 == "" or var2 == "":
+                            print("\nTokenizing failed: Incorrect number of arguments in line " + str(line_Count))
+                            file.close()
+                            return False
+
+                        token.set_Opcode(self.CONST_NOT)
+
+                    case _:
+                        #handles invalid commands
+                        print("\nTokenizing failed: Invalid command at line " + str(line_Count))
+                        file.close()
+                        return False
 
                 #adds the new token to the logic array and increments the count
                 self.logic.append(token)
-                logic_Count += 1
 
             #gets the next line
             line = file.readline()
             line_Count += 1
+
+        file.close()
 
         #returns False if tokenizing failed at any point
         #returns True if tokenizing was successful
@@ -575,3 +271,12 @@ class PLCInterpreter:
             return False
         else:
             return True
+
+    #returns the string line with whitespace and newlines removed
+    def ignore_Whitespace(self, line):
+        newLine = ""
+        for i in range(len(line)):
+            if line[i] != " " and line[i] != "\n":
+                newLine += line[i]
+
+        return newLine

@@ -77,6 +77,8 @@ class Token:
         elif name == "FALSE":
             temp_Type = "constant"
             temp_Var.append(False)
+        elif name == "":
+            pass
         else:
             #block variable
             

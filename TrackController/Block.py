@@ -8,6 +8,7 @@ class Block:
         self.suggested_Speed = 0
         self.commanded_Speed = 0
         self.max_Speed = 0
+        self.previous_Block = ""
         self.occupied = False
         self.failed = False
         self.closed = False
@@ -91,6 +92,9 @@ class Block:
     def remove_Light(self):
         if self.lights != []:
             self.lights.pop()
+
+    def get_Previous(self, block):
+        return self.previous_Block
 
     #possible colors are red, yellow, or green
     #they are represented as an array of 3 bits, each bit corresponding to a color
