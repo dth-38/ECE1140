@@ -6,8 +6,18 @@ L 2
 ;comment in block
 G 1
 M 30
-P yard
+P START
 N red_A_2
+END BLOCK
+BLOCK red_A_2
+M 20
+P red_A_1
+N red_A_3
+END BLOCK
+BLOCK red_A_3
+M 50
+P red_A_2
+N END
 END BLOCK
 END TRACK
 

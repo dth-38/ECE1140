@@ -32,20 +32,14 @@ class PLCInterpreter:
 
     #executes plc logic
     #env is the environment or track state to be modified
-    def execute(self, timeout=0):
+    def execute(self):
         self.pc = 0
         program_Length = len(self.logic)
         self.t = [0] * 10
 
-        start_Time = time.perf_counter()
-
         while self.pc < program_Length:
             self.interpret(self.logic[self.pc])
             self.pc += 1
-
-            elapsed_Time = time.perf_counter() - start_Time
-            if elapsed_Time > timeout:
-                return False
 
         return True
 

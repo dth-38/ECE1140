@@ -13,15 +13,13 @@ from PLCInterpreter import PLCInterpreter
 
 
 #TODO:
-#FIX logic jankyness, getting there...
-#add edge case to safety logic for changing track controllers
-#might still need a start_PLC function idk look into it
 #make room for update function calls to other modules maybe???
 
 class TrackController(QMainWindow):
 
     def __init__(self, tc_ID = 0, auto_Run = False):
         #track states
+        self.track_Size = 0
         self.current_Track_State = {}
         self.next_Track_State = {}
         #id for when there are multiple track controllers
@@ -40,18 +38,15 @@ class TrackController(QMainWindow):
         self.maintenance = None
         #semaphore for track state access
         self.track_Lock = False
-        #target fps = 1/target_Time
-        self.target_Time = 0.5
 
         #array for tracking which blocks were previously occupied
         #used for track failure checking
         self.previous_Occupations = []
 
-        #CHANGING STUFF WITH THREADING
-        #use run_Logic as a standalone function that acts as the system timer if there is no integration
-        #thread object for running logic in background
-        #self.logic_Thread = threading.Thread(target=self.run_Logic)
-        
+        #tracks first and final blocks. speeds up safety logic
+        self.first_Block = ""
+        self.final_Block = ""
+
         #interpreter
         self.interpreter = PLCInterpreter.PLCInterpreter()
         
@@ -109,6 +104,7 @@ class TrackController(QMainWindow):
                     line = program.readline()
                     block_Statement = self.ignore_Whitespace(line)
 
+                    i = 1
                     #parses DEFINE TRACK section until an END TRACK is found
                     while block_Statement != "ENDTRACK":
 
@@ -119,6 +115,11 @@ class TrackController(QMainWindow):
                             #extracts block name and creates new block
                             block_Name = block_Statement[5:]
                             temp_Track[block_Name] = Block()
+
+                            if i == 1:
+                                b1 = block_Name
+                            else:
+                                b2 = block_Name
 
                             line = program.readline()
                             statement = self.ignore_Whitespace(line)
@@ -185,6 +186,10 @@ class TrackController(QMainWindow):
 
         #matches the track states to the newly created one if parsing is successful
         if success == True:
+            self.track_Size = len(temp_Track)
+            self.first_Block = b1
+            self.final_Block = b2
+
             #copies temporary track into current and next
             self.current_Track_State = copy.deepcopy(temp_Track)
             self.next_Track_State = copy.deepcopy(temp_Track)
@@ -451,9 +456,7 @@ class TrackController(QMainWindow):
                 #try block to handle any undefined behavior in the plc program
                 #for example a block name that the plc isnt connected to
                 try:
-                    success = self.interpreter.execute(self.target_Time)
-                    if success == False:
-                        raise Exception("PLC timeout during execution.")
+                    self.interpreter.execute()
 
                 except Exception as e:
                     print("FATAL PLC RUNTIME ERROR.")
@@ -476,40 +479,54 @@ class TrackController(QMainWindow):
                     self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].max_Speed)
 
                 #track failure check
-                #cannot determine if a block connected to a yard has failed
-                #since that is identical to dispatching as far as the track controller can tell
+                #cannot determine if the first or last block has failed
+                #since that is identical to a train entering the zone as far as the track controller can tell
                 if self.next_Track_State[block].occupied == True:
+
+                    #gets the next 2 and previous 2 blocks from an occupied one
+                    #if the previous is the start or the next is the end, a train has entered the zone
                     previous = self.next_Track_State[block].previous_Block
-                    if previous != "YARD" and previous != "END":
+                    if previous != "START":
                         previous_Second = self.next_Track_State[previous].previous_Block
                     else:
-                        self.previous_Occupations.append(previous)
+                        if previous not in self.previous_Occupations:
+                            self.previous_Occupations.append(previous)
                     next_Bl = self.next_Track_State[block].next_Block
-                    if next_Bl != "YARD" and next_Bl != "END":
+                    if next_Bl != "END":
                         next_Bl_Second = self.next_Track_State[next_Bl].next_Block
                     else:
-                        self.previous_Occupation.append(next_Bl)
+                        if next_Bl not in self.previous_Occupations:
+                            self.previous_Occupation.append(next_Bl)
 
                     #updates previously occupied blocks and checks for track failure
                     #if a currently occupied block does not have a previous in the list it has failed
                     previous_Block_Found = False
                     for prev_Occ in self.previous_Occupations:
-                        if prev_Occ == previous or prev_Occ == next_Bl or prev_Occ == block:
+
+                        if prev_Occ == previous or prev_Occ == next_Bl:
                             previous_Block_Found = True
                             break
-                        elif prev_Occ == previous_Second:
+                        elif prev_Occ == block:
                             self.previous_Occupations.remove(prev_Occ)
-                            self.previous_Occupations.append(previous)
                             previous_Block_Found = True
                             break
-                        elif prev_Occ == next_Bl_Second:
+                        elif prev_Occ == previous_Second and self.check_Occupancy(previous) == False:
                             self.previous_Occupations.remove(prev_Occ)
-                            self.previous_Occupations.append(next_Bl)
+                            #this if could be outside for loop possibly for speedup, idk yet
+                            if previous not in self.previous_Occupations:
+                                self.previous_Occupations.append(previous)
+                            previous_Block_Found = True
+                            break
+                        elif prev_Occ == next_Bl_Second and self.check_Occupancy(next_Bl) == False:
+                            self.previous_Occupations.remove(prev_Occ)
+                            if next_Bl not in self.previous_Occupations:
+                                self.previous_Occupations.append(next_Bl)
                             previous_Block_Found = True
                             break
                         else:
                             pass
 
+                    
                     if previous_Block_Found == False:
                         self.next_Track_State[block].failed = True
 
@@ -527,7 +544,7 @@ class TrackController(QMainWindow):
 
                 #train padding check: creates a safety zone with all recently occupied block
                 for bl in self.previous_Occupations:
-                    if bl != "yard" and bl != "END":
+                    if bl != "START" and bl != "END":
                         self.next_Track_State[bl].authority = 0
 
                 #copies next track back to current track
@@ -544,12 +561,46 @@ class TrackController(QMainWindow):
                 for gate in range(len(self.current_Track_State[block].gates)):
                     self.current_Track_State[block].gates[gate] = copy.copy(self.next_Track_State[block].gates[gate])
 
-            #longest track controller update period while properly detecting trains is 1.6 seconds
+            #longest track controller update period while ensured to properly detect trains is 1.6 seconds
+
+            #goofy way to clean up previous occupancies once a train has left the track controller range
+            #basically checks both the train's last position +1 and -1 are in the list
+            #only works due to the jankyness of my previous position tracking system
+            start_Exists = False
+            start_Plus2 = False
+            end_Exists = False
+            end_Minus2 = False
+            for occ in self.previous_Occupations:
+                if occ == "START":
+                    start_Exists = True
+                elif occ == "END":
+                    end_Exists = True
+                elif occ == self.next_Track_State[self.first_Block].next_Block:
+                    start_Plus2 = True
+                elif occ == self.next_Track_State[self.final_Block].previous_Block:
+                    end_Minus2 = True
+                
+            if start_Exists == True and start_Plus2 == True and self.next_Track_State[self.first_Block].occupied == False:
+                self.previous_Occupations.remove("START")
+                self.previous_Occupations.remove(self.next_Track_State[self.first_Block].next_Block)
+            elif end_Exists == True and end_Minus2 == True and self.next_Track_State[self.final_Block].occupied == False:
+                self.previous_Occupations.remove("END")
+                self.previous_Occupations.remove(self.next_Track_State[self.final_Block].previous_Block)
 
 
             #unlocks track state
             self.track_Lock = False
 
+    #helper function to handle situations where a train is in two blocks at once
+    #used in safety checks
+    def check_Occupancy(self, block):
+        val = True
+        if block == "END1" or block == "END2":
+            val = False
+        else:
+            val = self.next_Track_State[block].occupied
+
+        return val
 
 
     #resets the in_Debug flag when the menu is closed
