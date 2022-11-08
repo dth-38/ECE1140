@@ -1,0 +1,7 @@
+DEFINE TRACK
+BLOCK red_A_1
+END
+
+DEFINE LOGIC
+AND red_A_1:occupied, red_A_1:occupied, red_A_1:failed
+END

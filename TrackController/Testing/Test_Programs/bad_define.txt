@@ -1,0 +1,4 @@
+DEFINE BAD
+;not important
+EQ t[0], t[1]
+END

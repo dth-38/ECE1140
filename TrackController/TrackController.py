@@ -3,56 +3,218 @@ import shutil
 import pathlib
 import os
 import copy
-import time
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget
-from PyQt5.QtCore import pyqtSlot
+#import time
+#import threading
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel
 from PyQt5.QtGui import QFont
 from Block import Block
 import TCGUI.TextEditorGUI, TCGUI.DebugGUI, TCGUI.MaintenanceGUI, TCGUI.ModifyGUI
-from Token import Token
+from PLCInterpreter import PLCInterpreter
 
+
+#TODO:
+#make room for update function calls to other modules maybe???
 
 class TrackController(QMainWindow):
 
-    def __init__(self, tc_ID=0):
+    def __init__(self, tc_ID = 0, auto_Run = False):
+        #track states
+        self.track_Size = 0
         self.current_Track_State = {}
         self.next_Track_State = {}
+        #id for when there are multiple track controllers
         self.id = tc_ID
+        #name of saved plc file
         self.filename = ""
-        self.program = 0
+        #tracks what menus are open
         self.in_Debug = False
         self.in_Maintenance = False
-        self.in_Modify = False
-        self.run_PLC = True
+        #tracks which parts of the logic thread to run
+        self.run_PLC = False
+        self.run_Vitals = False
+        #object for each menu
         self.editor = None
         self.debug = None
         self.maintenance = None
-        self.modify = None
+        #semaphore for track state access
         self.track_Lock = False
-        self.target_Time = 0.5
-        self.jump_Table = {}
-        self.logic = []
+
+        #array for tracking which blocks were previously occupied
+        #used for track failure checking
+        self.previous_Occupations = []
+
+        #tracks first and final blocks. speeds up safety logic
+        self.first_Block = ""
+        self.final_Block = ""
+
+        #interpreter
+        self.interpreter = PLCInterpreter.PLCInterpreter()
         
 
         super().__init__()
 
-        self.build_Track()
 
         self.load_Saved_Program()
 
+        self.build_Track()
+
         self.setup_Main_Window()
 
-        self.show()
+        if auto_Run == True:
+            self.run_PLC = True
+        else:
+            self.show()
 
 
+    #builds the track_state dictionaries from the uploaded plc file or a specified one
+    #returns True on success, False on failure
+    def build_Track(self, fl = ""):
+        self.run_Vitals = False
 
-    def build_Track(self):
-        #TODO:
-        #probe track model for amount of blocks
-        #generate blocks and add to trackState
-        #probe track model for switches, gates, lights, possibly state of other block vars
+        success = False
+        temp_Track = {}
+
+        #allows a plc program to be directly parsed, mainly for testing purposes
+        if fl != "":
+            self.filename = fl
+            self.statusBar().showMessage(self.extract_Name(self.filename) + " is loaded.")
+
+
+        #checks that there is a plc program loaded
+        if self.filename != "":
+            program = open(self.filename, "r")
+
+            line = program.readline()
+
+            while len(line) != 0 and success == False:
+
+                #parses each line looking for DEFINE TRACK
+                define_Statement = self.ignore_Whitespace(line)
+
+                if define_Statement == "DEFINETRACK":
+                    #DEFINE TRACK has been found
+
+                    #checks if a track section has already been parsed
+                    if success == True:
+                        print("Track initialization failed: Multiple track sections found.")
+                        success = False
+                        return False
+                        
+
+                    line = program.readline()
+                    block_Statement = self.ignore_Whitespace(line)
+
+                    i = 1
+                    #parses DEFINE TRACK section until an END TRACK is found
+                    while block_Statement != "ENDTRACK":
+
+                        #looks for a BLOCK statement
+                        if block_Statement[0:5] == "BLOCK":
+                            #BLOCK statement has been found
+
+                            #extracts block name and creates new block
+                            block_Name = block_Statement[5:]
+                            temp_Track[block_Name] = Block()
+
+                            if i == 1:
+                                b1 = block_Name
+                            else:
+                                b2 = block_Name
+
+                            line = program.readline()
+                            statement = self.ignore_Whitespace(line)
+
+                            #section for parsing track equipment definitions in a block
+                            while statement != "ENDBLOCK":
+
+                                #try block here since the match substring or int typecasts could fail
+                                try:
+                                    match statement[0]:
+                                        case "S":
+                                            for j in range(int(statement[1:])):
+                                                temp_Track[block_Name].add_Switch()
+                                        case "G":
+                                            for j in range(int(statement[1:])):
+                                                temp_Track[block_Name].add_Gate()
+                                        case "L":
+                                            for j in range(int(statement[1:])):
+                                                temp_Track[block_Name].add_Light()
+                                        case "M":
+                                            temp_Track[block_Name].max_Speed = int(statement[1:])
+                                        case "P":
+                                            temp_Track[block_Name].previous_Block = statement[1:]
+                                        case "N":
+                                            temp_Track[block_Name].next_Block = statement[1:]
+                                        case ";":
+                                            pass
+                                        case _:
+                                            raise Exception("Failed to intialize track: Invalid statement in block definition.")
+                                except Exception as e:
+                                    print(e)
+                                    program.close()
+                                    return False
+
+                                line = program.readline()
+                                if len(line) == 0:
+                                    print("Failed to initialize track: Reached EOF while parsing.")
+                                    program.close()
+                                    return False
+                                statement = self.ignore_Whitespace(line)
+                        else:
+                            #checks if the line is a comment and fails the function if it isnt
+                            if block_Statement[0] != ";":
+                                print("Failed to initialize track: Invalid block definition statement.")
+                                program.close()
+                                return False
+
+                        line = program.readline()
+                        if len(line) == 0:
+                            print("Failed to initialize track: Reached EOF while parsing.")
+                            program.close()
+                            return False
+                        block_Statement = self.ignore_Whitespace(line)
+
+
+                    #if it makes it here a track has been successfully parsed
+                    #continues iterating to ensure only one track is defined
+                    success = True
+
+                line = program.readline()
+
+            program.close()
+
+
+        #matches the track states to the newly created one if parsing is successful
+        if success == True:
+            self.track_Size = len(temp_Track)
+            self.first_Block = b1
+            self.final_Block = b2
+
+            #copies temporary track into current and next
+            self.current_Track_State = copy.deepcopy(temp_Track)
+            self.next_Track_State = copy.deepcopy(temp_Track)
+
+            #sets interpreter environement to the next track state
+            self.interpreter.set_Environment(self.next_Track_State)
+
+            #returns the program to the first line and calls the tokenizer
+            self.run_PLC = self.interpreter.tokenize(self.filename)
+
+            self.run_Vitals = True
         
-        pass
+        else:
+            self.statusBar().showMessage("No PLC program is loaded.")
+
+        return success
+
+    #returns the string line with whitespace and newlines removed
+    def ignore_Whitespace(self, line):
+        newLine = ""
+        for i in range(len(line)):
+            if line[i] != " " and line[i] != "\n":
+                newLine += line[i]
+
+        return newLine
 
 
     #loads the saved PLC program if there is one
@@ -70,7 +232,6 @@ class TrackController(QMainWindow):
             self.filename = str(filepath)
             message = self.extract_Name(self.filename) + " is loaded."
 
-            #enables PLC logic if a program is found
         else:
             message = "No PLC program is loaded."
 
@@ -112,19 +273,39 @@ class TrackController(QMainWindow):
         maintenanceButton.setMinimumHeight(160)
         maintenanceButton.setFont(buttonFont)
 
-        modifyButton = QPushButton('Modify Track', self)
-        modifyButton.clicked.connect(self.open_Modify)
-        modifyButton.setMinimumHeight(60)
-        modifyButton.setFont(buttonFont)
+        self.run_Button = QPushButton('RUN PLC', self)
+        self.run_Button.clicked.connect(self.run_Logic)
+        self.run_Button.setMinimumHeight(60)
+        self.run_Button.setFont(buttonFont)
+        self.run_Button.setCheckable(True)
+        self.run_Button.setEnabled(True)
+        self.run_Button.setStyleSheet("background-color: green")
+
+
+        self.stop_Button = QPushButton('STOP PLC', self)
+        self.stop_Button.clicked.connect(self.stop_Logic)
+        self.stop_Button.setMinimumHeight(60)
+        self.stop_Button.setFont(buttonFont)
+        self.stop_Button.setCheckable(True)
+        self.stop_Button.setEnabled(False)
+        self.stop_Button.setStyleSheet("background-color: gray")
+
+        self.plc_Label = QLabel("Logic: Stopped")
+        self.plc_Label.setFont(QFont('Times', 12))
+        self.plc_Label.setMaximumHeight(30)
+        self.plc_Label.setMinimumHeight(30)
+
 
 
         tcLayout = QGridLayout()
         #add widgets to layout here
-        tcLayout.addWidget(modifyButton, 0, 0)
-        tcLayout.addWidget(uploadButton, 1, 0)
-        tcLayout.addWidget(editButton, 2, 0)
-        tcLayout.addWidget(debugButton, 1, 1)
-        tcLayout.addWidget(maintenanceButton, 2, 1)
+        tcLayout.addWidget(self.run_Button, 0, 0)
+        tcLayout.addWidget(self.stop_Button, 0, 1)
+        tcLayout.addWidget(self.plc_Label, 2, 0)
+        tcLayout.addWidget(uploadButton, 3, 0)
+        tcLayout.addWidget(editButton, 4, 0)
+        tcLayout.addWidget(debugButton, 3, 1)
+        tcLayout.addWidget(maintenanceButton, 4, 1)
 
         #applies the layout to the main widget and sets it as central
         mainWidget.setLayout(tcLayout)
@@ -133,6 +314,9 @@ class TrackController(QMainWindow):
 
     #opens windows explorer to select and open a new file
     def upload_File(self):
+        #stops logic from running
+        self.stop_Logic()
+
         filename_Tuple = QFileDialog.getOpenFileName(None, 'Choose PLC Program', 'C:\\', "Text Files (*.txt)")
 
         #does nothing if the upload was canceled
@@ -151,13 +335,15 @@ class TrackController(QMainWindow):
             self.filename = destination
 
             #opens new PLC program and shows message stating so
-            #self.program = open(self.filename, "r")
             self.statusBar().showMessage(self.extract_Name(self.filename) + " is loaded.")
 
             #opens new file in editor if editor has been opened
             if self.editor is not None:
                 self.editor.set_Filepath(self.filename)
                 self.editor.open_File()
+
+            self.build_Track()
+
 
 
     #extracts the PLC filename from the filepath
@@ -173,25 +359,24 @@ class TrackController(QMainWindow):
     #opens Debug menu
     def open_Debug(self):
         if self.debug is None:
-            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.update_Sync_Track, self.leave_Debug)
+            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.tick, self.leave_Debug)
  
-        if self.in_Modify is False:
-            self.in_Debug = True
-            self.debug.show()
+        self.in_Debug = True
+        self.debug.show()
 
     #opens text editor
     def open_Editor(self):
         #ensures the editor doesn't try to open a file that isn't there
         if self.filename != '':
             #disables the PLC from running when editing
-            self.run_PLC = False
+            self.run_Vitals = False
 
             #ensure the editor isn't already open
             if self.editor is None:
 
-                #passes the enable_PLC function to allow the text editor
+                #passes the enable_Vitals function to allow the text editor
                 #to reenable PLC logic on close
-                self.editor = TCGUI.TextEditorGUI.TextEditorGUI(self.filename, self.enable_PLC, self.extract_Name)
+                self.editor = TCGUI.TextEditorGUI.TextEditorGUI(self.enable_Vitals, self.filename)
             self.editor.show()
 
     #opens maintenance menu
@@ -199,17 +384,12 @@ class TrackController(QMainWindow):
         if self.maintenance is None:
             self.maintenance = TCGUI.MaintenanceGUI.MaintenanceGUI(self.get_Track, self.leave_Maintenance)
 
-        if self.in_Modify is False:
-            self.in_Maintenance = True
-            self.maintenance.show()
+        
+        self.in_Maintenance = True
+        self.maintenance.show()
 
-    def open_Modify(self):
-        if self.modify is None:
-            self.modify = TCGUI.ModifyGUI.ModifyGUI(self.get_Next_Track, self.update_Sync_Track, self.leave_Modify)
-
-        if self.in_Debug is False and self.in_Maintenance is False:
-            self.in_Modify = True
-            self.modify.show()
+    def enable_Vitals(self):
+        self.run_Vitals = True
 
     #used to pass the track state to the debug and maintenance guis
     def get_Track(self):
@@ -221,6 +401,7 @@ class TrackController(QMainWindow):
     def get_Next_Track(self):
         return self.next_Track_State
 
+    #this is due for a refactor
     #updates a value in next_Track_State
     def set_Track(self, block, var, val):
 
@@ -251,251 +432,176 @@ class TrackController(QMainWindow):
                 pass
 
 
-    #runs PLC on next_Track_State and syncs current_Track_State
-    def update_Sync_Track(self):
-        #this might be changed later
-        for block in self.next_Track_State:
-            self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
-
-        self.current_Track_State = copy.deepcopy(self.next_Track_State)
-
 
     #main plc loop continuously generating outputs using logic
-    #should be run on another thread
-    def run_Logic(self):
-        if self.filename != "":
-            #opens plc file
-            logic_File = open(self.filename, 'r')
+    #is run on another thread
+    def tick(self):
 
-            self.tokenize(logic_File)
+        if self.run_Vital == True:
 
-            while True:
-                #starts timer for fps control
-                start_Time = time.perf_counter()
+            #locks track state before copying
+            self.track_Lock = True
+            #copies track state inputs to next state
+            for block in self.current_Track_State:
+                self.next_Track_State[block].suggested_Speed = copy.copy(self.current_Track_State[block].suggested_Speed)
+                self.next_Track_State[block].authority = copy.copy(self.current_Track_State[block].authority)
+                self.next_Track_State[block].occupied = copy.copy(self.current_Track_State[block].occupied)
+                self.next_Track_State[block].failed = copy.copy(self.current_Track_State[block].failed)
+                self.next_Track_State[block].closed = copy.copy(self.current_Track_State[block].closed)
+            #unlocks track state so other modules can modify inputs/read outputs
+            self.track_Lock = False
+            
+            #runs logic
+            if self.run_PLC == True:
+                #try block to handle any undefined behavior in the plc program
+                #for example a block name that the plc isnt connected to
+                try:
+                    self.interpreter.execute()
 
-                #locks track state before copying
-                self.track_Lock = True
-                #copies track state inputs to next state
-                for block in self.current_Track_State:
-                    self.next_Track_State[block].suggested_Speed = copy.copy(self.current_Track_State[block].suggested_Speed)
-                    self.next_Track_State[block].authority = copy.copy(self.current_Track_State[block].authority)
-                    self.next_Track_State[block].occupied = copy.copy(self.current_Track_State[block].occupied)
-                    self.next_Track_State[block].failed = copy.copy(self.current_Track_State[block].failed)
-                    self.next_Track_State[block].closed = copy.copy(self.current_Track_State[block].closed)
-                #unlocks track state so other modules can modify inputs/read outputs
-                self.track_Lock = False
+                except Exception as e:
+                    print("FATAL PLC RUNTIME ERROR.")
+                    print(e)    
+                    print("Continuing to run vital logic.")
                 
-                #runs logic
-                if self.run_PLC:
-                    pass
+                    self.run_PLC = False
+
+
+            #locks track state before updating
+            self.track_Lock = True
+
+            #runs vital safety logic then
+            #copies newly generated outputs back to track state
+            for block in self.current_Track_State:
+
+                #speed safety check: commanded speed cannot exceed block maximum
+                self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
+                if self.next_Track_State[block].commanded_Speed > self.next_Track_State[block].max_Speed:
+                    self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].max_Speed)
+
+                #track failure check
+                #cannot determine if the first or last block has failed
+                #since that is identical to a train entering the zone as far as the track controller can tell
+                if self.next_Track_State[block].occupied == True:
+
+                    #gets the next 2 and previous 2 blocks from an occupied one
+                    #if the previous is the start or the next is the end, a train has entered the zone
+                    previous = self.next_Track_State[block].previous_Block
+                    if previous != "START":
+                        previous_Second = self.next_Track_State[previous].previous_Block
+                    else:
+                        if previous not in self.previous_Occupations:
+                            self.previous_Occupations.append(previous)
+                    next_Bl = self.next_Track_State[block].next_Block
+                    if next_Bl != "END":
+                        next_Bl_Second = self.next_Track_State[next_Bl].next_Block
+                    else:
+                        if next_Bl not in self.previous_Occupations:
+                            self.previous_Occupation.append(next_Bl)
+
+                    #updates previously occupied blocks and checks for track failure
+                    #if a currently occupied block does not have a previous in the list it has failed
+                    previous_Block_Found = False
+                    for prev_Occ in self.previous_Occupations:
+
+                        if prev_Occ == previous or prev_Occ == next_Bl:
+                            previous_Block_Found = True
+                            break
+                        elif prev_Occ == block:
+                            self.previous_Occupations.remove(prev_Occ)
+                            previous_Block_Found = True
+                            break
+                        elif prev_Occ == previous_Second and self.check_Occupancy(previous) == False:
+                            self.previous_Occupations.remove(prev_Occ)
+                            #this if could be outside for loop possibly for speedup, idk yet
+                            if previous not in self.previous_Occupations:
+                                self.previous_Occupations.append(previous)
+                            previous_Block_Found = True
+                            break
+                        elif prev_Occ == next_Bl_Second and self.check_Occupancy(next_Bl) == False:
+                            self.previous_Occupations.remove(prev_Occ)
+                            if next_Bl not in self.previous_Occupations:
+                                self.previous_Occupations.append(next_Bl)
+                            previous_Block_Found = True
+                            break
+                        else:
+                            pass
 
                     
+                    if previous_Block_Found == False:
+                        self.next_Track_State[block].failed = True
 
-                    #god help me
+
+                #failure/closure safety check: shuts down block if it has failed or is closed
+                if self.next_Track_State[block].closed == True or self.next_Track_State[block].failed == True:
+                    self.next_Track_State[block].authority = 0
+                    for light in range(len(self.next_Track_State[block].lights)):
+                        self.next_Track_State[block].set_Light(light, "RED")
+
+                #switch interlock safety check: occupied blocks cannot change switch positions
+                if self.next_Track_State[block].occupied == True:
+                    for switch in range(len(self.next_Track_State[block].switches)):
+                        self.next_Track_State[block].switches[switch] = copy.copy(self.current_Track_State[block].switches[switch])
+
+                #train padding check: creates a safety zone with all recently occupied block
+                for bl in self.previous_Occupations:
+                    if bl != "START" and bl != "END":
+                        self.next_Track_State[bl].authority = 0
+
+                #copies next track back to current track
+                self.current_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].commanded_Speed)
+
+                self.current_Track_State[block].authority = copy.copy(self.next_Track_State[block].authority)
                 
+                for switch in range(len(self.current_Track_State[block].switches)):
+                    self.current_Track_State[block].switches[switch] = copy.copy(self.next_Track_State[block].switches[switch])
+            
+                for light in range(len(self.current_Track_State[block].lights)):
+                    self.current_Track_State[block].lights[light] = copy.copy(self.next_Track_State[block].lights[light])
 
-                #maybe put some safety logic here idk
+                for gate in range(len(self.current_Track_State[block].gates)):
+                    self.current_Track_State[block].gates[gate] = copy.copy(self.next_Track_State[block].gates[gate])
 
-                #locks track state before updating
-                self.track_Lock = True
-                #copies newly generated outputs back to track state
-                for block in self.current_Track_State:
-                    self.current_Track_State.commanded_Authority = copy.copy(self.next_Track_State[block].commanded_Authority)
-                    
-                    for switch in self.current_Track_State[block].switches:
-                        self.current_Track_State[block].switches[switch] = copy.copy(self.next_Track_State[block].switches[switch])
-                    
-                    for light in self.current_Track_State[block].lights:
-                        self.current_Track_State[block].lights[light] = copy.copy(self.next_Track_State[block].lights[light])
+            #longest track controller update period while ensured to properly detect trains is 1.6 seconds
 
-                    for gate in self.current_Track_State[block].gates:
-                        self.current_Track_State[block].gates[gate] = copy.copy(self.next_Track_State[block].gates[gate])
-                #unlocks track state
-                self.track_Lock = False
-
-                #calculates the amount of time to sleep to achieve target fps
-                time_Diff = time.perf_counter() - start_Time
-                wait_Time = self.target_Time - time_Diff
-                time.sleep(wait_Time)
-
-
-    #tokenizes plc logic to make runtime interpretation faster
-    def tokenize(self, file):
-        logic_Count = 0
-
-        #gets the first line
-        line = file.readline()
-
-        #continues until the end of the file
-        while line:
-            add_Logic = True
-            comm = ""
-            i = 0
-
-            #ignores leading whitespace
-            while line[i] == " ":
-                i += 1
-
-            #gets the command by parsing until a space is found
-            for j in range(i, len(line)):
-                if line[j] != " ":
-                    comm += line[j]
-                else:
-                    i = j
-                    break
-
-            #matches the command string and generates token
-            #token format [4] where:
-            #[0] = number corresponding to command
-            #[1] = var1 (string)
-            #[2] = var2 (string)
-            #[3] = var3 (string)
-            token = Token()
-            match comm:
-                #adds a jump point to the table
-                case "SET":
-                    label = ""
-
-                    #iterates through the current line starting from the end of the command
-                    for i in range(j, len(line)):
-                        #checks for the end of the label
-                        if line[i] != " ":
-                            label += line[i]
-                        else:
-                            break
-
-                    #adds position in logic array to dictionary with label as key
-                    self.jump_Table[label] = logic_Count
-                    add_Logic = False
-
-                #command num = 2, uses var1, 2, and 3
-                #format "AND var1, var2, var3"
-                case "AND":
-                    pass
-                #command num = 3, uses var1, 2, and 3
-                #format "OR var1, var2, var3"
-                case "OR":
-                    pass
-                #command num = 0, uses var1 and var2
-                #format "EQ var1, var2"
-                case "EQ":
-                    pass
-                #command num = 1, uses var1 and var2
-                #format "NOT var1, var2"
-                case "NOT":
-                    pass
-
-                #command num = 4, uses var1
-                #format "B label"
-                case "B":
-                    var1 = ""
-
-                    #iterates until a space or endline to get the label to jump to
-                    for i in range(j, len(line)):
-                        if line[i] != " ":
-                            var1 += line[i]
-                        else:
-                            break
-                    
-                    #ignore trailing whitespace
-                    for j in range(i, len(line)):
-                        #if there is anything other than whitespace, the line is invalid
-                        if line[j] != " ":
-                            self.run_PLC = False
-                            print("\nTokenizing failed: Invalid formatting at line " + str(file.tell()))
-                            return False
-
-                    #creates token
-                    token.set_Opcode(4)
-                    token.var1 = [label]
-                    token.var1_Type = "label"
-
-                #command num = 5, uses var1, 2, and 3
-                #format "BEQ label, var1, var2"
-                case "BEQ":
-                    var1 = ""
-                    var2 = ""
-                    var3 = ""
-
-                    #iterates until a comma is found
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var1 += line[i]
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var2
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var2 += line[i]
-
-                    i += 1
-                    #ignores whitespace
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            break
-
-                    #gets var3
-                    for i in range(j, len(line)):
-                        if line[i] != ",":
-                            var3 += line[i]
-
-                    i += 1
-                    #ignores trailing whitespace and checks for improper formatting
-                    for j in range(i, len(line)):
-                        if line[j] != " ":
-                            self.run_PLC = False
-                            print("\nTokenizing failed: Invalid formatting in line " + str(file.tell()))
-                            return False
-
-                    #checks that 3 operands were found
-                    if var1 == "" or var2 == "" or var3 == "":
-                        self.run_PLC = False
-                        print("\nTokenizing failed: Incorrect number of arguments in line " + str(file.tell()))
-                        return False
-
-                    #creates token
-                    token.set_Opcode(5)
-                    token.var1 = [var1]
-                    token.var1_Type = "label"
-
-                    if not token.set_Var(2, var2) or not token.set_Var(3, var3):
-                        self.run_PLC = False
-                    
-
-                #command num = 6, uses var1, 2, and 3
-                #format "BNE label, var1, var2"
-                case "BNE":
-                    pass
-                case _:
-                    #handles comments, invalid commands
-                    if comm[0] != ";":
-                        self.run_PLC = False
-                        print("\nTokenizing failed: Invalid command at line " + str(file.tell()))
-                        return False
-
-            #checks if the token was generated (since SET command does not generate logic)
-            if add_Logic:
-                #adds the new token to the logic array and increments the count
-                self.logic.append(token)
-                logic_Count += 1
-
-            #gets the next line
-            line = file.nextline()
-
-        #returns False if tokenizing failed at any point
-        #returns True if tokenizing was successful
-        return True
-        
+            #goofy way to clean up previous occupancies once a train has left the track controller range
+            #basically checks both the train's last position +1 and -1 are in the list
+            #only works due to the jankyness of my previous position tracking system
+            start_Exists = False
+            start_Plus2 = False
+            end_Exists = False
+            end_Minus2 = False
+            for occ in self.previous_Occupations:
+                if occ == "START":
+                    start_Exists = True
+                elif occ == "END":
+                    end_Exists = True
+                elif occ == self.next_Track_State[self.first_Block].next_Block:
+                    start_Plus2 = True
+                elif occ == self.next_Track_State[self.final_Block].previous_Block:
+                    end_Minus2 = True
+                
+            if start_Exists == True and start_Plus2 == True and self.next_Track_State[self.first_Block].occupied == False:
+                self.previous_Occupations.remove("START")
+                self.previous_Occupations.remove(self.next_Track_State[self.first_Block].next_Block)
+            elif end_Exists == True and end_Minus2 == True and self.next_Track_State[self.final_Block].occupied == False:
+                self.previous_Occupations.remove("END")
+                self.previous_Occupations.remove(self.next_Track_State[self.final_Block].previous_Block)
 
 
-    #function for reenabling logic after editing a file
-    def enable_PLC(self):
-        self.run_PLC = True
+            #unlocks track state
+            self.track_Lock = False
+
+    #helper function to handle situations where a train is in two blocks at once
+    #used in safety checks
+    def check_Occupancy(self, block):
+        val = True
+        if block == "END1" or block == "END2":
+            val = False
+        else:
+            val = self.next_Track_State[block].occupied
+
+        return val
+
 
     #resets the in_Debug flag when the menu is closed
     def leave_Debug(self):
@@ -505,14 +611,47 @@ class TrackController(QMainWindow):
     def leave_Maintenance(self):
         self.in_Maintenance = False
 
-    #resets the in_Modify flag when the menu is closed
-    def leave_Modify(self):
-        self.in_Modify = False
-        self.update_Sync_Track()
-        if self.maintenance is not None:
-            self.maintenance.parse_Blocks()
-        if self.debug is not None:
-            self.debug.parse_Track_Blocks()
+    def run_Logic(self):
+        self.run_PLC = True
+        self.plc_Label.setText("Logic: Running")
+        self.update_Run_UI(True)
+
+    #stops logic thread
+    def stop_Logic(self):
+        self.run_PLC = False
+        #consider a timeout for join and a force abort if join fails
+        #self.logic_Thread.join()
+        self.plc_Label.setText("Logic: Stopped")
+
+        self.update_Run_UI(False)
+
+    #updates the state of the run/stop buttons and status lines
+    #based on the whether the logic is starting or stopping
+    #and if the vital or nonvital logic is running
+    def update_Run_UI(self, start):
+        if start == True:
+            self.run_Button.setEnabled(False)
+            self.stop_Button.setEnabled(True)
+            if self.run_PLC == True:
+                self.plc_Label.setText("Logic: Running")
+            else:
+                self.plc_Label.setText("Logic: Stopped")
+            if self.run_Vitals == True:
+                self.vitals_Label.setText("Vitals: Running")
+                self.stop_Button.setStyleSheet("background-color: red")
+                self.run_Button.setStyleSheet("background-color: gray")
+            else:
+                self.vitals_Label.setText("Vitals: Stopped")
+                self.stop_Button.setStyleSheet("background-color: gray")
+                self.run_Button.setStyleSheet("background-color: green")
+        else:
+            self.run_Button.setEnabled(True)
+            self.stop_Button.setEnabled(False)
+            self.stop_Button.setStyleSheet("background-color: gray")
+            self.run_Button.setStyleSheet("background-color: green")
+
+            
+
 
 
 #main for the whole Track Controller, simply creates an instance of TrackController

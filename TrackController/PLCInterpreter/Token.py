@@ -1,18 +1,18 @@
 #defines the token used to optimize the plc interpreter
 #vars contain parsed variables
 #opcodes: EQ=0, NOT=1, AND=2, OR=3, B=4, BEQ=5, BNE=6
-#var types: Temporary register: "temp", Occupation: "occupied", Light: "light", Gate: "gate", Failure: "failed", Closed: "closed", Switch: "switch", label: "label"
+#var types: Temporary register: "temp", Occupation: "occupied", Light: "light", 
+#           Gate: "gate", Failure: "failed", Closed: "closed", Switch: "switch", label: "label", constant: "constant"
 
 #for example:
 #AND t[0], red_A_1:light[0].RED, red_A_2:occupied
 #would be stored as: 
-#opcode = 2, var1_Type = temp, var1 = [0], var2_Type = light, var2 = ["red_A_1", 0, "RED"], var2_Type = occ, var2 = ["red_A_2"]
-
-#this SHOULD make runtime interpretation easier
+#opcode = 2, var1_Type = temp, var1 = [0], var2_Type = light, var2 = ["red_A_1", 0, 0], var2_Type = occ, var2 = ["red_A_2"]
 
 class Token:
 
     def __init__(self):
+        
         self.opcode = 0
         self.var1 = []
         self.var1_Type = ""
@@ -27,6 +27,17 @@ class Token:
 
     def set_Opcode(self, code):
         self.opcode = code
+
+    def get_Var_Type(self, num):
+        match num:
+            case 1:
+                return self.var1_Type
+            case 2:
+                return self.var2_Type
+            case 3:
+                return self.var3_Type
+            case _:
+                pass
 
     def get_Var(self, num):
         match num:
@@ -44,8 +55,14 @@ class Token:
     #returns true if successful, false otherwise
     #DO NOT PASS IT A BRANCH LABEL, IT WILL BREAK
     def set_Var(self, num, name):
+        if name == "":
+            return True
+
         temp_Var = []
         temp_Type = ""
+        i = 0
+        j = 0
+
 
         if name[0] == "t":
             #temporary register
@@ -57,7 +74,14 @@ class Token:
             else:
                 temp_Var.append(int(reg))
                 temp_Type = "temp"
-
+        elif name == "TRUE":
+            temp_Type = "constant"
+            temp_Var.append(True)
+        elif name == "FALSE":
+            temp_Type = "constant"
+            temp_Var.append(False)
+        elif name == "":
+            pass
         else:
             #block variable
             
@@ -66,14 +90,17 @@ class Token:
             for i in range(len(name)):
                 if name[i] != ":":
                     block += name[i]
+                else:
+                    break
 
 
             i += 1
             #parses variable type
-            type_Name = ""
             for j in range(i, len(name)):
                 if name[j] != "[":
-                    type_Type += name[j]
+                    temp_Type += name[j]
+                else:
+                    break
 
             #increments counter to make next parse easier
             j += 1
@@ -115,18 +142,18 @@ class Token:
                     #checks that the light color is valid
                     match color:
                         case "RED":
-                            pass
+                            color_Val = 0
                         case "YELLOW":
-                            pass
+                            color_Val = 1
                         case "GREEN":
-                            pass
+                            color_Val = 2
                         case _:
                             print("\nTokenization Failed: Invalid light color specification.")
                             return False
 
                     temp_Var.append(block)
                     temp_Var.append(l_real_Num)
-                    temp_Var.append(color)
+                    temp_Var.append(color_Val)
 
                 case "gate":
                     #parses the gate number
