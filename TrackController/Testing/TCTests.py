@@ -2,6 +2,7 @@ import unittest
 import os
 import pathlib
 import sys
+import time
 
 #needed to import TrackController
 current = os.path.dirname(os.path.realpath(__file__))
@@ -20,7 +21,11 @@ class TestTC(unittest.TestCase):
         current_path = str(pathlib.Path().absolute())
         gf = current_path + "/Test_Programs/should_pass.txt"
 
+        start_Time = time.perf_counter()
         self.assertTrue(interpreter.tokenize(gf))
+        elapsed = time.perf_counter() - start_Time
+        self.assertTrue(elapsed < 1)
+
         #checks that each token is fully correct
         self.assertEqual(interpreter.logic[0].get_Opcode(), 2)
         self.assertEqual(interpreter.logic[0].get_Var_Type(1), "temp")
@@ -100,6 +105,25 @@ class TestTC(unittest.TestCase):
         self.assertEqual(testBlock.light_To_Str(0), "RED")
 
 
+    def test_Tick(self):
+        tc_App = QApplication([])
+        controller = TrackController()
+        
+        current_path = str(pathlib.Path().absolute())
+        gf = current_path + "/Test_Programs/should_pass.txt"
+
+        controller.build_Track(gf)
+
+        start_Time = time.perf_counter()
+        controller.tick()
+        elapsed = time.perf_counter() - start_Time
+        self.assertTrue(elapsed < 1)
+
+        self.assertTrue(controller.get_Track()["red_A_1"].lights[0][2])
+        self.assertFalse(controller.get_Track()["red_A_1"].lights[0][0])
+        self.assertTrue(controller.get_Track()["red_A_1"].switches[0])
+
+        tc_App.exec()
     
 
 if __name__ == '__main__':

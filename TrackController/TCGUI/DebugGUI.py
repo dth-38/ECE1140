@@ -4,7 +4,7 @@ from PyQt5.QtGui import QFont
 
 class DebugGUI(QWidget):
 
-    def __init__(self, get_Track, set_Track, update_Track, leave_Debug):
+    def __init__(self, get_Track, set_Track, update_Track):
         self.inputs_Drawn = 0
         self.outputs_Drawn = 0
 
@@ -16,7 +16,6 @@ class DebugGUI(QWidget):
         self.get_Track = get_Track
         self.set_Track = set_Track
         self.update_Track = update_Track
-        self.leave_Debug = leave_Debug
 
         self.setGeometry(580, 80, 500, 400)
         self.setWindowTitle("Debug Menu")
@@ -221,6 +220,5 @@ class DebugGUI(QWidget):
             self.update_Outputs(self.out_Blocks_Dd.currentText())
 
     def closeEvent(self, event):
-        self.leave_Debug()
         self.hide()
 

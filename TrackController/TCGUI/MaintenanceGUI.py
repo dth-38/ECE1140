@@ -4,10 +4,9 @@ from PyQt5.QtWidgets import QComboBox, QLabel
 
 class MaintenanceGUI(QWidget):
 
-    def __init__(self, get_Track, leave_Maintenance):
+    def __init__(self, get_Track):
         self.is_Drawn = False
         self.get_Track = get_Track
-        self.leave_Maintenance = leave_Maintenance
 
         #initializes QWidget
         super().__init__()
@@ -125,5 +124,4 @@ class MaintenanceGUI(QWidget):
         
 
     def closeEvent(self, event):
-        self.leave_Maintenance()
         self.hide()

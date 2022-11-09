@@ -1,5 +1,3 @@
-
-
 class Block:
 
     def __init__(self, id = ""):
@@ -17,7 +15,9 @@ class Block:
         self.lights = []
         self.gates = []
         
-        
+#------------------------------------------------
+# ONLY TO BE USED BY TOKENIZER/INTERPRETER
+#------------------------------------------------
     def set_Field(self, field, index=0, color=0, val=0):
         match field:
             case "occupied":
@@ -58,6 +58,9 @@ class Block:
 
         return val
 
+#---------------------------------------------------------
+# MUTATORS & ACCESSORS FOR SWITCHES
+#---------------------------------------------------------
     #adds a switch to the block
     def add_Switch(self):
         self.switches.append(0)
@@ -71,6 +74,26 @@ class Block:
     def toggle_Switch(self, switchNum):
         self.switches[switchNum] = ~self.switches[switchNum]
 
+    def set_Switch(self, switchNum, state):
+        self.switches[switchNum] = state
+
+    def get_Switch(self, switchNum):
+        return self.switches[switchNum]
+
+    #gets a switch's position as a string
+    def switch_To_Str(self, switchNum):
+        switch = self.switches[switchNum]
+
+        if switch:
+            switch_Str = "ON"
+        else:
+            switch_Str = "OFF"
+
+        return switch_Str
+
+#---------------------------------------------------------
+# MUTATORS & ACCESSORS FOR GATES
+#---------------------------------------------------------
     #adds a gate to the block
     def add_Gate(self):
         self.gates.append(0)
@@ -84,7 +107,27 @@ class Block:
     def toggle_Gate(self, gateNum):
         self.gates[gateNum] = ~self.gates[gateNum]
 
-    
+    def set_Gate(self, gateNum, state):
+        self.gates[gateNum] = state
+
+    def get_Gate(self, gateNum):
+        return self.gates[gateNum]
+
+    #gets a gate's status as a string
+    def gate_To_Str(self, gateNum):
+        gate = self.gates[gateNum]
+
+        if gate:
+            gate_Str = "OPEN"
+        else:
+            gate_Str = "CLOSED"
+
+        return gate_Str
+
+#--------------------------------------------------------
+# MUTATORS & ACCESSORS FOR LIGHTS
+#--------------------------------------------------------
+
     #adds a light to the block
     def add_Light(self):
         self.lights.append([1, 0, 0])
@@ -94,18 +137,18 @@ class Block:
         if self.lights != []:
             self.lights.pop()
 
-    def get_Previous(self, block):
-        return self.previous_Block
-
     #possible colors are red, yellow, or green
     #they are represented as an array of 3 bits, each bit corresponding to a color
     def set_Light(self, lightNum, color):
-        if color == 'YELLOW':
-            temp = [0, 1, 0]
-        elif color == 'GREEN':
-            temp = [0, 0, 1]
-        else:
-            temp = [1, 0, 0]
+        color.upper()
+
+        match color:
+            case 'YELLOW':
+                temp = [0, 1, 0]
+            case 'GREEN':
+                temp = [0, 0, 1]
+            case _:
+                temp = [1, 0, 0]
 
         self.lights[lightNum] = temp
 
@@ -123,25 +166,3 @@ class Block:
             color = "NONE"
 
         return color
-
-    #gets a switch's position as a string
-    def switch_To_Str(self, switchNum):
-        switch = self.switches[switchNum]
-
-        if switch:
-            switch_Str = "ON"
-        else:
-            switch_Str = "OFF"
-
-        return switch_Str
-
-    #gets a gate's status as a string
-    def gate_To_Str(self, gateNum):
-        gate = self.gates[gateNum]
-
-        if gate:
-            gate_Str = "OPEN"
-        else:
-            gate_Str = "CLOSED"
-
-        return gate_Str

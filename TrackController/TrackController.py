@@ -12,8 +12,6 @@ import TCGUI.TextEditorGUI, TCGUI.DebugGUI, TCGUI.MaintenanceGUI, TCGUI.ModifyGU
 from PLCInterpreter import PLCInterpreter
 
 
-#TODO:
-#make room for update function calls to other modules maybe???
 
 class TrackController(QMainWindow):
 
@@ -26,10 +24,7 @@ class TrackController(QMainWindow):
         self.id = tc_ID
         #name of saved plc file
         self.filename = ""
-        #tracks what menus are open
-        self.in_Debug = False
-        self.in_Maintenance = False
-        #tracks which parts of the logic thread to run
+        #tracks which parts of tick() to run
         self.run_PLC = False
         self.run_Vitals = False
         #object for each menu
@@ -38,15 +33,12 @@ class TrackController(QMainWindow):
         self.maintenance = None
         #semaphore for track state access
         self.track_Lock = False
-
         #array for tracking which blocks were previously occupied
         #used for track failure checking
         self.previous_Occupations = []
-
         #tracks first and final blocks. speeds up safety logic
         self.first_Block = ""
         self.final_Block = ""
-
         #interpreter
         self.interpreter = PLCInterpreter.PLCInterpreter()
         
@@ -54,22 +46,22 @@ class TrackController(QMainWindow):
         super().__init__()
 
 
+        self.setup_Main_Window()
         self.load_Saved_Program()
-
         self.build_Track()
 
-        self.setup_Main_Window()
-
-        if auto_Run == True:
-            self.run_PLC = True
-        else:
+        if auto_Run == False:
             self.show()
 
 
+#---------------------------------------------------------------
+# FUNCTIONS TO BUILD TRACK
+#---------------------------------------------------------------
     #builds the track_state dictionaries from the uploaded plc file or a specified one
     #returns True on success, False on failure
     def build_Track(self, fl = ""):
-        self.run_Vitals = False
+        self.stop_Vitals()
+        self.stop_PLC()
 
         success = False
         temp_Track = {}
@@ -97,19 +89,22 @@ class TrackController(QMainWindow):
                     #checks if a track section has already been parsed
                     if success == True:
                         print("Track initialization failed: Multiple track sections found.")
+                        program.close()
                         success = False
+                        self.default_Track()
                         return False
                         
 
                     line = program.readline()
                     block_Statement = self.ignore_Whitespace(line)
 
-                    i = 1
+                    i = 0
                     #parses DEFINE TRACK section until an END TRACK is found
                     while block_Statement != "ENDTRACK":
 
                         #looks for a BLOCK statement
                         if block_Statement[0:5] == "BLOCK":
+                            i += 1
                             #BLOCK statement has been found
 
                             #extracts block name and creates new block
@@ -152,12 +147,14 @@ class TrackController(QMainWindow):
                                 except Exception as e:
                                     print(e)
                                     program.close()
+                                    self.default_Track()
                                     return False
 
                                 line = program.readline()
                                 if len(line) == 0:
                                     print("Failed to initialize track: Reached EOF while parsing.")
                                     program.close()
+                                    self.default_Track()
                                     return False
                                 statement = self.ignore_Whitespace(line)
                         else:
@@ -165,12 +162,14 @@ class TrackController(QMainWindow):
                             if block_Statement[0] != ";":
                                 print("Failed to initialize track: Invalid block definition statement.")
                                 program.close()
+                                self.default_Track()
                                 return False
 
                         line = program.readline()
                         if len(line) == 0:
                             print("Failed to initialize track: Reached EOF while parsing.")
                             program.close()
+                            self.default_Track()
                             return False
                         block_Statement = self.ignore_Whitespace(line)
 
@@ -198,14 +197,24 @@ class TrackController(QMainWindow):
             self.interpreter.set_Environment(self.next_Track_State)
 
             #returns the program to the first line and calls the tokenizer
-            self.run_PLC = self.interpreter.tokenize(self.filename)
+            tokenization_Success = self.interpreter.tokenize(self.filename)
+            if tokenization_Success == True:
+                self.start_PLC()
 
-            self.run_Vitals = True
-        
+            self.start_Vitals()
         else:
-            self.statusBar().showMessage("No PLC program is loaded.")
+            self.default_Track()
 
         return success
+
+    #helper function to reset the track on track intitialization failure
+    def default_Track(self):
+        self.track_Size = 0
+        self.first_Block = ""
+        self.final_Block = ""
+        self.current_Track_State.clear()
+        self.next_Track_State.clear()
+        self.statusBar().showMessage("No PLC program is loaded.")
 
     #returns the string line with whitespace and newlines removed
     def ignore_Whitespace(self, line):
@@ -217,28 +226,9 @@ class TrackController(QMainWindow):
         return newLine
 
 
-    #loads the saved PLC program if there is one
-    #and displays loaded message
-    def load_Saved_Program(self):
-        #message for uploaded PLC program
-        message = ""
-        #complicated buts gets all path to .txt files in Program folder
-        file_Array = sorted(pathlib.Path(str(pathlib.Path().absolute()) + '/Program/').glob('*.txt'))
-        #gets the first .txt file in Program folder
-        if len(file_Array) != 0:
-            filepath = file_Array[0]
-        
-            #sets filename from filepath and displays PLC message
-            self.filename = str(filepath)
-            message = self.extract_Name(self.filename) + " is loaded."
-
-        else:
-            message = "No PLC program is loaded."
-
-        self.statusBar().setFont(QFont('Times', 13))
-        self.statusBar().showMessage(message)
-
-
+#----------------------------------------------------------------
+# HANDLES ALL MAIN WINDOW GUI ELEMENTS
+#----------------------------------------------------------------
     #sets up main window GUI elements
     def setup_Main_Window(self):
         #Main Window setup 
@@ -273,63 +263,84 @@ class TrackController(QMainWindow):
         maintenanceButton.setMinimumHeight(160)
         maintenanceButton.setFont(buttonFont)
 
-        self.run_Button = QPushButton('RUN PLC', self)
-        self.run_Button.clicked.connect(self.run_Logic)
-        self.run_Button.setMinimumHeight(60)
-        self.run_Button.setFont(buttonFont)
-        self.run_Button.setCheckable(True)
-        self.run_Button.setEnabled(True)
-        self.run_Button.setStyleSheet("background-color: green")
-
-
-        self.stop_Button = QPushButton('STOP PLC', self)
-        self.stop_Button.clicked.connect(self.stop_Logic)
-        self.stop_Button.setMinimumHeight(60)
-        self.stop_Button.setFont(buttonFont)
-        self.stop_Button.setCheckable(True)
-        self.stop_Button.setEnabled(False)
-        self.stop_Button.setStyleSheet("background-color: gray")
 
         self.plc_Label = QLabel("Logic: Stopped")
+        self.plc_Label.setStyleSheet("color: red")
         self.plc_Label.setFont(QFont('Times', 12))
         self.plc_Label.setMaximumHeight(30)
         self.plc_Label.setMinimumHeight(30)
 
-
+        self.vital_Label = QLabel("Vital: Stopped")
+        self.vital_Label.setStyleSheet("color: red")
+        self.vital_Label.setFont(QFont('Times', 12))
+        self.vital_Label.setMaximumHeight(30)
+        self.vital_Label.setMinimumHeight(30)
 
         tcLayout = QGridLayout()
         #add widgets to layout here
-        tcLayout.addWidget(self.run_Button, 0, 0)
-        tcLayout.addWidget(self.stop_Button, 0, 1)
-        tcLayout.addWidget(self.plc_Label, 2, 0)
-        tcLayout.addWidget(uploadButton, 3, 0)
-        tcLayout.addWidget(editButton, 4, 0)
-        tcLayout.addWidget(debugButton, 3, 1)
-        tcLayout.addWidget(maintenanceButton, 4, 1)
+        tcLayout.addWidget(self.plc_Label, 0, 0)
+        tcLayout.addWidget(self.vital_Label, 1, 0)
+        tcLayout.addWidget(uploadButton, 2, 0)
+        tcLayout.addWidget(editButton, 3, 0)
+        tcLayout.addWidget(debugButton, 2, 1)
+        tcLayout.addWidget(maintenanceButton, 3, 1)
 
         #applies the layout to the main widget and sets it as central
         mainWidget.setLayout(tcLayout)
         self.setCentralWidget(mainWidget)
 
 
+#-----------------------------------------------------------------
+# FUNCTIONS FOR LOADING SAVED/NEW PLC PROGRAMS
+#-----------------------------------------------------------------
+    #loads the saved PLC program if there is one
+    #and displays loaded message
+    def load_Saved_Program(self):
+        #message for uploaded PLC program
+        message = ""
+        #walks up the file tree until ECE1140 directory is found
+        destination = str(pathlib.Path().absolute())
+        i = 0
+        while destination[len(destination)-7:] != "ECE1140":
+            i += 1
+            destination = str(pathlib.Path(__file__).parents[i])
+        #creates the expected text file based on the controller id
+        destination += ("/plc_programs/plc_" + str(self.id) + ".txt")
+        
+        #checks if the file exists
+        if os.path.isfile(destination):
+            self.filename = destination
+            message = self.extract_Name(self.filename) + " is loaded."
+        else:
+            message = "No PLC program is loaded."
+
+        self.statusBar().setFont(QFont('Times', 13))
+        self.statusBar().showMessage(message)
+
+
     #opens windows explorer to select and open a new file
     def upload_File(self):
-        #stops logic from running
-        self.stop_Logic()
 
         filename_Tuple = QFileDialog.getOpenFileName(None, 'Choose PLC Program', 'C:\\', "Text Files (*.txt)")
 
         #does nothing if the upload was canceled
         if filename_Tuple[0] != '':
-            #complicated buts gets path to all .txt files in Program folder
-            file_Array = sorted(pathlib.Path(str(pathlib.Path().absolute()) + '/Program/').glob('*.txt'))
-            if len(file_Array) != 0:
-                os.remove(str(file_Array[0]))
+            #creates a new name in the format plc_#.txt where # is the controller id
+            new_Filename = "plc_" + str(self.id) + ".txt"
+            #gets destination path by walking up the file tree until the ECE1140 directory is found
+            destination = str(pathlib.Path().absolute())
+            i = 0
+            while destination[len(destination)-7:] != "ECE1140":
+                i += 1
+                destination = str(pathlib.Path(__file__).parents[i])
+
+            destination += ('/plc_programs/' + new_Filename)
+            if os.path.isfile(destination):
+                os.remove(destination)
 
             self.filename = filename_Tuple[0]
 
             #saves the uploaded PLC program to local Program directory
-            destination = str(pathlib.Path().absolute()) + '/Program/' + self.extract_Name(self.filename) 
             shutil.copyfile(self.filename, destination)
             #ensures that the local copy of the PLC program is opened
             self.filename = destination
@@ -345,7 +356,6 @@ class TrackController(QMainWindow):
             self.build_Track()
 
 
-
     #extracts the PLC filename from the filepath
     def extract_Name(self, filepath):
         temp = ''
@@ -356,10 +366,14 @@ class TrackController(QMainWindow):
 
         return filepath[filepath_Pos+1:len(filepath)]
 
+
+#--------------------------------------------------------
+# FUNCTIONS FOR OPENING OTHER MENUS
+#--------------------------------------------------------
     #opens Debug menu
     def open_Debug(self):
         if self.debug is None:
-            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.tick, self.leave_Debug)
+            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.tick)
  
         self.in_Debug = True
         self.debug.show()
@@ -368,76 +382,81 @@ class TrackController(QMainWindow):
     def open_Editor(self):
         #ensures the editor doesn't try to open a file that isn't there
         if self.filename != '':
-            #disables the PLC from running when editing
-            self.run_Vitals = False
-
             #ensure the editor isn't already open
             if self.editor is None:
 
-                #passes the enable_Vitals function to allow the text editor
-                #to reenable PLC logic on close
-                self.editor = TCGUI.TextEditorGUI.TextEditorGUI(self.enable_Vitals, self.filename)
+                #passes the build_Track function to allow the text editor
+                #to refresh track on close
+                self.editor = TCGUI.TextEditorGUI.TextEditorGUI(self.build_Track, self.filename)
             self.editor.show()
 
     #opens maintenance menu
     def open_Maintenance(self):
         if self.maintenance is None:
-            self.maintenance = TCGUI.MaintenanceGUI.MaintenanceGUI(self.get_Track, self.leave_Maintenance)
-
+            self.maintenance = TCGUI.MaintenanceGUI.MaintenanceGUI(self.get_Track)
         
         self.in_Maintenance = True
         self.maintenance.show()
 
-    def enable_Vitals(self):
-        self.run_Vitals = True
 
+#---------------------------------------------------------------
+# TRACK STATE ACCESSORS/MUTATORS
+# !RETURNS NONE ON ACCESS FAILURE
+#---------------------------------------------------------------
     #used to pass the track state to the debug and maintenance guis
-    def get_Track(self):
+    def get_Track_Block(self, block=""):
         #refuses access to the track if it is locked
+        if self.track_Lock == False and block != "":
+            return self.current_Track_State[block]
+        else:
+            return None
+
+    def get_Track(self):
         if self.track_Lock == False:
             return self.current_Track_State
+        else:
+            return None
 
-    #used to modify track blocks
-    def get_Next_Track(self):
-        return self.next_Track_State
-
+#-----------------------------------------------------------------
+# DEPRECATED, ONLY HERE TO PREVENT DEBUG MENU FROM BREAKING
+#-----------------------------------------------------------------
     #this is due for a refactor
-    #updates a value in next_Track_State
+    #updates a value in current_Track_State
     def set_Track(self, block, var, val):
-
         match var:
             case "spd":
-                self.next_Track_State[block].suggested_Speed = copy.copy(val)
+                self.current_Track_State[block].suggested_Speed = copy.copy(val)
             case "auth":
-                self.next_Track_State[block].forward_Authority = copy.copy(val)
+                self.current_Track_State[block].forward_Authority = copy.copy(val)
             case "occ":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.next_Track_State[block].occupied = copy.copy(val)
+                self.current_Track_State[block].occupied = copy.copy(val)
             case "cls":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.next_Track_State[block].closed = copy.copy(val)
+                self.current_Track_State[block].closed = copy.copy(val)
             case "fail":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.next_Track_State[block].failed = copy.copy(val)
+                self.current_Track_State[block].failed = copy.copy(val)
             case _:
                 pass
 
-
-
+#-----------------------------------------------------------------
+# MAIN FUNCTION TO RUN LOGIC AND UPDATE TRACK CONTROLLER
+#-----------------------------------------------------------------
     #main plc loop continuously generating outputs using logic
-    #is run on another thread
+    #is run on another thread?
     def tick(self):
 
-        if self.run_Vital == True:
+        if self.run_Vitals == True:
 
             #locks track state before copying
             self.track_Lock = True
@@ -463,7 +482,7 @@ class TrackController(QMainWindow):
                     print(e)    
                     print("Continuing to run vital logic.")
                 
-                    self.run_PLC = False
+                    self.stop_PLC()
 
 
             #locks track state before updating
@@ -542,11 +561,6 @@ class TrackController(QMainWindow):
                     for switch in range(len(self.next_Track_State[block].switches)):
                         self.next_Track_State[block].switches[switch] = copy.copy(self.current_Track_State[block].switches[switch])
 
-                #train padding check: creates a safety zone with all recently occupied block
-                for bl in self.previous_Occupations:
-                    if bl != "START" and bl != "END":
-                        self.next_Track_State[bl].authority = 0
-
                 #copies next track back to current track
                 self.current_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].commanded_Speed)
 
@@ -588,6 +602,12 @@ class TrackController(QMainWindow):
                 self.previous_Occupations.remove(self.next_Track_State[self.final_Block].previous_Block)
 
 
+            #train padding check: creates a safety zone with all recently occupied blocks
+            #this is done last so that previous occupancies have a chance to update
+            for bl in self.previous_Occupations:
+                if bl != "START" and bl != "END":
+                    self.next_Track_State[bl].authority = 0
+
             #unlocks track state
             self.track_Lock = False
 
@@ -603,55 +623,28 @@ class TrackController(QMainWindow):
         return val
 
 
-    #resets the in_Debug flag when the menu is closed
-    def leave_Debug(self):
-        self.in_Debug = False
-
-    #resets the in_Maintenance flag when the menu is closed
-    def leave_Maintenance(self):
-        self.in_Maintenance = False
-
-    def run_Logic(self):
+#-------------------------------------------------------------------
+# FUNCTIONS THAT START/STOP CONTROLLER FUNCTIONALITY + UPDATE UI
+#-------------------------------------------------------------------
+    def start_PLC(self):
         self.run_PLC = True
         self.plc_Label.setText("Logic: Running")
-        self.update_Run_UI(True)
+        self.plc_Label.setStyleSheet("color: green")
 
-    #stops logic thread
-    def stop_Logic(self):
+    def stop_PLC(self):
         self.run_PLC = False
-        #consider a timeout for join and a force abort if join fails
-        #self.logic_Thread.join()
         self.plc_Label.setText("Logic: Stopped")
+        self.plc_Label.setStyleSheet("color: red")
 
-        self.update_Run_UI(False)
+    def start_Vitals(self):
+        self.run_Vitals = True
+        self.vital_Label.setText("Vital: Running")
+        self.vital_Label.setStyleSheet("color: green")
 
-    #updates the state of the run/stop buttons and status lines
-    #based on the whether the logic is starting or stopping
-    #and if the vital or nonvital logic is running
-    def update_Run_UI(self, start):
-        if start == True:
-            self.run_Button.setEnabled(False)
-            self.stop_Button.setEnabled(True)
-            if self.run_PLC == True:
-                self.plc_Label.setText("Logic: Running")
-            else:
-                self.plc_Label.setText("Logic: Stopped")
-            if self.run_Vitals == True:
-                self.vitals_Label.setText("Vitals: Running")
-                self.stop_Button.setStyleSheet("background-color: red")
-                self.run_Button.setStyleSheet("background-color: gray")
-            else:
-                self.vitals_Label.setText("Vitals: Stopped")
-                self.stop_Button.setStyleSheet("background-color: gray")
-                self.run_Button.setStyleSheet("background-color: green")
-        else:
-            self.run_Button.setEnabled(True)
-            self.stop_Button.setEnabled(False)
-            self.stop_Button.setStyleSheet("background-color: gray")
-            self.run_Button.setStyleSheet("background-color: green")
-
-            
-
+    def stop_Vitals(self):
+        self.run_Vitals = False
+        self.vital_Label.setText("Vital: Stopped")
+        self.vital_Label.setStyleSheet("color: red")
 
 
 #main for the whole Track Controller, simply creates an instance of TrackController
