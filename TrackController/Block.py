@@ -1,16 +1,23 @@
 class Block:
 
     def __init__(self, id = ""):
+        #constants for if the switch is connected to next blocks or previous blocks
+        self.TO_NONE = 0
+        self.TO_NEXT = 1
+        self.TO_PREV = 2
+
         self.id = id
         self.authority = 0
         self.suggested_Speed = 0
         self.commanded_Speed = 0
         self.max_Speed = 0
-        self.previous_Block = ""
-        self.next_Block = ""
+        self.previous_Blocks = []
+        self.next_Blocks = []
         self.occupied = False
         self.failed = False
         self.closed = False
+        self.is_Exit = False
+        self.switch_To = self.TO_NONE
         self.switches = []
         self.lights = []
         self.gates = []
@@ -53,6 +60,8 @@ class Block:
                 val = self.closed
             case "switch":
                 val = self.switches[index]
+            case "exit":
+                val = self.is_Exit
             case _:
                 pass
 
@@ -62,8 +71,17 @@ class Block:
 # MUTATORS & ACCESSORS FOR SWITCHES
 #---------------------------------------------------------
     #adds a switch to the block
-    def add_Switch(self):
+    def add_Switch(self, dir, off, on):
         self.switches.append(0)
+        if dir == "NEXT":
+            self.switch_To = self.TO_NEXT
+            self.next_Blocks.append(off)
+            self.next_Blocks.append(on)
+        else:
+            self.switch_To = self.TO_PREV
+            self.previous_Blocks.append(off)
+            self.previous_Blocks.append(on)
+
 
     #removes the last switch from the list
     def remove_Switch(self):
@@ -74,17 +92,17 @@ class Block:
     def toggle_Switch(self, switchNum):
         self.switches[switchNum] = ~self.switches[switchNum]
 
-    def set_Switch(self, switchNum, state):
+    def set_Switch(self, switchNum=0, state=False):
         self.switches[switchNum] = state
 
-    def get_Switch(self, switchNum):
+    def get_Switch(self, switchNum=0):
         return self.switches[switchNum]
 
     #gets a switch's position as a string
-    def switch_To_Str(self, switchNum):
+    def switch_To_Str(self, switchNum=0):
         switch = self.switches[switchNum]
 
-        if switch:
+        if switch == True:
             switch_Str = "ON"
         else:
             switch_Str = "OFF"
@@ -104,20 +122,20 @@ class Block:
             self.gates.pop()
 
     #toggles the state of the specified gate
-    def toggle_Gate(self, gateNum):
+    def toggle_Gate(self, gateNum=0):
         self.gates[gateNum] = ~self.gates[gateNum]
 
-    def set_Gate(self, gateNum, state):
+    def set_Gate(self, gateNum=0, state=False):
         self.gates[gateNum] = state
 
-    def get_Gate(self, gateNum):
+    def get_Gate(self, gateNum=0):
         return self.gates[gateNum]
 
     #gets a gate's status as a string
-    def gate_To_Str(self, gateNum):
+    def gate_To_Str(self, gateNum=0):
         gate = self.gates[gateNum]
 
-        if gate:
+        if gate == True:
             gate_Str = "OPEN"
         else:
             gate_Str = "CLOSED"
@@ -130,7 +148,7 @@ class Block:
 
     #adds a light to the block
     def add_Light(self):
-        self.lights.append([1, 0, 0])
+        self.lights.append([1, 0])
 
     #removes a light from the list
     def remove_Light(self):
@@ -139,30 +157,46 @@ class Block:
 
     #possible colors are red, yellow, or green
     #they are represented as an array of 3 bits, each bit corresponding to a color
-    def set_Light(self, lightNum, color):
+    def set_Light(self, lightNum=0, color="RED"):
         color.upper()
 
         match color:
-            case 'YELLOW':
-                temp = [0, 1, 0]
             case 'GREEN':
-                temp = [0, 0, 1]
+                temp = [0, 1]
             case _:
-                temp = [1, 0, 0]
+                temp = [1, 0]
 
         self.lights[lightNum] = temp
 
     #gets a light's color as a string
-    def light_To_Str(self, lightNum):
+    def light_To_Str(self, lightNum=0):
         light = self.lights[lightNum]
 
-        if light == [1, 0, 0]:
+        if light == [1, 0]:
             color = "RED"
-        elif light == [0, 1, 0]:
-            color = "YELLOW"
-        elif light == [0, 0, 1]:
+        elif light == [0, 1]:
             color = "GREEN"
         else:
             color = "NONE"
 
         return color
+
+
+#--------------------------------------------------------------------
+# ACCESSORS FOR NEXT/PREVIOUS BLOCKS SINCE THEY HAVE CUSTOM LOGIC
+#--------------------------------------------------------------------
+    def get_Next_Block(self):
+        if self.switch_To == self.TO_NEXT:
+            val = int(self.switches[0])
+        else:
+            val = 0
+
+        return self.next_Blocks[val]
+
+    def get_Previous_Block(self):
+        if self.switch_To == self.TO_PREV:
+            val = int(self.switches[0])
+        else:
+            val = 0
+        
+        return self.previous_Blocks[val]

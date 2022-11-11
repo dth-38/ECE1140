@@ -53,7 +53,6 @@ class Token:
     
     #parses a variable name to format it
     #returns true if successful, false otherwise
-    #DO NOT PASS IT A BRANCH LABEL, IT WILL BREAK
     def set_Var(self, num, name):
         if name == "":
             return True
@@ -143,10 +142,8 @@ class Token:
                     match color:
                         case "RED":
                             color_Val = 0
-                        case "YELLOW":
-                            color_Val = 1
                         case "GREEN":
-                            color_Val = 2
+                            color_Val = 1
                         case _:
                             print("\nTokenization Failed: Invalid light color specification.")
                             return False
@@ -198,6 +195,8 @@ class Token:
                 case "closed":
                     temp_Var.append(block)
                 case "failed":
+                    temp_Var.append(block)
+                case "exit":
                     temp_Var.append(block)
                 case _:
                     print("\nTokenization failed: Invalid track variable")

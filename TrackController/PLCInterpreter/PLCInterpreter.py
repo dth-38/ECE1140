@@ -5,6 +5,7 @@ class PLCInterpreter:
 
     def __init__(self, env=0):
         #defines instruction constants
+        #branch instructions go unused
         self.CONST_EQ = 0
         self.CONST_NOT = 1
         self.CONST_AND = 2
@@ -110,6 +111,8 @@ class PLCInterpreter:
                 val = self.environment[tok.get_Var(var_Num)[0]].switches[tok.get_Var(var_Num)[1]]
             case "constant":
                 val = tok.get_Var(var_Num)[0]
+            case "exit":
+                val = self.environment[tok.get_Var(var_Num)[0]].is_Exit
             case _:
                 pass
 

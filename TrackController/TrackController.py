@@ -3,8 +3,6 @@ import shutil
 import pathlib
 import os
 import copy
-#import time
-#import threading
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel
 from PyQt5.QtGui import QFont
 from Block import Block
@@ -50,6 +48,7 @@ class TrackController(QMainWindow):
         self.load_Saved_Program()
         self.build_Track()
 
+        #allows the TC to be instantiated without opening the GUI
         if auto_Run == False:
             self.show()
 
@@ -126,8 +125,23 @@ class TrackController(QMainWindow):
                                 try:
                                     match statement[0]:
                                         case "S":
-                                            for j in range(int(statement[1:])):
-                                                temp_Track[block_Name].add_Switch()
+                                            #format: S NEXT/PREV, off_Block, on_Block
+                                            #gets blocks the switch sends to and whether they are previous or next
+                                            direction = statement[1:5]
+                                            off_Block = ""
+                                            on_Block = ""
+                                            for j in range(6, len(statement)):
+                                                if statement[j] != ",":
+                                                    off_Block += statement[j]
+                                                else:
+                                                    j += 1
+                                                    break
+
+                                            for k in range(j, len(statement)):
+                                                on_Block += statement[k]
+
+                                            temp_Track[block_Name].add_Switch(direction, off_Block, on_Block)
+
                                         case "G":
                                             for j in range(int(statement[1:])):
                                                 temp_Track[block_Name].add_Gate()
@@ -137,9 +151,9 @@ class TrackController(QMainWindow):
                                         case "M":
                                             temp_Track[block_Name].max_Speed = int(statement[1:])
                                         case "P":
-                                            temp_Track[block_Name].previous_Block = statement[1:]
+                                            temp_Track[block_Name].previous_Blocks.append(statement[1:])
                                         case "N":
-                                            temp_Track[block_Name].next_Block = statement[1:]
+                                            temp_Track[block_Name].next_Blocks.append(statement[1:])
                                         case ";":
                                             pass
                                         case _:
@@ -504,15 +518,15 @@ class TrackController(QMainWindow):
 
                     #gets the next 2 and previous 2 blocks from an occupied one
                     #if the previous is the start or the next is the end, a train has entered the zone
-                    previous = self.next_Track_State[block].previous_Block
+                    previous = self.next_Track_State[block].get_Previous_Block()
                     if previous != "START":
-                        previous_Second = self.next_Track_State[previous].previous_Block
+                        previous_Second = self.next_Track_State[previous].get_Previous_Block()
                     else:
                         if previous not in self.previous_Occupations:
                             self.previous_Occupations.append(previous)
-                    next_Bl = self.next_Track_State[block].next_Block
+                    next_Bl = self.next_Track_State[block].get_Next_Block()
                     if next_Bl != "END":
-                        next_Bl_Second = self.next_Track_State[next_Bl].next_Block
+                        next_Bl_Second = self.next_Track_State[next_Bl].get_Next_Block()
                     else:
                         if next_Bl not in self.previous_Occupations:
                             self.previous_Occupation.append(next_Bl)
@@ -522,20 +536,29 @@ class TrackController(QMainWindow):
                     previous_Block_Found = False
                     for prev_Occ in self.previous_Occupations:
 
+                        #if a previous occupation is adjacent then we are all good
                         if prev_Occ == previous or prev_Occ == next_Bl:
                             previous_Block_Found = True
                             break
+
+                        #if a previous occupation is currently occupied then it is no longer previously occupied
+                        #this situation only really occurs and is handled due to block update order
                         elif prev_Occ == block:
                             self.previous_Occupations.remove(prev_Occ)
                             previous_Block_Found = True
                             break
+
+                        #case for a train that has moved forward a space
+                        #previously occupied must also move forward by one
                         elif prev_Occ == previous_Second and self.check_Occupancy(previous) == False:
                             self.previous_Occupations.remove(prev_Occ)
-                            #this if could be outside for loop possibly for speedup, idk yet
                             if previous not in self.previous_Occupations:
                                 self.previous_Occupations.append(previous)
                             previous_Block_Found = True
                             break
+
+                        #case for a train that has move backward a space
+                        #previously occupied must also move backward by one
                         elif prev_Occ == next_Bl_Second and self.check_Occupancy(next_Bl) == False:
                             self.previous_Occupations.remove(prev_Occ)
                             if next_Bl not in self.previous_Occupations:
@@ -549,6 +572,9 @@ class TrackController(QMainWindow):
                     if previous_Block_Found == False:
                         self.next_Track_State[block].failed = True
 
+                #failures appear as occupations in the track controller
+                if self.next_Track_State[block].failed == True:
+                    self.next_Track_State[block].occupied = True
 
                 #failure/closure safety check: shuts down block if it has failed or is closed
                 if self.next_Track_State[block].closed == True or self.next_Track_State[block].failed == True:
@@ -560,6 +586,7 @@ class TrackController(QMainWindow):
                 if self.next_Track_State[block].occupied == True:
                     for switch in range(len(self.next_Track_State[block].switches)):
                         self.next_Track_State[block].switches[switch] = copy.copy(self.current_Track_State[block].switches[switch])
+
 
                 #copies next track back to current track
                 self.current_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].commanded_Speed)
@@ -579,7 +606,7 @@ class TrackController(QMainWindow):
 
             #goofy way to clean up previous occupancies once a train has left the track controller range
             #basically checks both the train's last position +1 and -1 are in the list
-            #only works due to the jankyness of my previous position tracking system
+            #only works due to the jankyness of my previous position tracking system above
             start_Exists = False
             start_Plus2 = False
             end_Exists = False
@@ -589,17 +616,17 @@ class TrackController(QMainWindow):
                     start_Exists = True
                 elif occ == "END":
                     end_Exists = True
-                elif occ == self.next_Track_State[self.first_Block].next_Block:
+                elif occ == self.next_Track_State[self.first_Block].get_Next_Block():
                     start_Plus2 = True
-                elif occ == self.next_Track_State[self.final_Block].previous_Block:
+                elif occ == self.next_Track_State[self.final_Block].get_Previous_Block():
                     end_Minus2 = True
                 
             if start_Exists == True and start_Plus2 == True and self.next_Track_State[self.first_Block].occupied == False:
                 self.previous_Occupations.remove("START")
-                self.previous_Occupations.remove(self.next_Track_State[self.first_Block].next_Block)
+                self.previous_Occupations.remove(self.next_Track_State[self.first_Block].get_Next_Block())
             elif end_Exists == True and end_Minus2 == True and self.next_Track_State[self.final_Block].occupied == False:
                 self.previous_Occupations.remove("END")
-                self.previous_Occupations.remove(self.next_Track_State[self.final_Block].previous_Block)
+                self.previous_Occupations.remove(self.next_Track_State[self.final_Block].get_Previous_Block())
 
 
             #train padding check: creates a safety zone with all recently occupied blocks
@@ -615,7 +642,7 @@ class TrackController(QMainWindow):
     #used in safety checks
     def check_Occupancy(self, block):
         val = True
-        if block == "END1" or block == "END2":
+        if block == "START" or block == "END":
             val = False
         else:
             val = self.next_Track_State[block].occupied
