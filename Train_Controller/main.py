@@ -6,6 +6,143 @@ from testWindow import testWindow, trainBody
 
 form_mainWindow = uic.loadUiType("TrainController.ui")[0]
 
+#for power
+class power_calc:
+    def __init__(self):
+        self.ki = 0.0
+        self.kp = 0.0
+        self.power = 0.0
+        self.u_k = 0.0
+        self.u_k_1 = 0.0
+        self.e_k = 0.0
+        self.e_k_1 = 0.0
+        self.T = 1.0    #Time interval 1 sec, same as Timer rate
+        self.train_velocity = 0.0
+
+    #get methods
+    def get_ki(self):
+        return self.ki
+    def get_kp(self):
+        return self.kp
+
+    #set methods
+    def set_ki(self, num):
+        self.ki = num    
+    def set_kp(self, num):
+        self.kp = num
+    def set_train_velocity(self, num):
+        self.train_velocity = num
+    def calculate_power(self, actual_speed):
+        self.e_k = actual_speed - self.train_velocity
+        self.u_k = self.u_k_1 + (self.T / 2) * (self.e_k + self.e_k_1)
+        self.e_k_1 = self.e_k   #update e_k_1
+        self.power = (self.kp * self.e_k) + (self.ki * self.u_k)
+        return self.power
+
+    def reset_all(self):
+        self.ki = 0.0
+        self.kp = 0.0
+        self.power = 0.0
+        self.u_k = 0.0
+        self.u_k_1 = 0.0
+        self.e_k = 0.0
+        self.e_k_1 = 0.0
+        self.T = 1.0    #Time interval 1 sec, same as Timer rate
+        self.train_velocity = 0.0
+
+#for train
+class train_status:
+
+    def __init__(self):
+        self.speed_limit = 60 #mph in default
+        self.commanded_speed = 0.0
+        self.speed = 0.0
+        self.authority = 0.0
+        self.door_left = ""
+        self.door_right = ""
+        self.internal_light = ""
+        self.external_light = ""
+        self.annun = ""
+        self.ad = ""
+        self.horn = ""
+        self.temp = 0.0
+
+        self.pp = power_calc()
+
+    #set methods
+    def set_authority(self, num):
+        self.authority = num
+    def set_commanded_speed(self, num):
+        self.commanded_speed = num
+    def set_speed(self, num):
+        self.speed = num
+    def set_speed_limit(self, num):
+        self.speed_limit = num
+    def set_door_left(self, state):
+        self.door_left = state
+    def set_door_right(self, state):
+        self.door_right = state
+    def set_internal_light(self, state):
+        self.internal_light = state
+    def set_external_light(self, state):
+        self.external_light = state
+    def set_annun(self, state):
+        self.annun = state
+    def set_ad(self, state):
+        self.ad = state
+    def set_horn(self, state):
+        self.horn = state
+    def set_temp(self, num):
+        self.temp = num
+    
+    def set_ki(self, num):
+        self.pp.set_ki(num)
+    def set_kp(self, num):
+        self.pp.set_kp(num)
+
+    #get methods
+    def get_speed_limit(self):
+        return self.speed_limit
+    def get_commanded_speed(self):
+        return self.commanded_speed
+    def get_speed(self):
+        return self.speed
+    def get_authority(self):
+        return self.authority
+    def get_left_door(self):
+        return self.door_left
+    def get_right_door(self):
+        return self.door_right
+    def get_internal_light(self):
+        return self.internal_light
+    def get_external_light(self):
+        return self.external_light
+    def get_annun(self):
+        return self.annun
+    def get_ad(self):
+        return self.ad
+    def get_horn(self):
+        return self.horn
+    def get_temp(self):
+        return self.temp
+
+    def reset_all_train(self):
+        self.ki = 0.0
+        self.kp = 0.0
+        self.power = 0.0
+        self.u_k = 0.0
+        self.u_k_1 = 0.0
+        self.e_k = 0.0
+        self.e_k_1 = 0.0
+        self.T = 1.0    #Time interval 1 sec, same as Timer rate
+        self.train_velocity = 0.0
+        self.pp.reset_all()
+
+    #power calculation
+    def get_power(self, s): #s = acual speed
+        return self.pp.calculate_power(s)
+
+
 class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     def __init__(self) :
         super().__init__()
@@ -27,6 +164,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.emergency_brake.clicked.connect(self.emergency_slow)
         
         self.user_cb.setCurrentIndex(-1)
+        self.cs_box.setReadOnly(False)
 
         self.begin_state()
 
