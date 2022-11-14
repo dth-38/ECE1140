@@ -470,6 +470,7 @@ class TrackController(QMainWindow):
     #main plc loop continuously generating outputs using logic
     #is run on another thread?
     def tick(self):
+        self.update_track()
 
         if self.run_Vitals == True:
 
@@ -656,12 +657,19 @@ class TrackController(QMainWindow):
         #stupid workaround to use these as pointers
         temp_speed = [1]
         temp_authority = [1]
+        temp_occupancy = [1]
+        temp_maintenance = [1]
 
         for block in self.current_Track_State:
             #use signal to call CTC get speed and authority
-            #passing temp_speed[0] & temp_authority[0] to use a psuedo pointers
+            #passing temp_speed[0] & temp_authority[0] to use as psuedo pointers
             self.current_Track_State[block].suggested_Speed = copy.copy(temp_speed[0])
             self.current_Track_State[block].authority = copy.copy(temp_authority[0])
+            self.current_Track_State[block].closed = copy.copy(temp_maintenance[0])
+
+            #use signal to call Track Model to get occupancy
+            #passing temp_occupancy[0] to use as pointer
+            self.current_Track_State[block].occupied = copy.copy(temp_occupancy[0])
 
 
 #-------------------------------------------------------------------
