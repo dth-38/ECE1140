@@ -1,12 +1,14 @@
-from signals import signals
+#from signals import signals
 
 #TODO: GET BLOCK SWITCH POSITIONS FROM TRACK CONTROLLER TO SWITCH THEM AT THAT POSITION IN SET MAINTENANCE
 class Block_Table: 
     def __init__(self):
         self.table = []
         self.maintenance_signal = False
+        """"
         signals.update_switches.connect(self.get_switch_status)
         signals.update_states.connect(self.get_states)
+        """
     #TODO: GET STATES(BLOCK OCC, BLOCK FAILURE FROM TRACK CONTROLLER)
     def add_entry(self,blk,states):
         print("ADD BLOCK ENTRY!!!!!!")

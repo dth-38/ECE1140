@@ -1,11 +1,16 @@
 from re import T
 from PyQt5 import QtCore, QtGui, QtWidgets
+from maintenance_screen import maintenance_screen
 
+from train_screen import train_screen
+from maintenance_screen import maintenance_screen
+from test_sceeen import test_screen
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling,True)
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps,True)
 
 import enum
+import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QComboBox, QHBoxLayout, QVBoxLayout 
 from PyQt5.QtCore import QTime, Qt, QEvent
@@ -14,11 +19,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import * 
 from PyQt5.QtCore import *
 
-from train_screen import Ui_Form as UI
-from maintenance_screen import Ui_Form as UI2
-from test_sceeen import Ui_Form as UI3
 
-class Ui_MainWindow(object):
+
+class Ui_MainWindow(QtWidgets.QMainWindow):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1440, 875)
@@ -56,25 +59,18 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
     
     def train_screen(self):
-        self.app = QtWidgets.QApplication(sys.argv)
-        self.Form = QtWidgets.QWidget()
-        self.ui = UI()
-        self.ui.setupUi(self.Form)
-        self.Form.show()
+        self.hide()
+        self.train = train_screen()
+
 
     def maintenance_screen(self):
-        self.app = QtWidgets.QApplication(sys.argv)
-        self.Form = QtWidgets.QWidget()
-        self.ui = UI2()
-        self.ui.setupUi(self.Form)
-        self.Form.show()
+        self.hide()
+        self.maintenance = maintenance_screen()
+       
         
     def test_screen(self):
-        self.app = QtWidgets.QApplication(sys.argv)
-        self.Form = QtWidgets.QWidget()
-        self.ui = UI3()
-        self.ui.setupUi(self.Form)
-        self.Form.show()
+        self.hide()
+        self.maintenance = maintenance_screen()
 
 
     def retranslateUi(self, MainWindow):
@@ -86,7 +82,7 @@ class Ui_MainWindow(object):
         self.menuCTC_Office.setTitle(_translate("MainWindow", "CTC Office"))
         self.menuMain_Window.setTitle(_translate("MainWindow", "Main Window"))
 
-""""
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -95,4 +91,3 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-"""
