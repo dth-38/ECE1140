@@ -651,6 +651,19 @@ class TrackController(QMainWindow):
         return val
 
 
+    #helper to update track state from ctc and track model
+    def update_track(self):
+        #stupid workaround to use these as pointers
+        temp_speed = [1]
+        temp_authority = [1]
+
+        for block in self.current_Track_State:
+            #use signal to call CTC get speed and authority
+            #passing temp_speed[0] & temp_authority[0] to use a psuedo pointers
+            self.current_Track_State[block].suggested_Speed = copy.copy(temp_speed[0])
+            self.current_Track_State[block].authority = copy.copy(temp_authority[0])
+
+
 #-------------------------------------------------------------------
 # FUNCTIONS THAT START/STOP CONTROLLER FUNCTIONALITY + UPDATE UI
 #-------------------------------------------------------------------
