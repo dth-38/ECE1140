@@ -45,18 +45,18 @@ OR red_A_1:switch[0], red_A_2:occupied, red_A_1:light[0].GREEN
 ;checks if red_A_5 is occupied before switching and allowing a train to move that direction
 NOT t[1], red_A_5:occupied
 AND t[1], t[1], red_A_5:exit
-EQ red_A_3.switch[0], t[1]
+EQ red_A_3:switch[0], t[1]
 
 ;checks if red_A_4 is occupied before switching and allowing a train to move that direction
 NOT t[2], red_A_4:occupied
 AND t[2], t[2], red_A_4:exit
-NOT red_A_3.switch[0], t[2]
+NOT red_A_3:switch[0], t[2]
 
 ;sets lights according to switch position
-EQ red_A_5:light[0].GREEN, red_A_3.switch[0]
-NOT red_A_5:light[0].RED, red_A_3.switch[0]
+EQ red_A_5:light[0].GREEN, red_A_3:switch[0]
+NOT red_A_5:light[0].RED, red_A_3:switch[0]
 
-NOT red_A_4:light[0].GREEN, red_A_3.switch[0]
-EQ red_A_4:light[0].RED, red_A_3.switch[0]
+NOT red_A_4:light[0].GREEN, red_A_3:switch[0]
+EQ red_A_4:light[0].RED, red_A_3:switch[0]
 
 END LOGIC

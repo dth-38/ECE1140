@@ -1,5 +1,4 @@
-import time
-from PLCInterpreter import Token
+from TrackController.PLCInterpreter.Token import Token
 
 class PLCInterpreter:
 
@@ -162,7 +161,7 @@ class PLCInterpreter:
                             break
 
                     #matches the command string and generates token
-                    token = Token.Token()
+                    token = Token()
                     var1 = ""
                     var2 = ""
                     var3 = ""

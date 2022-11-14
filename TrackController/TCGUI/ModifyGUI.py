@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QGridLayout
 from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QComboBox
 from PyQt5.QtGui import QFont
-from Block import Block
+from TrackController.Block import Block
 
 class ModifyGUI(QWidget):
     

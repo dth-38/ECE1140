@@ -5,9 +5,10 @@ import os
 import copy
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel
 from PyQt5.QtGui import QFont
-from Block import Block
-import TCGUI.TextEditorGUI, TCGUI.DebugGUI, TCGUI.MaintenanceGUI, TCGUI.ModifyGUI
-from PLCInterpreter import PLCInterpreter
+from TrackController.Block import Block
+import TrackController.TCGUI.TextEditorGUI, TrackController.TCGUI.DebugGUI
+import TrackController.TCGUI.MaintenanceGUI, TrackController.TCGUI.ModifyGUI
+from TrackController.PLCInterpreter.PLCInterpreter import PLCInterpreter
 
 
 
@@ -38,7 +39,7 @@ class TrackController(QMainWindow):
         self.first_Block = ""
         self.final_Block = ""
         #interpreter
-        self.interpreter = PLCInterpreter.PLCInterpreter()
+        self.interpreter = PLCInterpreter()
         
 
         super().__init__()
