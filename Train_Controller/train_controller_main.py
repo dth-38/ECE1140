@@ -175,6 +175,11 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.manual_f = False   #flag for manual mode
         #self.failure_main_flag = False
 
+        #update train controller display every 1 sec
+        self.timer_update = QtCore.QTimer(self) 
+        self.timer_update.start(1000)
+        self.timer_update.timeout.connect(self.update_train_display) 
+
     def pop_test(self):
         self.hide()
         self.test = testWindow()
@@ -249,8 +254,10 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.set_ad(self.check_ad())
         self.real_train.set_horn(self.check_horn())
 
-        self.copy_to_train_frame()
+        #NOTE might have to send to train model --> let model evaluate these values --> update values in controller
+        self.update_train_display()
 
+    #Check if all the inputs are in.
     def check_value(self):
 
         if (self.auto_f == False and self.manual_f == False):
@@ -270,6 +277,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             return False
         return True
 
+    #prevent speed from exceeding the limit
     def control_speed(self):
         if self.real_train.get_commanded_speed() > self.real_train.get_speed_limit():
             self.real_train.set_speed(self.real_train.get_speed_limit())
@@ -306,7 +314,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         ) == False:
             return False
 
-    def copy_to_train_frame(self):
+    #display values to train screen
+    def update_train_display(self):
         self.train_speed.display(self.real_train.get_speed())
         self.train_left.setPlainText(self.real_train.get_left_door())
         self.train_right.setPlainText(self.real_train.get_right_door())
@@ -485,6 +494,9 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.horn_off.setChecked(False)
         self.horn_off.setAutoExclusive(True)
 
+    ############
+    #  Modes   #
+    ############
     def automatic_mode(self):
         self.partial_reset()    #clear out partially
 
@@ -552,6 +564,23 @@ if __name__ == "__main__" :
     app = QtWidgets.QApplication(sys.argv) 
     myWindow = WindowClass() 
     sys.exit(app.exec_())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #threadL https://ybworld.tistory.com/39
