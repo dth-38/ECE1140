@@ -3,13 +3,17 @@ import shutil
 import pathlib
 import os
 import copy
+
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel
 from PyQt5.QtGui import QFont
+
 from TrackController.Block import Block
 from TrackController.TCGUI.DebugGUI import DebugGUI
 from TrackController.TCGUI.MaintenanceGUI import MaintenanceGUI
 from TrackController.TCGUI.TextEditorGUI import TextEditorGUI
 from TrackController.PLCInterpreter.PLCInterpreter import PLCInterpreter
+
+from TrackController import TCTools
 
 
 
@@ -439,6 +443,16 @@ class TrackController(QMainWindow):
         found = False
         for key in self.current_Track_State.keys():
             if block == key:
+                found = True
+                break
+
+        return found
+
+    def check_connection(self, line, num):
+        formatted_block = TCTools.convert_to_block(line, num)
+        found = False
+        for key in self.current_Track_State.keys():
+            if formatted_block == key:
                 found = True
                 break
 
