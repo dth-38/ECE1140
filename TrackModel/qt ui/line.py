@@ -6,7 +6,6 @@ class Line:
         self.blocks = []
         self.line_ticket_sales = 0
 
+    ## Returns block object by calling the block number
     def get_block(self, number):
-        for i in range(len(self.blocks)):
-            if (self.blocks[i].getNumber() == number):
-                return self.blocks[i]
+        return self.blocks[number]

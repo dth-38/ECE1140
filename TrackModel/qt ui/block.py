@@ -17,11 +17,20 @@ class Block:
     def set_rail_cross(self, RailwayCrossing):
         self.rail_crossing = RailwayCrossing
 
+    def set_beacon(self, s1, s2, s3):
+        ## s1 = Outgoing Station
+        #  s2 = Incoming Station
+        #  s3 = track side
+        self.beacon = [s1, s2, s3]
+
     def set_station(self, Station):
         self.station = Station
 
     def get_station(self):
         return self.station
+
+    def get_number(self):
+        return self.number
 
     def get_section(self):
         return self.section
