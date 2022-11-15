@@ -1,5 +1,6 @@
 
 import enum
+import sched
 import sys
 import time
 from turtle import position 
@@ -7,7 +8,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTime, Qt, QEvent, QTimer
 from PyQt5.QtGui import QStandardItem
 from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtWidgets import * 
+from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtGui import * 
 from PyQt5.QtCore import *
 from PyQt5 import *
@@ -19,8 +21,10 @@ from Train_Table import Train_Table
 
 #TRAIN SCREEN WINDOW 
 class train_screen(QWidget):
-    def __init__(self):
+    def __init__(self,scheduler,clock):
         super(train_screen,self).__init__()
+        self.schedule = scheduler
+        self.clock = clock
         self.setupUi()
         self.show()
     def setupUi(self):
@@ -54,6 +58,7 @@ class train_screen(QWidget):
         self.label_3 = QtWidgets.QLabel(self)
         self.label_3.setGeometry(QtCore.QRect(590, 550, 60, 16))
         self.label_3.setObjectName("label_3")
+        self.label_2.setObjectName("label_2")
         self.main_button = QtWidgets.QPushButton(self)
         self.main_button.setGeometry(QtCore.QRect(1210, 580, 231, 221))
         self.main_button.setObjectName("main_button")
@@ -109,8 +114,7 @@ class train_screen(QWidget):
         self.destination_selection.raise_()
         self.throughput_output.raise_()
 
-        self.schedule = CTC_Scheduler()
-        self.clock = CTC_Clock()
+        
         self.train_entries = []
         self.block_entries = []
 
@@ -133,27 +137,29 @@ class train_screen(QWidget):
         stations = ["Yard","Shadyside", "Herron Ave", "Swissville", "Penn Station", "Steel Plaza", "First Ave", "Station Square", "South Hills Junction"]
         self.line_train_selection.addItems(lines)
         self.starting_location_selection.addItems(stations)
-        #self.destination_selection.addItems(stations)
         self.line_throughput_selection.addItems(lines)
 
     def pressed(self):
         arrival_time = (self.hour_selection.value(),self.minute_selection.value(),self.second_selection.value())
         print(arrival_time)
         destinations = self.destination_selection.toPlainText()
-        self.train_entries = self.schedule.manual_dispatch_train(arrival_time,self.train_selection.value(),self.line_train_selection.currentText(),destinations)
+        self.train_entries, travel_time = self.schedule.manual_dispatch_train(arrival_time,self.train_selection.value(),self.line_train_selection.currentText(),destinations)
         self.train_table_display.addItem("NEW TRAIN DISPATCHED!!!!!!!!!")
         self.train_table_display.addItem("Train #: " + str(self.train_entries[0]))
         self.train_table_display.addItem("Position: " + str(self.train_entries[1]))
         self.train_table_display.addItem("States: " + str(self.train_entries[2]))
         self.train_table_display.addItem("Destinations: " + str(self.train_entries[3]))
         self.train_table_display.addItem("Authority: " + str(self.train_entries[4]))
+        self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
+        self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
         
     
     #TODO: WHEN AND HOW TO DISPLAY BLOCK TABLE?
         
+    #TODO GET TICKET SALES FROM TRACKMODEL
     def output_throughput(self):
         line = self.line_throughput_selection.currentText()
-        throughput = self.schedule.calc_throughput(line)
+        throughput = self.schedule.calc_throughput(line=line,ticket_sales=10,hours=self.current_hour.value())
         self.throughput_output.setText(str(throughput))
     
     def add_schedule(self):
@@ -163,20 +169,19 @@ class train_screen(QWidget):
     def update_current_time(self):
         print("Update Time")
         self.clock.update_time()
-        authorities, positions = self.schedule.update_trains()
-        print("authorities: " + str(authorities))
-        print("positions: " + str(positions))
+        authority, position = self.schedule.update_trains()
+        print("authority: " + str(authority))
+        print("position: " + str(position))
         self.current_hour.setValue(self.clock.get_hours())
         self.current_minute.setValue(self.clock.get_minutes())
         self.current_second.setValue(self.clock.get_seconds())
         #Only one train working currently 
-        if len(authorities) > 0 and len(positions) > 0:
-            self.train_table_display.addItem("New Position: " + str(positions[0]))
-            self.train_table_display.addItem("New Authority: " + str(authorities[0]))    
-            if authorities[0] == 0:
-                #only for 2 stations
-                new_authority = self.schedule.calc_authority(self.train_entries[0],self.train_entries[5],self.train_entries[3][1])
-                print(new_authority)
+        if self.train_table_display.count() > 0:
+            self.train_table_display.takeItem(2)
+            self.train_table_display.insertItem(2,"Position: " + str(position))
+            self.train_table_display.takeItem(5)
+            self.train_table_display.insertItem(5,"Authority: " + str(authority))
+
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
@@ -189,7 +194,7 @@ class train_screen(QWidget):
 "\n"
 "- Destination: \n"
 "\n"
-"- Arrival Time: "))
+"- Departure Time: "))
         self.dispatch_button.setText(_translate("Form", "Dispatch Train"))
         self.throughput_button.setText(_translate("Form", "Select Throughput"))
         self.schedule_button.setText(_translate("Form","Add Schedule"))
@@ -199,13 +204,3 @@ class train_screen(QWidget):
         self.main_button.setText(_translate("Form", "Back to Main Window"))
         self.label_3.setText(_translate("Form", "Schedule:"))
 
-""""
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
-    sys.exit(app.exec_())
-"""

@@ -11,10 +11,11 @@ from Block_Table import Block_Table
 from CTC_Clock import  CTC_Clock
 
 class CTC_Scheduler: 
-    def __init__(self,auth=0,speed=0,through=0):
-        self.authority = auth
-        self.suggested_speed = speed
-        self.throughput = through
+    def __init__(self):
+        self.authority = 0
+        self.position = 0
+        self.red_throughput = 0
+        self.green_throughput = 0
         self.time = CTC_Clock()
         #TODO: ASK HOW DISPATCH QUEUE WORKS
         self.dispatch_queue = []
@@ -45,11 +46,11 @@ class CTC_Scheduler:
                                  1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
         self.block_occupancies = []
         self.block_failures = []
-        self.ticket_sales = 0
         self.train_states = []
         self.train_position = 0
-        self.red_speed = 50
-        self.green_speed = 50
+        self.red_speed = 70
+        self.green_speed = 70
+        self.destination_index = 0
         #TODO: GET SIGNALS FROM OTHER MODULES
         """"
         signals.update_occupancy.connect(self.get_block_occupancies)
@@ -59,7 +60,7 @@ class CTC_Scheduler:
         signals.update_train_position(self.get_train_position)
         """
     def upload_schedule(self,schedule):
-        schedule = pd.read_excel(schedule,sheet_name=6)
+        schedule = pd.read_excel(schedule)
         print(schedule)
         for index, row in schedule.iterrows():
             if str(row[0]) == "nan" or str(row["Infrastructure"]) == "nan" or str(row["total time to station w/dwell (min)"]) == "nan":
@@ -79,21 +80,31 @@ class CTC_Scheduler:
                 self.schedule_dispatch(arrival_time,self.train_id,line,station)
                 self.train_id += 1
                 self.calc_authority()
-    def manual_dispatch_train(self,arrival_time,train_id,line,destinations):
+    def manual_dispatch_train(self,departure_time,train_id,line,destinations):
         print("MANUAL DISPATCH!!!!")
         #Dispatch queue only for scheduled dispatches? 
         #self.dispatch_queue.append([arrival_time,train_id])
         #TODO: CALL SORT DISPATCH QUEUE
         #self.sort_dispatch_queue()
         #TODO: GET TRAIN STATES FROM TRAIN MODEL???
-        #TODO: Calc authority to first station
-        self.authority = self.calc_authority(train_id,line,destinations[0])
-        #TODO: GET BLOCK OCCUPANCIES AND BLOCK FAILURES ARRAYS FROM TRACK CONTROLLER
+        #TODO: Find out how to track authority to other stations, only working for authority to first station
+        destinations = destinations.split()
+        print("First Destination: " + str(destinations[self.destination_index]))
+        self.authority = self.calc_authority(train_id,line,destinations[self.destination_index])
+        self.destination_index += 1
+        travel_time = self.calc_travel_time(line)
+        travel_hours = int(travel_time)
+        travel_minutes = (travel_time*60) % 60
+        travel_seconds = (travel_time*3600) % 60
+        travel_time = (travel_hours,travel_minutes,travel_seconds)
+        print("travel_time: " + str(travel_time))
+        arrival_time = [int(travel_time[0] + departure_time[0]), int(travel_time[1] + departure_time[1]), int(travel_time[2] + departure_time[2])]
         print("ADD TRAIN ENTRY")
         self.train_table.add_entry(id=self.train_id,position=self.train_position,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
         self.train_id += 1
+
         #return the new entry added for each train dispatched
-        return self.train_table.get_entry(self.train_id - 1)
+        return self.train_table.get_entry(self.train_id - 2), travel_time
     #TODO: FIND WAY TO CALL THIS FUNCTION CONTINUOUSLY?
     def schedule_dispatch(self,schedule_arrival,schedule_id,schedule_line,schedule_destinations):
         print("SCHEDULE DISPATCH!!!!!")
@@ -115,25 +126,18 @@ class CTC_Scheduler:
             self.train_id += 1
             #TODO: GET BLOCK OCCUPANCIES AND BLOCK FAILURES ARRAYS FROM TRACK CONTROLLER
             self.calc_authority(new_train,schedule_line,self.block_occupancies,self.block_failures)
-    def view_throughput(self,line):
-        self.throughput = self.calc_throughput(line)
-    def calc_throughput(self,line):
-        #TODO: GET TICKET SALES FROM TRACK MODEL and figure out how to compute throughput
-        #ticket_sales = line.get_ticket_sales()
-        if self.time.get_hours() > 0:
-            self.throughput = self.ticket_sales/self.time.get_hours()
-        else: 
-            self.throughput = 0
-        return self.throughput
-    def set_authority(self,new_train,authority):
-        print("SET AUTHORITY!!!!")
-        #TODO: CAN I DO THIS????
-        new_train.set_authority(authority)
-    #TODO: FIND OUT HOW TO SET SUGGESTED SPEED
-    def set_speed(self,new_train,speed):
-        print("SET SPEED!!!!")
-        #TODO: CAN I DO THIS????
-        new_train.set_speed(speed)
+    def calc_throughput(self,line,ticket_sales,hours):
+        #TODO: GET TICKET SALES FROM TRACK MODEL
+        if hours > 0:
+            if line == "Red":
+                self.red_throughput = ticket_sales/hours
+                return self.red_throughput
+            elif line == "Green":
+                self.green_throughput = ticket_sales/hours
+                return self.green_throughput
+        else:
+            return 0
+
     """"
     def calc_authority(self,new_train,line,block_occ,block_failure):
         self.authority = 0
@@ -154,8 +158,10 @@ class CTC_Scheduler:
         new_train.set_auhtority(self.authority)
     """
     def calc_authority(self,train_id,line,destination):
+        print("DESTINATION: " + str(destination))
         authority = 0
         #TEMPORARY SHADYSIDE DESTINATION
+        #TODO: FIGURE OUT HOW TO GET DESTINATION BLOCK OF STATION
         destination_block = 7
         if line == "Red":
             for i in range(len(self.red_route_blocks)):
@@ -169,30 +175,36 @@ class CTC_Scheduler:
                     authority += 1
                 else:
                     return authority
+    #only working for one train
     def update_trains(self):
-        authorities = []
-        positions = []
-        number_trains = self.train_table.get_table_length()
-        for i in range(number_trains):
-            table_entry = self.train_table.get_entry(i + 1)
+        if self.train_table.get_table_length() > 0:
+            table_entry = self.train_table.get_entry(0)
             if table_entry[4] > 0:
                 new_authority = table_entry[4] - 1
-                authorities.append(new_authority)
-                self.train_table.change_authority(i,new_authority)
-            line = table_entry[5]
-            if line == "Red":
-                for j in range(len(self.red_route_blocks) - 1):
-                    if table_entry[1] == self.red_route_blocks[j]:
-                        new_position = self.red_route_blocks[j + 1]
-                        positions.append(new_position)
-                        self.train_table.change_position(i,new_position)
-            elif line == "Green":
-                for j in range(len(self.green_route_blocks) - 1):
-                    if table_entry[1] == self.green_route_blocks[j]:
-                        new_position = self.green_route_blocks[j + 1]
-                        positions.append(new_position)
-                        self.train_table.change_position(i,new_position)
-        return authorities, positions
+                self.authority = new_authority
+                self.train_table.change_authority(0,self.authority)
+                line = table_entry[5]
+                if line == "Red":
+                    for j in range(len(self.red_route_blocks) - 1):
+                        if table_entry[1] == self.red_route_blocks[j]:
+                            new_position = self.red_route_blocks[j + 1]
+                            self.position = new_position
+                            self.train_table.change_position(0,new_position)
+                            break
+                elif line == "Green":
+                    print("GREEN LINE!!!!")
+                    for j in range(len(self.green_route_blocks) - 1):
+                        if table_entry[1] == self.green_route_blocks[j]:
+                            new_position = self.green_route_blocks[j + 1]
+                            self.position = new_position
+                            self.train_table.change_position(0,new_position)
+                            break
+            else:
+                if self.destination_index < len(table_entry[3]):
+                    self.authority = self.calc_authority(train_id=table_entry[0],line=table_entry[5],destination=table_entry[3][self.destination_index])
+                    self.destination_index += 1
+                    self.train_table.change_authority(0,self.authority)
+        return self.authority, self.position
 
     """"
     def update_authority(self,current_train,line,block_occ,block_failure):
@@ -211,16 +223,17 @@ class CTC_Scheduler:
         dtype = [int,Train]
         self.dispatch_queue = np.array(self.dispatch_queue,dtype=dtype)
         self.dispatch_queue = np.sort(self.dispatch_queue,order=Train)
+    #TODO: GET ACTUAL DISTANCE OF EACH BLOCK FROM TRACKMODEL? Yes
     def calc_travel_time(self,line):
         dist = 0
         if line == "Red":
             for i in range(len(self.red_route_blocks)):
                 dist += self.red_route_blocks[i]
-            travel_time = self.red_speed/dist
+            travel_time = dist/(self.red_speed*1000)
         elif line == "Green":
             for i in range(len(self.green_route_blocks)):
-                dist += self.red_route_blocks[i]
-            travel_time = self.green_speed/dist
+                dist += self.green_route_blocks[i]
+            travel_time = dist/(self.green_speed*1000)
         return travel_time
     def get_block_occupancies(self,block_occupancies):
         self.block_occupancies = block_occupancies

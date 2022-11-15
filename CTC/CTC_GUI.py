@@ -22,6 +22,10 @@ from PyQt5.QtCore import *
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
+    def __init__(self,scheduler,clock):
+        super().__init__()
+        self.scheduler = scheduler
+        self.clock = clock
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1440, 875)
@@ -60,7 +64,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     
     def train_screen(self):
         self.hide()
-        self.train = train_screen()
+        self.train = train_screen(self.scheduler,self.clock)
 
 
     def maintenance_screen(self):
@@ -70,7 +74,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         
     def test_screen(self):
         self.hide()
-        self.maintenance = maintenance_screen()
+        self.test = test_screen()
 
 
     def retranslateUi(self, MainWindow):
