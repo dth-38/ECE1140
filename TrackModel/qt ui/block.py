@@ -20,6 +20,9 @@ class Block:
     def set_station(self, Station):
         self.station = Station
 
+    def get_station(self):
+        return self.station
+
     def get_section(self):
         return self.section
 

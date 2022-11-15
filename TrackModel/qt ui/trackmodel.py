@@ -16,7 +16,7 @@ class TrackModel:
 
     def load_model(self, red_table, green_table):
         ## Load the excel file, take in data
-        file = TrackInfo(fp = 'track_layout.xlsx')
+        file = TrackInfo(fp = "C:/Users/rachs/OneDrive/Documents/ECE1140/ECE1140/TrackModel/qt ui/track_layout.xlsx")
         file.load_excel_data(file.get_sheet(0), red_table)
         file.load_excel_data(file.get_sheet(1), green_table)
 
@@ -84,7 +84,6 @@ class TrackModel:
     def load_infra_values(self, file, table, block, row, col):
         ## Get station and other infrastructure information
         infra = file.get_cell_text(table, row, col)
-        print(infra)
 
         ## Create rail crossing on corresponding block
         if (infra == "RAILWAY CROSSING"):
@@ -95,5 +94,20 @@ class TrackModel:
         elif (infra.find("STATION") != -1):
             station = Station()
             block.set_station(station)
-            
 
+            ## Get station name
+            #  infra[0:8] = "STATION: "
+            semicolon = infra.find(";", 8)
+            #  ex: STATION; PENN STATION; UNDERGROUND
+            if (semicolon != -1):
+                n = infra[8:semicolon]
+                name = n.strip()
+            #  ex: STATION; HERRON AVE
+            else:
+                n = infra[8:]
+                name = n.strip()
+            
+            ## Set name to corresponding station
+            block.get_station().set_name(name)
+
+    def set_beacon_values()
