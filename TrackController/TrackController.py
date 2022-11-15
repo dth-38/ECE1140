@@ -15,6 +15,8 @@ from TrackController.PLCInterpreter.PLCInterpreter import PLCInterpreter
 
 from TrackController import TCTools
 
+import Signals
+
 
 
 class TrackController(QMainWindow):
@@ -496,189 +498,188 @@ class TrackController(QMainWindow):
 #-----------------------------------------------------------------
     #main plc loop continuously generating outputs using logic
     #is run on another thread?
-    def tick(self):
-        self.update_track()
+    def tick(self, id):
+        if id == self.id:
+            if self.run_Vitals == True:
 
-        if self.run_Vitals == True:
-
-            #locks track state before copying
-            self.track_Lock = True
-            #copies track state inputs to next state
-            for block in self.current_Track_State:
-                self.next_Track_State[block].suggested_Speed = copy.copy(self.current_Track_State[block].suggested_Speed)
-                self.next_Track_State[block].authority = copy.copy(self.current_Track_State[block].authority)
-                self.next_Track_State[block].occupied = copy.copy(self.current_Track_State[block].occupied)
-                self.next_Track_State[block].failed = copy.copy(self.current_Track_State[block].failed)
-                self.next_Track_State[block].closed = copy.copy(self.current_Track_State[block].closed)
-            #unlocks track state so other modules can modify inputs/read outputs
-            self.track_Lock = False
+                #locks track state before copying
+                self.track_Lock = True
+                #copies track state inputs to next state
+                for block in self.current_Track_State:
+                    self.next_Track_State[block].suggested_Speed = copy.copy(self.current_Track_State[block].suggested_Speed)
+                    self.next_Track_State[block].authority = copy.copy(self.current_Track_State[block].authority)
+                    self.next_Track_State[block].occupied = copy.copy(self.current_Track_State[block].occupied)
+                    self.next_Track_State[block].failed = copy.copy(self.current_Track_State[block].failed)
+                    self.next_Track_State[block].closed = copy.copy(self.current_Track_State[block].closed)
+                #unlocks track state so other modules can modify inputs/read outputs
+                self.track_Lock = False
             
-            #runs logic
-            if self.run_PLC == True:
-                #try block to handle any undefined behavior in the plc program
-                #for example a block name that the plc isnt connected to
-                try:
-                    self.interpreter.execute()
+                #runs logic
+                if self.run_PLC == True:
+                    #try block to handle any undefined behavior in the plc program
+                    #for example a block name that the plc isnt connected to
+                    try:
+                        self.interpreter.execute()
 
-                except Exception as e:
-                    print("FATAL PLC RUNTIME ERROR.")
-                    print(e)    
-                    print("Continuing to run vital logic.")
+                    except Exception as e:
+                        print("FATAL PLC RUNTIME ERROR.")
+                        print(e)    
+                        print("Continuing to run vital logic.")
                 
-                    self.stop_PLC()
+                        self.stop_PLC()
 
 
-            #locks track state before updating
-            self.track_Lock = True
+                #locks track state before updating
+                self.track_Lock = True
 
-            #runs vital safety logic then
-            #copies newly generated outputs back to track state
-            for block in self.current_Track_State:
+                #runs vital safety logic then
+                #copies newly generated outputs back to track state
+                for block in self.current_Track_State:
 
-                #speed safety check: commanded speed cannot exceed block maximum
-                self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
-                if self.next_Track_State[block].commanded_Speed > self.next_Track_State[block].max_Speed:
-                    self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].max_Speed)
+                    #speed safety check: commanded speed cannot exceed block maximum
+                    self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
+                    if self.next_Track_State[block].commanded_Speed > self.next_Track_State[block].max_Speed:
+                        self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].max_Speed)
 
-                #track failure check
-                #cannot determine if the first or last block has failed
-                #since that is identical to a train entering the zone as far as the track controller can tell
-                if self.next_Track_State[block].occupied == True:
+                    #track failure check
+                    #cannot determine if the first or last block has failed
+                    #since that is identical to a train entering the zone as far as the track controller can tell
+                    if self.next_Track_State[block].occupied == True:
 
-                    #gets the next 2 and previous 2 blocks from an occupied one
-                    #if the previous is the start or the next is the end, a train has entered the zone
-                    previous = self.next_Track_State[block].get_Previous_Block()
-                    if previous != "START":
-                        previous_Second = self.next_Track_State[previous].get_Previous_Block()
-                    else:
-                        if previous not in self.previous_Occupations:
-                            self.previous_Occupations.append(previous)
-                    next_Bl = self.next_Track_State[block].get_Next_Block()
-                    if next_Bl != "END":
-                        next_Bl_Second = self.next_Track_State[next_Bl].get_Next_Block()
-                    else:
-                        if next_Bl not in self.previous_Occupations:
-                            self.previous_Occupation.append(next_Bl)
-
-                    #updates previously occupied blocks and checks for track failure
-                    #if a currently occupied block does not have a previous in the list it has failed
-                    previous_Block_Found = False
-                    for prev_Occ in self.previous_Occupations:
-
-                        #if a previous occupation is adjacent then we are all good
-                        if prev_Occ == previous or prev_Occ == next_Bl:
-                            previous_Block_Found = True
-                            break
-
-                        #if a previous occupation is currently occupied then it is no longer previously occupied
-                        #this situation only really occurs and is handled due to block update order
-                        elif prev_Occ == block:
-                            self.previous_Occupations.remove(prev_Occ)
-                            previous_Block_Found = True
-                            break
-
-                        #case for a train that has moved forward a space
-                        #previously occupied must also move forward by one
-                        elif prev_Occ == previous_Second and self.check_Occupancy(previous) == False:
-                            self.previous_Occupations.remove(prev_Occ)
+                        #gets the next 2 and previous 2 blocks from an occupied one
+                        #if the previous is the start or the next is the end, a train has entered the zone
+                        previous = self.next_Track_State[block].get_Previous_Block()
+                        if previous != "START":
+                            previous_Second = self.next_Track_State[previous].get_Previous_Block()
+                        else:
                             if previous not in self.previous_Occupations:
                                 self.previous_Occupations.append(previous)
-                            previous_Block_Found = True
-                            break
-
-                        #case for a train that has move backward a space
-                        #previously occupied must also move backward by one
-                        elif prev_Occ == next_Bl_Second and self.check_Occupancy(next_Bl) == False:
-                            self.previous_Occupations.remove(prev_Occ)
-                            if next_Bl not in self.previous_Occupations:
-                                self.previous_Occupations.append(next_Bl)
-                            previous_Block_Found = True
-                            break
+                        next_Bl = self.next_Track_State[block].get_Next_Block()
+                        if next_Bl != "END":
+                            next_Bl_Second = self.next_Track_State[next_Bl].get_Next_Block()
                         else:
-                            pass
+                            if next_Bl not in self.previous_Occupations:
+                                self.previous_Occupation.append(next_Bl)
+
+                        #updates previously occupied blocks and checks for track failure
+                        #if a currently occupied block does not have a previous in the list it has failed
+                        previous_Block_Found = False
+                        for prev_Occ in self.previous_Occupations:
+
+                            #if a previous occupation is adjacent then we are all good
+                            if prev_Occ == previous or prev_Occ == next_Bl:
+                                previous_Block_Found = True
+                                break
+
+                            #if a previous occupation is currently occupied then it is no longer previously occupied
+                            #this situation only really occurs and is handled due to block update order
+                            elif prev_Occ == block:
+                                self.previous_Occupations.remove(prev_Occ)
+                                previous_Block_Found = True
+                                break
+
+                            #case for a train that has moved forward a space
+                            #previously occupied must also move forward by one
+                            elif prev_Occ == previous_Second and self.check_Occupancy(previous) == False:
+                                self.previous_Occupations.remove(prev_Occ)
+                                if previous not in self.previous_Occupations:
+                                    self.previous_Occupations.append(previous)
+                                previous_Block_Found = True
+                                break
+
+                            #case for a train that has move backward a space
+                            #previously occupied must also move backward by one
+                            elif prev_Occ == next_Bl_Second and self.check_Occupancy(next_Bl) == False:
+                                self.previous_Occupations.remove(prev_Occ)
+                                if next_Bl not in self.previous_Occupations:
+                                    self.previous_Occupations.append(next_Bl)
+                                previous_Block_Found = True
+                                break
+                            else:
+                                pass
 
                     
-                    if previous_Block_Found == False:
-                        self.next_Track_State[block].failed = True
+                        if previous_Block_Found == False:
+                            self.next_Track_State[block].failed = True
 
-                #failures appear as occupations in the track controller
-                if self.next_Track_State[block].failed == True:
-                    self.next_Track_State[block].occupied = True
+                    #failures appear as occupations in the track controller
+                    if self.next_Track_State[block].failed == True:
+                        self.next_Track_State[block].occupied = True
 
-                #failure/closure safety check: shuts down block if it has failed or is closed
-                if self.next_Track_State[block].closed == True or self.next_Track_State[block].failed == True:
-                    self.next_Track_State[block].authority = 0
-                    for light in range(len(self.next_Track_State[block].lights)):
-                        self.next_Track_State[block].set_Light(light, "RED")
+                    #failure/closure safety check: shuts down block if it has failed or is closed
+                    if self.next_Track_State[block].closed == True or self.next_Track_State[block].failed == True:
+                        self.next_Track_State[block].authority = 0
+                        for light in range(len(self.next_Track_State[block].lights)):
+                            self.next_Track_State[block].set_Light(light, "RED")
 
-                #switch interlock safety check: occupied blocks cannot change switch positions
-                if self.next_Track_State[block].occupied == True:
-                    for switch in range(len(self.next_Track_State[block].switches)):
-                        self.next_Track_State[block].switches[switch] = copy.copy(self.current_Track_State[block].switches[switch])
+                    #switch interlock safety check: occupied blocks cannot change switch positions
+                    if self.next_Track_State[block].occupied == True:
+                        for switch in range(len(self.next_Track_State[block].switches)):
+                            self.next_Track_State[block].switches[switch] = copy.copy(self.current_Track_State[block].switches[switch])
 
-                #removes authority from blocks that are not being switched to
-                for switch in self.next_Track_State[block].switches:
-                    if self.next_Track_State[block].switch_To == self.next_Track_State[block].TO_PREV:
-                        off_block = self.next_Track_State[block].previous_Blocks[0]
-                        on_block = self.next_Track_State[block].previous_Blocks[1]
-                    else:
-                        off_block = self.next_Track_State[block].next_Blocks[0]
-                        on_block = self.next_Track_State[block].next_Blocks[1]
+                    #removes authority from blocks that are not being switched to
+                    for switch in self.next_Track_State[block].switches:
+                        if self.next_Track_State[block].switch_To == self.next_Track_State[block].TO_PREV:
+                            off_block = self.next_Track_State[block].previous_Blocks[0]
+                            on_block = self.next_Track_State[block].previous_Blocks[1]
+                        else:
+                            off_block = self.next_Track_State[block].next_Blocks[0]
+                            on_block = self.next_Track_State[block].next_Blocks[1]
 
-                    if switch == False:
-                        self.next_Track_State[on_block].authority = 0
-                    else:
-                        self.next_Track_State[off_block].authority = 0
+                        if switch == False:
+                            self.next_Track_State[on_block].authority = 0
+                        else:
+                            self.next_Track_State[off_block].authority = 0
 
-                #copies next track back to current track
-                self.current_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].commanded_Speed)
+                    #copies next track back to current track
+                    self.current_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].commanded_Speed)
 
-                self.current_Track_State[block].authority = copy.copy(self.next_Track_State[block].authority)
+                    self.current_Track_State[block].authority = copy.copy(self.next_Track_State[block].authority)
                 
-                for switch in range(len(self.current_Track_State[block].switches)):
-                    self.current_Track_State[block].switches[switch] = copy.copy(self.next_Track_State[block].switches[switch])
+                    for switch in range(len(self.current_Track_State[block].switches)):
+                        self.current_Track_State[block].switches[switch] = copy.copy(self.next_Track_State[block].switches[switch])
             
-                for light in range(len(self.current_Track_State[block].lights)):
-                    self.current_Track_State[block].lights[light] = copy.copy(self.next_Track_State[block].lights[light])
+                    for light in range(len(self.current_Track_State[block].lights)):
+                        self.current_Track_State[block].lights[light] = copy.copy(self.next_Track_State[block].lights[light])
 
-                for gate in range(len(self.current_Track_State[block].gates)):
-                    self.current_Track_State[block].gates[gate] = copy.copy(self.next_Track_State[block].gates[gate])
+                    for gate in range(len(self.current_Track_State[block].gates)):
+                        self.current_Track_State[block].gates[gate] = copy.copy(self.next_Track_State[block].gates[gate])
 
-            #longest track controller update period while ensured to properly detect trains is 1.6 seconds
+                #longest track controller update period while ensured to properly detect trains is 1.6 seconds
 
-            #goofy way to clean up previous occupancies once a train has left the track controller range
-            #basically checks both the train's last position +1 and -1 are in the list
-            #only works due to the jankyness of my previous position tracking system above
-            start_Exists = False
-            start_Plus2 = False
-            end_Exists = False
-            end_Minus2 = False
-            for occ in self.previous_Occupations:
-                if occ == "START":
-                    start_Exists = True
-                elif occ == "END":
-                    end_Exists = True
-                elif occ == self.next_Track_State[self.first_Block].get_Next_Block():
-                    start_Plus2 = True
-                elif occ == self.next_Track_State[self.final_Block].get_Previous_Block():
-                    end_Minus2 = True
+                #goofy way to clean up previous occupancies once a train has left the track controller range
+                #basically checks both the train's last position +1 and -1 are in the list
+                #only works due to the jankyness of my previous position tracking system above
+                start_Exists = False
+                start_Plus2 = False
+                end_Exists = False
+                end_Minus2 = False
+                for occ in self.previous_Occupations:
+                    if occ == "START":
+                        start_Exists = True
+                    elif occ == "END":
+                        end_Exists = True
+                    elif occ == self.next_Track_State[self.first_Block].get_Next_Block():
+                        start_Plus2 = True
+                    elif occ == self.next_Track_State[self.final_Block].get_Previous_Block():
+                        end_Minus2 = True
                 
-            if start_Exists == True and start_Plus2 == True and self.next_Track_State[self.first_Block].occupied == False:
-                self.previous_Occupations.remove("START")
-                self.previous_Occupations.remove(self.next_Track_State[self.first_Block].get_Next_Block())
-            elif end_Exists == True and end_Minus2 == True and self.next_Track_State[self.final_Block].occupied == False:
-                self.previous_Occupations.remove("END")
-                self.previous_Occupations.remove(self.next_Track_State[self.final_Block].get_Previous_Block())
+                if start_Exists == True and start_Plus2 == True and self.next_Track_State[self.first_Block].occupied == False:
+                    self.previous_Occupations.remove("START")
+                    self.previous_Occupations.remove(self.next_Track_State[self.first_Block].get_Next_Block())
+                elif end_Exists == True and end_Minus2 == True and self.next_Track_State[self.final_Block].occupied == False:
+                    self.previous_Occupations.remove("END")
+                    self.previous_Occupations.remove(self.next_Track_State[self.final_Block].get_Previous_Block())
 
 
-            #train padding check: creates a safety zone with all recently occupied blocks
-            #this is done last so that previous occupancies have a chance to update
-            for bl in self.previous_Occupations:
-                if bl != "START" and bl != "END":
-                    self.next_Track_State[bl].authority = 0
+                #train padding check: creates a safety zone with all recently occupied blocks
+                #this is done last so that previous occupancies have a chance to update
+                for bl in self.previous_Occupations:
+                    if bl != "START" and bl != "END":
+                        self.next_Track_State[bl].authority = 0
 
-            #unlocks track state
-            self.track_Lock = False
+                #unlocks track state
+                self.track_Lock = False
 
     #helper function to handle situations where a train is in two blocks at once
     #used in safety checks
@@ -690,26 +691,6 @@ class TrackController(QMainWindow):
             val = self.next_Track_State[block].occupied
 
         return val
-
-
-    #helper to update track state from ctc and track model
-    def update_track(self):
-        #stupid workaround to use these as pointers
-        temp_speed = [1]
-        temp_authority = [1]
-        temp_occupancy = [1]
-        temp_maintenance = [1]
-
-        for block in self.current_Track_State:
-            #use signal to call CTC get speed and authority
-            #passing temp_speed[0] & temp_authority[0] to use as psuedo pointers
-            self.current_Track_State[block].suggested_Speed = copy.copy(temp_speed[0])
-            self.current_Track_State[block].authority = copy.copy(temp_authority[0])
-            self.current_Track_State[block].closed = copy.copy(temp_maintenance[0])
-
-            #use signal to call Track Model to get occupancy
-            #passing temp_occupancy[0] to use as pointer
-            self.current_Track_State[block].occupied = copy.copy(temp_occupancy[0])
 
 
 #-------------------------------------------------------------------
@@ -734,6 +715,13 @@ class TrackController(QMainWindow):
         self.run_Vitals = False
         self.vital_Label.setText("Vital: Stopped")
         self.vital_Label.setStyleSheet("color: red")
+
+
+#-------------------------------------------------------
+# Signal handlers
+#-------------------------------------------------------
+    def setup_signals(self):
+        Signals.tc_update.connect(self.tick)
 
 
 #main for the whole Track Controller, simply creates an instance of TrackController
