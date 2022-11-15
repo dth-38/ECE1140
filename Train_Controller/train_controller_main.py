@@ -1,4 +1,5 @@
 import sys
+from simple_pid import PID
 from PyQt5 import QtCore, QtWidgets
 from PyQt5 import uic
 from errorWindow import warningWindow
@@ -6,57 +7,13 @@ from testWindow import testWindow
 
 form_mainWindow = uic.loadUiType("TrainController.ui")[0]
 
-#for power
-class power_calc:
-    def __init__(self):
-        self.ki = 0.0
-        self.kp = 0.0
-        self.power = 0.0
-        self.u_k = 0.0
-        self.u_k_1 = 0.0
-        self.e_k = 0.0
-        self.e_k_1 = 0.0
-        self.T = 1.0    #Time interval 1 sec, same as Timer rate
-        self.train_velocity = 0.0
-
-    #get methods
-    def get_ki(self):
-        return self.ki
-    def get_kp(self):
-        return self.kp
-
-    #set methods
-    def set_ki(self, num):
-        self.ki = num    
-    def set_kp(self, num):
-        self.kp = num
-    def set_train_velocity(self, num):
-        self.train_velocity = num
-    def calculate_power(self, actual_speed):
-        self.e_k = actual_speed - self.train_velocity
-        self.u_k = self.u_k_1 + (self.T / 2) * (self.e_k + self.e_k_1)
-        self.e_k_1 = self.e_k   #update e_k_1
-        self.power = (self.kp * self.e_k) + (self.ki * self.u_k)
-        return self.power
-
-    def reset_all(self):
-        self.ki = 0.0
-        self.kp = 0.0
-        self.power = 0.0
-        self.u_k = 0.0
-        self.u_k_1 = 0.0
-        self.e_k = 0.0
-        self.e_k_1 = 0.0
-        self.T = 1.0    #Time interval 1 sec, same as Timer rate
-        self.train_velocity = 0.0
-
-#for train
+#for keeping values of train
 class train_status:
 
     def __init__(self):
-        self.speed_limit = 60       #desired speed (from train model) that we want to reach
-        self.commanded_speed = 0.0  #commended speed from driver (manual mode)
-        self.speed = 0.0            #actual speed
+        self.speed_limit = 100
+        self.commanded_speed = 0.0  #commended speed (from manual mode) OR desired speed
+        self.speed = 0.0            #actual speed of train
         self.authority = 0.0
         self.door_left = "Off"
         self.door_right = "Off"
@@ -67,8 +24,13 @@ class train_status:
         self.horn = "On"
         self.temp = 68
         self.failure_flag = False
+        self.passenger_brake_flag = False
 
-        self.pp = power_calc()
+        self.ki = 0
+        self.kp = 0
+        self.pid = PID(self.kp, self.ki, 0, setpoint=self.commanded_speed) # initialize pid with fixed values
+        self.pid.outer_limits = (0, 120000)                                  # clamp at max power output specified in datasheet 120kW
+        self.power = 0
 
     #set methods
     def set_authority(self, num):
@@ -97,10 +59,12 @@ class train_status:
         self.temp = num
     def set_failure_flag(self, state):
         self.failure_flag = state
+    def set_passenger_brake_flag(self, state):
+        self.passenger_brake_flag = state
     def set_ki(self, num):
-        self.pp.set_ki(num)
+        self.ki = num
     def set_kp(self, num):
-        self.pp.set_kp(num)
+        self.kp = num
 
     #get methods
     def get_speed_limit(self):  #desired speed from train model
@@ -129,25 +93,31 @@ class train_status:
         return self.temp
     def get_failure_flag(self):
         return self.failure_flag
+    def get_passenger_brake_flag(self):
+        return self.passenger_brake_flag
+    def get_power(self):
+        return self.power
 
     def reset_all_train(self):
         self.ki = 0.0
         self.kp = 0.0
         self.power = 0.0
-        self.u_k = 0.0
-        self.u_k_1 = 0.0
-        self.e_k = 0.0
-        self.e_k_1 = 0.0
-        self.T = 1.0    #Time interval 1 sec, same as Timer rate
-        self.train_velocity = 0.0
-        self.pp.reset_all()
 
-    def get_power(self):
-        return self.power
+    def initialize_PID(self, kp_val, ki_val):
+        self.k_p = kp_val
+        self.k_i = ki_val
+        self.pid = PID(self.k_p, self.k_i, 0, setpoint=self.commanded_speed)
+        self.pid.outer_limits = (0, 120000) # clamp at max power output specified in datasheet 120kW
 
-    #power calculation
-    def power_calculation(self, s): #s = acual speed
-        return self.pp.calculate_power(s)
+    def get_power_output(self):
+        self.pid.setpoint = self.commanded_speed    #commanded speed = desired speed
+        self.power = self.pid(self.speed)
+        if self.power > 0:
+            return self.power
+        
+        else:
+            self.power = 0
+            return self.power
 
 
 class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
@@ -179,7 +149,6 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         self.auto_f = False     #flag for auto mode
         self.manual_f = False   #flag for manual mode
-        #self.failure_main_flag = False
 
         #update train controller display every 1 sec
         self.timer_update = QtCore.QTimer(self) 
@@ -362,7 +331,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         elif self.horn_off.isChecked(): return self.horn_off.text()
 
     #runs in train model
-    def update_in_controller(self, beacon):
+    def update_in_controller(self):
         #if failure occurs
         if self.real_train.get_failure_flag() == True:
             #decrease speed
@@ -374,8 +343,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         if self.real_train.get_power() == 0:
             self.auto_train_stopped()
 
-        #NOTE we have to use speed limit b/c we want to reach desired speed by giving more power
-        self.power_calculation(self.real_train.get_speed_limit())   #actually, not sure
+        #NOTE we try to reach desired speed by giving more power
+        self.real_train.get_power_output(self.real_train.get_commanded_speed()) 
 
         #update to screen
         self.update_train_display()
