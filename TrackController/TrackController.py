@@ -6,8 +6,9 @@ import copy
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel
 from PyQt5.QtGui import QFont
 from TrackController.Block import Block
-import TrackController.TCGUI.TextEditorGUI, TrackController.TCGUI.DebugGUI
-import TrackController.TCGUI.MaintenanceGUI, TrackController.TCGUI.ModifyGUI
+from TrackController.TCGUI.DebugGUI import DebugGUI
+from TrackController.TCGUI.MaintenanceGUI import MaintenanceGUI
+from TrackController.TCGUI.TextEditorGUI import TextEditorGUI
 from TrackController.PLCInterpreter.PLCInterpreter import PLCInterpreter
 
 
@@ -388,7 +389,7 @@ class TrackController(QMainWindow):
     #opens Debug menu
     def open_Debug(self):
         if self.debug is None:
-            self.debug = TCGUI.DebugGUI.DebugGUI(self.get_Track, self.set_Track, self.tick)
+            self.debug = DebugGUI(self.get_Track, self.set_Track, self.tick)
  
         self.in_Debug = True
         self.debug.show()
@@ -402,13 +403,13 @@ class TrackController(QMainWindow):
 
                 #passes the build_Track function to allow the text editor
                 #to refresh track on close
-                self.editor = TCGUI.TextEditorGUI.TextEditorGUI(self.build_Track, self.filename)
+                self.editor = TextEditorGUI(self.build_Track, self.filename)
             self.editor.show()
 
     #opens maintenance menu
     def open_Maintenance(self):
         if self.maintenance is None:
-            self.maintenance = TCGUI.MaintenanceGUI.MaintenanceGUI(self.get_Track)
+            self.maintenance = MaintenanceGUI(self.get_Track)
         
         self.in_Maintenance = True
         self.maintenance.show()
@@ -589,6 +590,19 @@ class TrackController(QMainWindow):
                     for switch in range(len(self.next_Track_State[block].switches)):
                         self.next_Track_State[block].switches[switch] = copy.copy(self.current_Track_State[block].switches[switch])
 
+                #removes authority from blocks that are not being switched to
+                for switch in self.next_Track_State[block].switches:
+                    if self.next_Track_State[block].switch_To == self.next_Track_State[block].TO_PREV:
+                        off_block = self.next_Track_State[block].previous_Blocks[0]
+                        on_block = self.next_Track_State[block].previous_Blocks[1]
+                    else:
+                        off_block = self.next_Track_State[block].next_Blocks[0]
+                        on_block = self.next_Track_State[block].next_Blocks[1]
+
+                    if switch == False:
+                        self.next_Track_State[on_block].authority = 0
+                    else:
+                        self.next_Track_State[off_block].authority = 0
 
                 #copies next track back to current track
                 self.current_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].commanded_Speed)

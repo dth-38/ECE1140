@@ -1,0 +1,88 @@
+;for sections A, B, C
+DEFINE TRACK
+    BLOCK green_A_1
+        M 28
+        P START
+        N green_A_2
+    END BLOCK
+
+    ;station Pioneer
+    BLOCK green_A_2
+        M 28
+        P green_A_1
+        N green_A_3
+        L 1
+    END BLOCK
+
+    BLOCK green_A_3
+        M 28
+        P green_A_2
+        N green_A_4
+    END BLOCK
+
+    BLOCK green_B_4
+        M 28
+        P green_A_3
+        N green_B_5
+    END BLOCK
+
+    BLOCK green_B_5
+        M 28
+        P green_B_4
+        N green_B_6
+    END BLOCK
+
+    BLOCK green_B_6
+        M 28
+        P green_B_5
+        N green_C_7
+    END BLOCK
+
+    BLOCK green_C_7
+        M 28
+        P green_B_6
+        N green_C_8
+    END BLOCK
+
+    BLOCK green_C_8
+        M 28
+        P green_C_7
+        N green_C_9
+    END BLOCK
+
+    ;station Edgebrook
+    BLOCK green_C_9
+        M 28
+        P green_C_8
+        N green_C_10
+        L 1
+    END BLOCK
+
+    BLOCK green_C_10
+        M 28
+        P green_C_9
+        N green_C_11
+    END BLOCK
+
+    BLOCK green_C_11
+        M 28
+        P green_C_10
+        N green_C_12
+    END BLOCK
+
+    BLOCK green_C_12
+        M 28
+        P green_C_11
+        N END
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;light controls for stations
+EQ green_A_2:light[0].RED, green_A_2:occupied
+NOT green_A_2:light[0].GREEN, green_A_2:light[0].RED
+
+EQ green_C_9:light[0].RED, green_C_9:occupied
+NOT green_A_2:light[0].GREEN, green_C_9:light[0].RED
+
+END LOGIC

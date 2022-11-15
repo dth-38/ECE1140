@@ -1,0 +1,80 @@
+;logic for blocks green_J_62/Yard to green_K_68
+
+DEFINE TRACK
+
+BLOCK green_J_62
+M 19
+P START
+N green_J_63
+L 1
+END BLOCK
+
+BLOCK yard
+P START
+N green_J_63
+L 1
+END BLOCK
+
+;switches to yard when switch is off(False)
+BLOCK green_J_63
+M 43
+S PREV, yard, green_J_62
+N green_J_64
+END BLOCK
+
+BLOCK green_J_64
+M 43
+P green_J_63
+N green_J_65
+END BLOCK
+
+;station Glenbury
+BLOCK green_J_65
+M 43
+P green_J_64
+N green_J_66
+L 1
+END BLOCK
+
+BLOCK green_J_66
+M 43
+P green_J_65
+N green_J_67
+END BLOCK
+
+BLOCK green_J_67
+M 25
+P green_J_66
+N green_J_68
+END BLOCK
+
+BLOCK green_J_68
+M 25
+P green_J_67
+N END
+END BLOCK
+END TRACK
+
+
+DEFINE LOGIC
+;controls switch position
+;only switches to yard if yard is occupied and 62 is not
+NOT t[0], yard:occupied
+OR green_J_63:switch[0], green_J_62:occupied, t[0]
+
+
+;controls switch lights
+OR t[1], green_J_63:occupied, green_J_64:occupied
+
+NOT t[2], green_J_63:switch[0]
+OR green_J_62:light[0].RED, t[1], t[2]
+NOT green_J_62:light[0].GREEN, green_J_62:light[0].RED
+
+OR yard:light[0].RED, t[1], green_J_63:switch[0]
+NOT yard:light[0].GREEN, yard:light[0].RED
+
+;controls station light
+EQ green_J_65:light[0].RED, green_J_65:occupied
+NOT green_J_65:light[0].GREEN, green_J_65:light[0].RED
+
+END LOGIC

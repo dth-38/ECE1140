@@ -1,0 +1,99 @@
+;logic for blocks green_N_85 O_86 and green_Q_100
+;huge overlap in N section blocks for safety
+;since I overlooked two way track sections
+
+DEFINE TRACK
+    BLOCK green_N_77
+        M 43
+        P START
+        N green_N_78
+    END BLOCK
+
+    BLOCK green_N_78
+        M 43
+        P green_N_77
+        N green_N_79
+    END BLOCK
+
+    BLOCK green_N_79
+        M 43
+        P green_N_78
+        N green_N_80
+    END BLOCK
+
+    BLOCK green_N_80
+        M 43
+        P green_N_79
+        N green_N_81
+    END BLOCK
+
+    BLOCK green_N_81
+        M 43
+        P green_N_80
+        N green_N_82
+    END BLOCK
+
+    BLOCK green_N_82
+        M 43
+        P green_N_81
+        N green_N_83
+    END BLOCK
+
+    BLOCK green_N_83
+        M 43
+        P green_N_82
+        N green_N_84
+    END BLOCK
+
+    BLOCK green_N_84
+        M 43
+        P green_N_83
+        N green_N_85
+    END BLOCK
+
+    ;switch on = green_Q_100, switch off = green_O_86
+    BLOCK green_N_85
+        M 43
+        P green_N_84
+        S NEXT, green_O_86, green_Q_100
+    END BLOCK
+
+    BLOCK green_O_86
+        M 16
+        P green_N_85
+        N END
+        L 1
+    END BLOCK
+
+    BLOCK green_Q_100
+        M 16
+        P green_N_85
+        N END
+        L 1
+    END BLOCK
+END TRACK
+
+
+DEFINE LOGIC
+
+;switch control checks for any occupancies in the N section
+OR t[0], green_N_77:occupied, green_N_78:occupied
+OR t[0], t[0], green_N_79:occupied
+OR t[0], t[0], green_N_80:occupied
+OR t[0], t[0], green_N_81:occupied
+OR t[0], t[0], green_N_82:occupied
+OR t[0], t[0], green_N_83:occupied
+OR t[0], t[0], green_N_84:occupied
+OR t[0], t[0], green_N_85:occupied
+NOT t[0], t[0]
+AND green_N_77:switch[0], t[0], green_Q_100:occupied
+
+;light control for O_86
+EQ green_O_86:light[0].RED, green_O_86:switch[0]
+NOT green_O_86:light[0].GREEN, green_O_86:light[0].RED
+
+;light control for Q_100
+EQ green_Q_100:light[0].GREEN, green_O_86:switch[0]
+NOT green_Q_100:light[0].RED, green_Q_100:light[0].GREEN
+
+END LOGIC

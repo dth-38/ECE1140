@@ -1,62 +1,37 @@
+;logic for blocks green_J_58 through 62
+
 DEFINE TRACK
-;comment in track
-BLOCK red_A_1
-L 2
-;comment in block
-G 1
-M 30
+BLOCK green_J_58
+M 19
 P START
-N red_A_2
+N green_J_59
 END BLOCK
-BLOCK red_A_2
-M 20
-P red_A_1
-N red_A_3
+
+BLOCK green_J_59
+M 19
+P green_J_58
+N green_J_60
 END BLOCK
-BLOCK red_A_3
-M 50
-P red_A_2
-S NEXT, red_A_4, red_A_5
+
+BLOCK green_J_60
+M 19
+P green_J_59
+N green_J_61
 END BLOCK
-BLOCK red_A_4
-P red_A_3
-M 50
+
+BLOCK green_J_61
+P green_J_60
+M 19
+N green_J_62
+END BLOCK
+
+BLOCK green_J_62
+M 19
+P green_J_61
 N END
-L 1
-END BLOCK
-BLOCK red_A_5
-M 30
-P red_A_3
-N END
-L 1
 END BLOCK
 END TRACK
 
-;comment
+;no logic since the section does not contain anything
 DEFINE LOGIC
-AND t[0], red_A_1:occupied, red_A_1:failed
-OR red_A_1:switch[0], t[0], red_A_1:light[0].RED
-EQ t[1], t[0]
-NOT red_A_1:gate[0], t[1]
-EQ red_A_1:light[0].GREEN, TRUE
-NOT red_A_1:light[0].RED, red_A_1:light[0].GREEN
-OR red_A_1:switch[0], red_A_2:occupied, red_A_1:light[0].GREEN
-
-;checks if red_A_5 is occupied before switching and allowing a train to move that direction
-NOT t[1], red_A_5:occupied
-AND t[1], t[1], red_A_5:exit
-EQ red_A_3:switch[0], t[1]
-
-;checks if red_A_4 is occupied before switching and allowing a train to move that direction
-NOT t[2], red_A_4:occupied
-AND t[2], t[2], red_A_4:exit
-NOT red_A_3:switch[0], t[2]
-
-;sets lights according to switch position
-EQ red_A_5:light[0].GREEN, red_A_3:switch[0]
-NOT red_A_5:light[0].RED, red_A_3:switch[0]
-
-NOT red_A_4:light[0].GREEN, red_A_3:switch[0]
-EQ red_A_4:light[0].RED, red_A_3:switch[0]
-
 END LOGIC
