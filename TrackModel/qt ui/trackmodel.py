@@ -8,7 +8,6 @@ class TrackModel:
         self.trains = []
         self.controllers = []
         self.lines = []
-        self.stations = []
         self.train_locs = [len(self.trains)]
         self.heaters = []
 
@@ -72,6 +71,7 @@ class TrackModel:
         for j in range(table.rowCount()):
             self.set_beacon_values(line, line.get_block(j))
 
+    ## Load string values from the infrastructure section of the track information sheet
     def load_infra_values(self, file, table, block, row, col):
         ## Get station and other infrastructure information
         infra = file.get_cell_text(table, row, col)
@@ -139,3 +139,6 @@ class TrackModel:
 
         ## Send previous and next station data to the corresponding block
         block.set_beacon(station1, station2, side)
+
+    ## Update current track information every second
+    ##def update_model(self):
