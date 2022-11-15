@@ -1,9 +1,7 @@
 from line import *
-from station import *
 from heater import *
 from trainloc import *
 from track_info import *
-from railwaycrossing import *
 
 class TrackModel:
     def __init__(self):
@@ -55,11 +53,11 @@ class TrackModel:
                     if (headers[i].text() == "Section"):
                         new_block.section = file.get_cell_text(table, x, i)
                     elif (headers[i].text() == "Block Number"):
-                        new_block.number = file.get_cell_text(table, x, i)
+                        new_block.number = int(file.get_cell_text(table, x, i))
                     elif (headers[i].text() == "Block Length (m)"):
-                        new_block.length = file.get_cell_text(table, x, i)
+                        new_block.length = int(file.get_cell_text(table, x, i))
                     elif (headers[i].text() == "Block Grade (%)"):
-                        new_block.grade = file.get_cell_text(table, x, i)
+                        new_block.grade = int(file.get_cell_text(table, x, i))
                     elif (headers[i].text() == "Speed Limit (Km/Hr)"):
                         new_block.commanded_speed = file.get_cell_text(table, x, i)
                     elif (headers[i].text() == "ELEVATION (M)"):
@@ -70,9 +68,9 @@ class TrackModel:
             ## Add new block to block list for correct line
             line.blocks.append(new_block)
 
-        # ## Set beacon values for the blocks
-        # for j in range(table.rowCount()):
-        #     self.set_beacon_values(line, line.get_block(j))
+        ## Set beacon values for the blocks
+        for j in range(table.rowCount()):
+            self.set_beacon_values(line, line.get_block(j))
 
     def load_infra_values(self, file, table, block, row, col):
         ## Get station and other infrastructure information
@@ -103,39 +101,41 @@ class TrackModel:
             ## Set name to corresponding station
             block.get_station().set_name(name)
 
-    # ## Call function after all blocks for each line are set
-    # def set_beacon_values(self, line, block):
-    #     station1 = ""
-    #     station2 = ""
-    #     side = ""
+    ## Call function after all blocks for each line are set
+    def set_beacon_values(self, line, block):
+        station1 = ""
+        station2 = ""
+        side = ""
 
-    #     ## Set station to yard at first block for each line
-    #     num = block.get_number()
-    #     if (num == 1):
-    #         block.set_station(Station())
-    #         block.get_station().set_name("YARD")
+        ## Create new beacon for each block
+        block.beacon = Beacon(station1, station2, side)
 
-    #     ## Get previous station
-    #     n = num
-    #     while (n > 1):
-    #         ## Iterate through previous block until the most recent station is found
-    #         n -= 1
-    #         prev_station = line.get_block(n).get_station()
-    #         if prev_station is not None:
-    #             station1 = prev_station
-    #             break
+        ## Set station to yard at first block for each line
+        num = block.get_number()
+        if (num == 1):
+            block.set_station(Station())
+            block.get_station().set_name("YARD")
 
-    #     ## Get upcoming station
-    #     n = num
-    #     while (n < (len(line.blocks) - 1)):
-    #         ## Iterate through previous block until the most recent station is found
-    #         n += 1
-    #         if line.get_block(n) is not None:
-    #             next_station = line.get_block(n).get_station()
-    #             print(next_station.get_name())
-    #             if next_station is not None:
-    #                 station2 = next_station
-    #                 break
+        ## Get previous station
+        n = num
+        while (n > 1):
+            ## Iterate through previous block until the most recent station is found
+            n -= 1
+            prev_station = line.get_block(n).get_station()
+            if prev_station is not None:
+                station1 = prev_station
+                break
 
-    #     ## Send previous and next station data to the corresponding block
-    #     block.set_beacon(station1, station2, side)
+        ## Get upcoming station
+        n = num
+        while (n < (len(line.blocks) - 1)):
+            ## Iterate through previous block until the most recent station is found
+            n += 1
+            if line.get_block(n) is not None:
+                next_station = line.get_block(n).get_station()
+                if next_station is not None:
+                    station2 = next_station
+                    break
+
+        ## Send previous and next station data to the corresponding block
+        block.set_beacon(station1, station2, side)
