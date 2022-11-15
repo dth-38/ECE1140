@@ -1,0 +1,72 @@
+;logic for roughly sections R,S, and T
+DEFINE TRACK
+    BLOCK green_R_101
+        M 16
+        P START
+        N green_S_102
+    END BLOCK
+
+    BLOCK green_S_102
+        M 17
+        P green_R_101
+        N green_S_103
+    END BLOCK
+
+    BLOCK green_S_103
+        M 17
+        P green_S_102
+        N green_S_104
+    END BLOCK
+
+    BLOCK green_S_104
+        M 17
+        P green_S_103
+        N green_T_105
+    END BLOCK
+
+    ;station Dormont
+    BLOCK green_T_105
+        M 17
+        P green_S_104
+        N green_T_106
+        L 1
+    END BLOCK
+
+    BLOCK green_T_106
+        M 17
+        P green_T_105
+        N green_T_107
+    END BLOCK
+
+    BLOCK green_T_107
+        M 17
+        P green_T_106
+        N green_T_108
+    END BLOCK
+
+    BLOCK green_T_108
+        M 17
+        P green_T_107
+        N green_T_109
+    END BLOCK
+
+    BLOCK green_T_109
+        M 17
+        P green_T_108
+        N green_U_110
+    END BLOCK
+
+    BLOCK green_U_110
+        M 19
+        P green_T_109
+        N END
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+
+;light control for Dormont station
+EQ green_T_105:light[0].RED, green_T_105:occupied
+NOT green_T_105:light[0].GREEN, green_T_105:light[0].RED
+
+END LOGIC

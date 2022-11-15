@@ -1,0 +1,102 @@
+;logic for blocks green_M_76 through green_N_81 + green_R_101
+
+DEFINE TRACK
+    BLOCK green_M_76
+        M 25
+        P START
+        N green_N_77
+        L 1
+    END BLOCK
+
+    BLOCK green_R_101
+        M 16
+        P START
+        N green_N_77
+        L 1
+    END BLOCK
+
+    ;switch off = green_M_76, switch on = green_R_101
+    ;station Mt.Lebanon
+    BLOCK green_N_77
+        M 43
+        S PREV, green_M_76, green_R_101
+        N green_N_78
+        L 1
+    END BLOCK
+
+    BLOCK green_N_78
+        M 43
+        P green_N_77
+        N green_N_79
+    END BLOCK
+
+    BLOCK green_N_79
+        M 43
+        P green_N_78
+        N green_N_80
+    END BLOCK
+
+    BLOCK green_N_80
+        M 43
+        P green_N_79
+        N green_N_81
+    END BLOCK
+
+    BLOCK green_N_81
+        M 43
+        P green_N_80
+        N green_N_82
+    END BLOCK
+
+    BLOCK green_N_82
+        M 43
+        P green_N_81
+        N green_N_83
+    END BLOCK
+
+    BLOCK green_N_83
+        M 43
+        P green_N_82
+        N green_N_84
+    END BLOCK
+
+    BLOCK green_N_84
+        M 43
+        P green_N_83
+        N green_N_85
+    END BLOCK
+
+    BLOCK green_N_85
+        M 43
+        P green_N_84
+        N END
+    END BLOCK
+END TRACK
+
+
+DEFINE LOGIC
+
+;switch control checks for any occupancies in the N section
+OR t[0], green_N_77:occupied, green_N_78:occupied
+OR t[0], t[0], green_N_79:occupied
+OR t[0], t[0], green_N_80:occupied
+OR t[0], t[0], green_N_81:occupied
+OR t[0], t[0], green_N_82:occupied
+OR t[0], t[0], green_N_83:occupied
+OR t[0], t[0], green_N_84:occupied
+OR green_N_77:switch[0], t[0], green_N_85:occupied
+
+;light control for R 101
+NOT t[1], green_R_101:occupied
+AND green_R_101:light[0].GREEN, green_N_77:switch[0], t[1]
+NOT green_R_101:light[0].RED, green_R_101:light[0].GREEN
+
+;light control for M 76
+EQ green_M_76:light[0].RED, green_N_77:switch[0]
+NOT green_M_76:light[0].GREEN, green_M_76:light[0].RED
+
+;light control for Mt. Lebanon station
+EQ green_N_77:light[0].RED, green_N_77:occupied
+NOT green_N_77:light[0].GREEN, green_N_77:light[0].RED
+
+END LOGIC

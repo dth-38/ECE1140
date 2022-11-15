@@ -1,0 +1,149 @@
+DEFINE TRACK
+    BLOCK green_C_12
+        M 28
+        P START
+        N green_D_13
+        L 1
+    END BLOCK
+
+    BLOCK green_A_1
+        M 28
+        P START
+        N green_D_13
+        L 1
+    END BLOCK
+
+    ;switch off = green_C_12, switch on = green_A_1
+    BLOCK green_D_13
+        M 43
+        S PREV, green_C_12, green_A_1
+        N green_D_14
+    END BLOCK
+
+    BLOCK green_D_14
+        M 43
+        P green_D_13
+        N green_D_15
+    END BLOCK
+
+    BLOCK green_D_15
+        M 43
+        P green_D_14
+        N green_D_16
+    END BLOCK
+
+    BLOCK green_D_16
+        M 43
+        P green_D_15
+        N green_E_17
+    END BLOCK
+
+    BLOCK green_E_17
+        M 37
+        P green_D_16
+        N green_E_18
+    END BLOCK
+
+    BLOCK green_E_18
+        M 37
+        P green_E_17
+        N green_E_18
+    END BLOCK
+
+    BLOCK green_E_19
+        M 37
+        P green_E_18
+        N green_E_20
+    END BLOCK
+    
+    BLOCK green_E_20
+        M 37
+        P green_E_19
+        N green_F_21
+    END BLOCK
+
+    BLOCK green_F_21
+        M 43
+        P green_E_20
+        N green_F_22
+    END BLOCK
+
+    BLOCK green_F_22
+        M 43
+        P green_F_21
+        N green_F_23
+    END BLOCK
+
+    BLOCK green_F_23
+        M 43
+        P green_F_22
+        N green_F_24
+    END BLOCK
+
+    BLOCK green_F_24
+        M 43
+        P green_F_23
+        N green_F_25
+    END BLOCK
+
+    BLOCK green_F_25
+        M 43
+        P green_F_24
+        N green_F_26
+    END BLOCK
+
+    BLOCK green_F_26
+        M 43
+        P green_F_25
+        N green_F_27
+    END BLOCK
+
+    BLOCK green_F_27
+        M 19
+        P green_F_26
+        N green_F_28
+    END BLOCK
+
+    BLOCK green_F_28
+        M 19
+        P green_F_27
+        N green_G_29
+    END BLOCK
+
+    BLOCK green_G_29
+        M 19
+        P green_F_28
+        N END
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;logic for switch in green_G_29
+OR t[0], green_D_13:occupied, green_D_14:occupied
+OR t[0], t[0], green_D_15:occupied
+OR t[0], t[0], green_D_16:occupied
+OR t[0], t[0], green_E_17:occupied
+OR t[0], t[0], green_E_18:occupied
+OR t[0], t[0], green_E_19:occupied
+OR t[0], t[0], green_E_20:occupied
+OR t[0], t[0], green_F_21:occupied
+OR t[0], t[0], green_F_22:occupied
+OR t[0], t[0], green_F_23:occupied
+OR t[0], t[0], green_F_24:occupied
+OR t[0], t[0], green_F_25:occupied
+OR t[0], t[0], green_F_26:occupied
+OR t[0], t[0], green_F_27:occupied
+OR t[0], t[0], green_F_28:occupied
+OR t[0], t[0], green_G_29:occupied
+NOT t[1], t[0]
+
+AND green_D_13:switch[0], t[1], green_A_1:occupied
+
+;light controls for switching
+EQ green_A_1:light[0].GREEN, green_D_13:switch[0]
+NOT green_A_1:light[0].RED, green_A_1:light[0].GREEN
+
+OR green_C_12:light[0].RED, green_D_13:switch[0], green_C_12:occupied
+NOT green_C_12:light[0].GREEN, green_C_12:light[0].RED
+
+END LOGIC

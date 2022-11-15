@@ -1,0 +1,165 @@
+;for section I
+DEFINE TRACK
+    BLOCK green_I_36
+        M 19
+        P START
+        N green_I_37
+    END BLOCK
+
+    BLOCK green_I_37
+        M 19
+        P green_I_36
+        N green_I_38
+    END BLOCK
+
+    BLOCK green_I_38
+        M 19
+        P green_I_37
+        N green_I_39
+    END BLOCK
+
+    ;station Central
+    BLOCK green_I_39
+        M 19
+        P green_I_38
+        N green_I_40
+        L
+    END BLOCK
+
+    BLOCK green_I_40
+        M 19
+        P green_I_39
+        N green_I_41
+    END BLOCK
+
+    BLOCK green_I_41
+        M 19
+        P green_I_40
+        N green_I_42
+    END BLOCK
+
+    BLOCK green_I_42
+        M 19
+        P green_I_41
+        N green_I_43
+    END BLOCK
+    
+    BLOCK green_I_43
+        M 19
+        P green_I_42
+        N green_I_44
+    END BLOCK
+
+    BLOCK green_I_44
+        M 19
+        P green_I_43
+        N green_I_45
+    END BLOCK
+
+    BLOCK green_I_45
+        M 19
+        P green_I_44
+        N green_I_46
+    END BLOCK
+
+    BLOCK green_I_46
+        M 19
+        P green_I_45
+        N green_I_47
+    END BLOCK
+
+    BLOCK green_I_47
+        M 19
+        P green_I_46
+        N green_I_48
+    END BLOCK
+
+    ;station Inglewood
+    BLOCK green_I_48
+        M 19
+        P green_I_47
+        N green_I_49
+        L 1
+    END BLOCK
+
+    BLOCK green_I_49
+        M 19
+        P green_I_48
+        N green_I_50
+    END BLOCK
+
+    BLOCK green_I_50
+        M 19
+        P green_I_49
+        N green_I_51
+    END BLOCK
+
+    BLOCK green_I_51
+        M 19
+        P green_I_50
+        N green_I_52
+    END BLOCK
+
+    BLOCK green_I_52
+        M 19
+        P green_I_51
+        N green_I_53
+    END BLOCK
+
+    BLOCK green_I_53
+        M 19
+        P green_I_52
+        N green_I_54
+    END BLOCK
+
+    BLOCK green_I_54
+        M 19
+        P green_I_53
+        N green_I_55
+    END BLOCK
+
+    BLOCK green_I_55
+        M 19
+        P green_I_54
+        N green_I_56
+    END BLOCK
+
+    BLOCK green_I_56
+        M 19
+        P green_I_55
+        N green_I_57
+    END BLOCK
+
+    ;switch off = yard, switch on = J_58
+    BLOCK green_I_57
+        M 19
+        P green_I_56
+        S NEXT, yard, green_J_58
+    END BLOCK
+
+    BLOCK yard
+        P green_I_57
+        N END
+        L 1
+    END BLOCK
+
+    BLOCK green_J_58
+        M 19
+        P green_I_57
+        N END
+        L 1
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;logic for switch in green_I_57
+EQ green_I_57:switch[0], green_J_58.exit
+
+;light controls
+EQ yard:light[0].GREEN, green_I_57:switch[0]
+NOT yard:light[0].RED, yard:light[0].GREEN
+
+EQ green_J_58:light[0].RED, green_I_57:switch[0]
+NOT green_J_58:light[0].GREEN, green_J_58:light[0].RED
+
+END LOGIC

@@ -1,0 +1,47 @@
+;for sections X, Y, Z
+DEFINE TRACK
+    BLOCK green_X_144
+        M 12
+        P START
+        N green_X_145
+    END BLOCK
+
+    BLOCK green_X_145
+        M 12
+        P green_X_144
+        N green_X_146
+    END BLOCK
+
+    BLOCK green_X_146
+        M 12
+        P green_X_145
+        N green_Y_147
+    END BLOCK
+
+    BLOCK green_Y_147
+        M 12
+        P green_X_146
+        N green_Y_148
+    END BLOCK
+
+    BLOCK green_Y_148
+        M 12
+        P green_Y_147
+        N green_Y_149
+    END BLOCK
+
+    BLOCK green_Y_149
+        M 12
+        P green_Y_148
+        N green_Z_150
+    END BLOCK
+
+    BLOCK green_Z_150
+        M 12
+        P green_Y_149
+        N END
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+END LOGIC

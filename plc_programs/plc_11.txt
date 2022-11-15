@@ -1,0 +1,53 @@
+;for section G and H, does not include G_29 with switch
+DEFINE TRACK
+    BLOCK green_G_30
+        M 19
+        P START
+        N green_G_31
+    END BLOCK
+
+    ;station South Bank
+    BLOCK green_G_31
+        M 19
+        P green_G_30
+        N green_G_32
+        L 1
+    END BLOCK
+
+    BLOCK green_G_32
+        M 19
+        P green_G_31
+        N green_H_33
+    END BLOCK
+
+    BLOCK green_H_33
+        M 19
+        P green_G_32
+        N green_H_34
+    END BLOCK
+
+    BLOCK green_H_34
+        M 19
+        P green_H_33
+        N green_H_35
+    END BLOCK
+
+    BLOCK green_H_35
+        M 19
+        P green_H_34
+        N green_I_36
+    END BLOCK
+
+    BLOCK green_I_36
+        M 19
+        P green_H_35
+        N END
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;light control for South Bank station
+EQ green_G_31:light[0].RED, green_G_31:occupied
+NOT green_G_31:light[0].GREEN, green_G_31:light[0].RED
+
+END LOGIC

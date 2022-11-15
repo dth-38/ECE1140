@@ -1,0 +1,58 @@
+;blocks green_K_68 through green_M_76
+DEFINE TRACK
+    BLOCK green_K_68
+        M 25
+        P START
+        N green_L_69
+    END BLOCK
+
+    BLOCK green_L_69
+        M 25
+        P green_K_68
+        N green_L_70
+    END BLOCK
+
+    BLOCK green_L_70
+        M 25
+        P green_L_69
+        N green_L_71
+    END BLOCK
+
+    BLOCK green_L_71
+        M 25
+        P green_L_70
+        N green_L_72
+    END BLOCK
+
+    BLOCK green_L_72
+        M 25
+        P green_L_71
+        N green_L_73
+    END BLOCK
+
+    ;station Dormont
+    BLOCK green_L_73
+        M 25
+        P green_L_72
+        N green_M_74
+        L 1
+    END BLOCK
+
+    BLOCK green_M_74
+        M 25
+        P green_L_73
+        N green_M_75
+    END BLOCK
+
+    BLOCK green_M_75
+        M 25
+        P green_M_74
+        N green_M_76
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;logic for Dormont light control
+EQ green_L_73:light[0].RED, green_L_73:occupied
+NOT green_L_73:light[0].GREEN, green_L_73:light[0].RED
+END LOGIC

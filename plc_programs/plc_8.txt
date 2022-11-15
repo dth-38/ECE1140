@@ -1,0 +1,155 @@
+;logic for W section
+DEFINE TRACK
+    BLOCK green_W_122
+        M 12
+        P START
+        N green_W_123
+    END BLOCK
+
+    BLOCK green_W_123
+        M 12
+        P green_W_122
+        N green_W_124
+    END BLOCK
+
+    BLOCK green_W_124
+        M 12
+        P green_W_123
+        N green_W_125
+    END BLOCK
+
+    BLOCK green_W_125
+        M 12
+        P green_W_124
+        N green_W_126
+    END BLOCK
+
+    BLOCK green_W_126
+        M 12
+        P green_W_125
+        N green_W_127
+    END BLOCK
+
+    BLOCK green_W_127
+        M 12
+        P green_W_126
+        N green_W_128
+    END BLOCK
+
+    BLOCK green_W_128
+        M 12
+        P green_W_127
+        N green_W_129
+    END BLOCK
+
+    BLOCK green_W_129
+        M 12
+        P green_W_128
+        N green_W_127
+    END BLOCK
+
+    BLOCK green_W_130
+        M 12
+        P green_W_129
+        N green_W_131
+    END BLOCK
+
+    BLOCK green_W_131
+        M 12
+        P green_W_130
+        N green_W_132
+    END BLOCK
+
+    ;station Inglewood
+    BLOCK green_W_132
+        M 12
+        P green_W_131
+        N green_W_133
+        L 1
+    END BLOCK
+
+    BLOCK green_W_133
+        M 12
+        P green_W_132
+        N green_W_134
+    END BLOCK
+
+    BLOCK green_W_134
+        M 12
+        P green_W_133
+        N green_W_135
+    END BLOCK
+
+    BLOCK green_W_135
+        M 12
+        P green_W_134
+        N green_W_136
+    END BLOCK
+
+    BLOCK green_W_136
+        M 12
+        P green_W_135
+        N green_W_137
+    END BLOCK
+
+    BLOCK green_W_137
+        M 12
+        P green_W_136
+        N green_W_138
+    END BLOCK
+
+    BLOCK green_W_138
+        M 12
+        P green_W_137
+        N green_W_139
+    END BLOCK
+
+    BLOCK green_W_139
+        M 12
+        P green_W_138
+        N green_W_140
+    END BLOCK
+
+    BLOCK green_W_140
+        M 12
+        P green_W_139
+        N green_W_141
+    END BLOCK
+
+    ;station Central
+    BLOCK green_W_141
+        M 12
+        P green_W_140
+        N green_W_142
+        L 1
+    END BLOCK
+
+    BLOCK green_W_142
+        M 12
+        P green_W_141
+        N green_W_143
+    END BLOCK
+
+    BLOCK green_W_143
+        M 12
+        P green_W_142
+        N green_X_144
+    END BLOCK
+
+    BLOCK green_X_144
+        M 12
+        P green_W_143
+        N END
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;light control for Inglewood station
+EQ green_W_132:light[0].RED, green_W_132:occupied
+NOT green_W_132:light[0].GREEN, green_W_132:light[0].RED
+
+;light control for Central station
+EQ green_W_141:light[0].RED, green_W_141:occupied
+NOT green_W_141:light[0].GREEN, green_W_141:light[0].RED
+
+END LOGIC

@@ -1,0 +1,89 @@
+;logic for sections U and V
+DEFINE TRACK
+    BLOCK green_U_110
+        M 19
+        P START
+        N green_U_111
+    END BLOCK
+
+    BLOCK green_U_111
+        M 19
+        P green_U_110
+        N green_U_112
+    END BLOCK
+
+    BLOCK green_U_112
+        M 19
+        P green_U_111
+        N green_U_113
+    END BLOCK
+
+    BLOCK green_U_113
+        M 19
+        P green_U_112
+        N green_U_114
+    END BLOCK
+
+    ;station Glenbury
+    BLOCK green_U_114
+        M 19
+        P green_U_113
+        N green_U_115
+        L 1
+    END BLOCK
+
+    BLOCK green_U_115
+        M 19
+        P green_U_114
+        N green_U_116
+    END BLOCK
+
+    BLOCK green_U_116
+        M 19
+        P green_U_115
+        N green_V_117
+    END BLOCK
+    
+    BLOCK green_V_117
+        M 9
+        P green_U_116
+        N green_V_118
+    END BLOCK
+
+    BLOCK green_V_118
+        M 9
+        P green_V_117
+        N green_V_119
+    END BLOCK
+
+    BLOCK green_V_119
+        M 9
+        P green_V_118
+        N green_V_120
+    END BLOCK
+
+    BLOCK green_V_120
+        M 9
+        P green_V_119
+        N green_V_121
+    END BLOCK
+
+    BLOCK green_V_121
+        M 9
+        P green_V_120
+        N green_W_122
+    END BLOCK
+
+    BLOCK green_W_122
+        M 12
+        P green_V_121
+        N END
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;light control for Glenbury station
+EQ green_U_114:light[0].RED, green_U_114:occupied
+NOT green_U_114:light[0].GREEN, green_U_114:light[0].RED
+
+END LOGIC

@@ -1,0 +1,107 @@
+;logic for O and P sections
+DEFINE TRACK
+    BLOCK green_O_86
+        M 16
+        P START
+        N green_O_87
+    END BLOCK
+
+    BLOCK green_O_87
+        M 16
+        P green_O_86
+        N green_O_88
+    END BLOCK
+
+    ;station Poplar
+    BLOCK green_O_88
+        M 16
+        P green_O_87
+        N green_P_89
+        L 1
+    END BLOCK
+
+    BLOCK green_P_89
+        M 16
+        P green_O_88
+        N green_P_90
+    END BLOCK
+
+    BLOCK green_P_90
+        M 16
+        P green_P_89
+        N green_P_91
+    END BLOCK
+
+    BLOCK green_P_91
+        M 16
+        P green_P_90
+        N green_P_92
+    END BLOCK
+
+    BLOCK green_P_92
+        M 16
+        P green_P_91
+        N green_P_93
+    END BLOCK
+
+    BLOCK green_P_93
+        M 16
+        P green_P_92
+        N green_P_94
+    END BLOCK
+
+    BLOCK green_P_94
+        M 16
+        P green_P_93
+        N green_P_95
+    END BLOCK
+
+    BLOCK green_P_95
+        M 16
+        P green_P_94
+        N green_P_96
+    END BLOCK
+
+    ;station Castle Shannon
+    BLOCK green_P_96
+        M 16
+        P green_P_95
+        N green_P_97
+        L 1
+    END BLOCK
+
+    BLOCK green_P_97
+        M 16
+        P green_P_96
+        N green_Q_98
+    END BLOCK
+
+    BLOCK green_Q_98
+        M 16
+        P green_P_97
+        N green_Q_99
+    END BLOCK
+
+    BLOCK green_Q_99
+        M 16
+        P green_Q_98
+        N green_Q_100
+    END BLOCK
+
+    BLOCK green_Q_100
+        M 16
+        P green_Q_99
+        N END
+    END BLOCK
+
+
+DEFINE LOGIC
+;light control for Poplar station
+EQ green_O_88:light[0].RED, green_O_88:occupied
+NOT green_O_88:light[0].GREEN, green_O_88:light[0].RED
+
+;light control for Castle Shannon station
+EQ green_P_96:light[0].RED, green_P_96:occupied
+NOT green_P_96:light[0].GREEN, green_P_96:light[0].RED
+
+END LOGIC
