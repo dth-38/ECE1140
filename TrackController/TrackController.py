@@ -434,6 +434,17 @@ class TrackController(QMainWindow):
         else:
             return None
 
+    #checks if a block connected to the track controller
+    def check_connection(self, block):
+        found = False
+        for key in self.current_Track_State.keys():
+            if block == key:
+                found = True
+                break
+
+        return found
+
+
 #-----------------------------------------------------------------
 # DEPRECATED, ONLY HERE TO PREVENT DEBUG MENU FROM BREAKING
 #-----------------------------------------------------------------
