@@ -2,7 +2,7 @@ import sys
 from PyQt5 import QtCore, QtWidgets
 from PyQt5 import uic
 from errorWindow import warningWindow
-from testWindow import testWindow, trainBody
+from testWindow import testWindow
 
 form_mainWindow = uic.loadUiType("TrainController.ui")[0]
 
@@ -54,18 +54,19 @@ class power_calc:
 class train_status:
 
     def __init__(self):
-        self.speed_limit = 60 #mph in default
-        self.commanded_speed = 0.0
-        self.speed = 0.0
+        self.speed_limit = 60       #desired speed (from train model) that we want to reach
+        self.commanded_speed = 0.0  #commended speed from driver (manual mode)
+        self.speed = 0.0            #actual speed
         self.authority = 0.0
-        self.door_left = ""
-        self.door_right = ""
-        self.internal_light = ""
-        self.external_light = ""
-        self.annun = ""
-        self.ad = ""
-        self.horn = ""
-        self.temp = 0.0
+        self.door_left = "Off"
+        self.door_right = "Off"
+        self.internal_light = "On"
+        self.external_light = "Off"
+        self.annun = "On"
+        self.ad = "On"
+        self.horn = "On"
+        self.temp = 68
+        self.failure_flag = False
 
         self.pp = power_calc()
 
@@ -74,9 +75,9 @@ class train_status:
         self.authority = num
     def set_commanded_speed(self, num):
         self.commanded_speed = num
-    def set_speed(self, num):
+    def set_speed(self, num):       #actual speed
         self.speed = num
-    def set_speed_limit(self, num):
+    def set_speed_limit(self, num): #desired speed
         self.speed_limit = num
     def set_door_left(self, state):
         self.door_left = state
@@ -94,18 +95,19 @@ class train_status:
         self.horn = state
     def set_temp(self, num):
         self.temp = num
-    
+    def set_failure_flag(self, state):
+        self.failure_flag = state
     def set_ki(self, num):
         self.pp.set_ki(num)
     def set_kp(self, num):
         self.pp.set_kp(num)
 
     #get methods
-    def get_speed_limit(self):
+    def get_speed_limit(self):  #desired speed from train model
         return self.speed_limit
-    def get_commanded_speed(self):
+    def get_commanded_speed(self):  #commended speed from manual mode (driver)
         return self.commanded_speed
-    def get_speed(self):
+    def get_speed(self):    #current speed of the train
         return self.speed
     def get_authority(self):
         return self.authority
@@ -125,6 +127,8 @@ class train_status:
         return self.horn
     def get_temp(self):
         return self.temp
+    def get_failure_flag(self):
+        return self.failure_flag
 
     def reset_all_train(self):
         self.ki = 0.0
@@ -138,8 +142,11 @@ class train_status:
         self.train_velocity = 0.0
         self.pp.reset_all()
 
+    def get_power(self):
+        return self.power
+
     #power calculation
-    def get_power(self, s): #s = acual speed
+    def power_calculation(self, s): #s = acual speed
         return self.pp.calculate_power(s)
 
 
@@ -158,7 +165,6 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.reset_button.clicked.connect(self.reset)
         self.apply_button.clicked.connect(self.apply_driver_change)
         self.engineer_apply_button.clicked.connect(self.apply_engineer_change)
-        self.activate_button.clicked.connect(self.activate_program)
 
         self.normal_brake.clicked.connect(self.normal_slow)
         self.emergency_brake.clicked.connect(self.emergency_slow)
@@ -169,7 +175,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.begin_state()
 
         self.main_warning = warningWindow()  #warning window
-        self.real_train = trainBody()   #train body
+        self.real_train = train_status()   #train body
 
         self.auto_f = False     #flag for auto mode
         self.manual_f = False   #flag for manual mode
@@ -207,14 +213,18 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         else:
             self.main_warning.signal_detected("You must login. Try again")
 
+    #normal brake
     def normal_slow(self):
+        #decrease power to slow down
         val = self.real_train.get_speed() - 10
         if (val < 0) : val = 0
         self.real_train.set_speed(val)
         self.train_speed.display(val)
 
+    #ememrgency brake
     def emergency_slow(self):
-        val = self.real_train.get_speed() - 25
+        #decrease power to slow down
+        val = self.real_train.get_speed() - 25  #deacceleration rate = 25
         if (val < 0) : val = 0
         self.real_train.set_speed(val)
         self.train_speed.display(val)
@@ -253,9 +263,6 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.set_annun(self.check_annun())
         self.real_train.set_ad(self.check_ad())
         self.real_train.set_horn(self.check_horn())
-
-        #NOTE might have to send to train model --> let model evaluate these values --> update values in controller
-        self.update_train_display()
 
     #Check if all the inputs are in.
     def check_value(self):
@@ -353,6 +360,33 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     def check_horn(self):
         if self.horn_on.isChecked(): return self.horn_on.text()
         elif self.horn_off.isChecked(): return self.horn_off.text()
+
+    #runs in train model
+    def update_in_controller(self, beacon):
+        #if failure occurs
+        if self.real_train.get_failure_flag() == True:
+            #decrease speed
+            self.emergency_slow()   #or set power = 0
+
+        #baesd on the authority & beacon (name of station), I should also know when to stop --> raise emergency_slow() flag
+
+        #if train came to stop (fully)
+        if self.real_train.get_power() == 0:
+            self.auto_train_stopped()
+
+        #NOTE we have to use speed limit b/c we want to reach desired speed by giving more power
+        self.power_calculation(self.real_train.get_speed_limit())   #actually, not sure
+
+        #update to screen
+        self.update_train_display()
+
+    #if train is at stop, status changes accordingly
+    def auto_train_stopped(self):
+        self.real_train.set_door_left("On")
+        self.real_train.set_door_right("On")
+        self.real_train.set_external_light("On")
+        self.real_train.set_annun("On")
+        self.real_train.set_horn("On")
 
     def reset(self):
         self.real_train.reset_all_train()

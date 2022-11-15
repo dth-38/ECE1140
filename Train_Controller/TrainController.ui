@@ -1201,10 +1201,10 @@ p, li { white-space: pre-wrap; }
     <widget class="QPushButton" name="apply_button">
      <property name="geometry">
       <rect>
-       <x>330</x>
-       <y>1080</y>
-       <width>281</width>
-       <height>151</height>
+       <x>30</x>
+       <y>1060</y>
+       <width>421</width>
+       <height>171</height>
       </rect>
      </property>
      <property name="sizePolicy">
@@ -1243,10 +1243,10 @@ p, li { white-space: pre-wrap; }
     <widget class="QPushButton" name="reset_button">
      <property name="geometry">
       <rect>
-       <x>640</x>
-       <y>1080</y>
-       <width>271</width>
-       <height>151</height>
+       <x>500</x>
+       <y>1060</y>
+       <width>421</width>
+       <height>171</height>
       </rect>
      </property>
      <property name="sizePolicy">
@@ -1361,30 +1361,6 @@ p, li { white-space: pre-wrap; }
        <string>Off</string>
       </property>
      </widget>
-    </widget>
-    <widget class="QPushButton" name="activate_button">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>1080</y>
-       <width>271</width>
-       <height>151</height>
-      </rect>
-     </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Activate</string>
-     </property>
     </widget>
    </widget>
    <widget class="QFrame" name="failure_frame">
