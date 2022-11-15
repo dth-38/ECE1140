@@ -23,7 +23,7 @@ DEFINE TRACK
         M 19
         P green_I_38
         N green_I_40
-        L
+        L 1
     END BLOCK
 
     BLOCK green_I_40
@@ -153,7 +153,7 @@ END TRACK
 
 DEFINE LOGIC
 ;logic for switch in green_I_57
-EQ green_I_57:switch[0], green_J_58.exit
+EQ green_I_57:switch[0], green_J_58:exit
 
 ;light controls
 EQ yard:light[0].GREEN, green_I_57:switch[0]
@@ -161,5 +161,12 @@ NOT yard:light[0].RED, yard:light[0].GREEN
 
 EQ green_J_58:light[0].RED, green_I_57:switch[0]
 NOT green_J_58:light[0].GREEN, green_J_58:light[0].RED
+
+;light controls to stations
+EQ green_I_39:light[0].RED, green_I_39:occupied
+NOT green_I_39:light[0].GREEN, green_I_39:light[0].RED
+
+EQ green_I_48:light[0].RED, green_I_48:occupied
+NOT green_I_48:light[0].GREEN, green_I_48:light[0].RED
 
 END LOGIC

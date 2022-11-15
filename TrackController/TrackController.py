@@ -174,12 +174,13 @@ class TrackController(QMainWindow):
                                     return False
                                 statement = self.ignore_Whitespace(line)
                         else:
-                            #checks if the line is a comment and fails the function if it isnt
-                            if block_Statement[0] != ";":
-                                print("Failed to initialize track: Invalid block definition statement.")
-                                program.close()
-                                self.default_Track()
-                                return False
+                            if block_Statement != "":
+                                #checks if the line is a comment and fails the function if it isnt
+                                if block_Statement[0] != ";":
+                                    print("Failed to initialize track: Invalid block definition statement.")
+                                    program.close()
+                                    self.default_Track()
+                                    return False
 
                         line = program.readline()
                         if len(line) == 0:
@@ -236,7 +237,7 @@ class TrackController(QMainWindow):
     def ignore_Whitespace(self, line):
         newLine = ""
         for i in range(len(line)):
-            if line[i] != " " and line[i] != "\n":
+            if line[i] != " " and line[i] != "\n" and line[i] != "\t":
                 newLine += line[i]
 
         return newLine
