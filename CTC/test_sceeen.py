@@ -14,10 +14,15 @@ from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import * 
 from PyQt5.QtCore import *
+from CTC_Scheduler import CTC_Scheduler
 from common import Train, TrackModel, Line, Station
 
 class test_screen(QWidget):
-    def setupUi(self, Form):
+    def __init__(self):
+        super(test_screen,self).__init__()
+        self.setupUi()
+        self.show()
+    def setupUi(self):
         self.label = QtWidgets.QLabel(self)
         self.label.setGeometry(QtCore.QRect(0, 130, 211, 371))
         self.label.setObjectName("label")
@@ -48,6 +53,9 @@ class test_screen(QWidget):
         self.label_4 = QtWidgets.QLabel(self)
         self.label_4.setGeometry(QtCore.QRect(670, 80, 201, 361))
         self.label_4.setObjectName("label_4")
+        self.label_5 = QtWidgets.QLabel(self)
+        self.label_5.setGeometry(QtCore.QRect(0,510,60,16))
+        self.label_5.setObjectName("label_5")
         self.main_button = QtWidgets.QPushButton(self)
         self.main_button.setGeometry(QtCore.QRect(1260, 470, 161, 291))
         self.main_button.setObjectName("main_button")
@@ -84,7 +92,11 @@ class test_screen(QWidget):
         self.section_selection = QtWidgets.QComboBox(self)
         self.section_selection.setGeometry(QtCore.QRect(70, 480, 104, 26))
         self.section_selection.setObjectName("location_selection")
+        self.hour_selection = QtWidgets.QSpinBox(self)
+        self.hour_selection.setGeometry(QtCore.QRect(70,510,48,24))
+        self.hour_selection.setObjectName("hour_selection")
         
+        self.schedule = CTC_Scheduler()
 
         self.retranslateUi(self)
         self.main_button.clicked.connect(lambda:self.closescr())
@@ -105,10 +117,10 @@ class test_screen(QWidget):
         self.section_selection.addItems(["A","B","C"])
     
     def output(self):
-        output_train = Train(id=self.train_selection.value(),line=self.line_selection.currentText())
-        #TODO: NEEDS TO BE UPDATED
-       
-    def closescr(self,Form):
+        throughput = self.schedule.calc_throughput(self.line_selection.currentText(),self.ticket_sales_selection.value(),self.hour_selection.value())
+        self.throughput_output.setText(str(throughput))   
+           
+    def closescr(self):
         self.hide()
     
 
@@ -146,13 +158,5 @@ class test_screen(QWidget):
         self.main_button.setText(_translate("Form", "Back to Main Window"))
         self.test_log_button.setText(_translate("Form", "Test Log"))
         self.test_button.setText(_translate("Form", "Test"))
+        self.label_5.setText(_translate("Form", "Hours:"))
 
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
-    sys.exit(app.exec_())

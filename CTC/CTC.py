@@ -2,29 +2,23 @@ from CTC_Scheduler import CTC_Scheduler
 from CTC_GUI import Ui_MainWindow
 from common import TrackModel
 from CTC_Clock import CTC_Clock
-from CTC_GUI import Ui_MainWindow as CTC_GUI
+from CTC_GUI import Ui_MainWindow
 
 import sys
 from PyQt5 import QtWidgets
 
-#DO I STILL NEED THIS CLASS????
+
 class CTC: 
-    def __init__(self):
-        self.clock = CTC_Clock()
-        self.scheudle = CTC_Scheduler()
-        self.track_model = TrackModel()
-        self.ui = CTC_GUI()
-        #TODO: ADD TRACKMODEL
-        #self.add_track_model()
-        #self.add_schedule()
-        #self.maintenance_mode()
-        #self.manual_dispatch()
-        self.add_ui()
+    def __init__(self, clk, sch, a_model):
+        self.clock = clk
+        self.scheudle = sch
+        self.track_model = a_model
     #CREATE UI
     def add_ui(self):
         app = QtWidgets.QApplication(sys.argv)
         MainWindow = QtWidgets.QMainWindow()
-        self.ui.setupUi(MainWindow)
+        ui = Ui_MainWindow(self.scheudle,self.clock)
+        ui.setupUi(MainWindow)
         MainWindow.show()
         sys.exit(app.exec_())
     
@@ -46,5 +40,3 @@ class CTC:
         print("MANUAL DISPATCH")
         while self.clock.get_time() < (23,59,59):
             self.clock.update_time(10)
-
-ctc = CTC()
