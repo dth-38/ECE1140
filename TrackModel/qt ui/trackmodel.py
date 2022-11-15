@@ -1,9 +1,7 @@
 from line import *
-from station import *
 from heater import *
 from trainloc import *
 from track_info import *
-from railwaycrossing import *
 
 class TrackModel:
     def __init__(self):
@@ -28,58 +26,51 @@ class TrackModel:
         self.lines.append(Line("Green Line"))
         
         ## Get header labels from the file
-        red_headers = []
-        green_headers = []
+        headers = []
         for y in range(9):
-            red_headers.append(red_table.horizontalHeaderItem(y))
-            green_headers.append(green_table.horizontalHeaderItem(y))
+            if (red_table.horizontalHeaderItem(y).text() == green_table.horizontalHeaderItem(y).text()):
+                headers.append(red_table.horizontalHeaderItem(y))
 
+        ## Set up block lists for the red and green lines
+        self.create_blocks(file, self.lines[0], red_table, headers)
+        self.create_blocks(file, self.lines[1], green_table, headers)
+
+        ## Check that blocks were created
+        print(len(self.lines[0].blocks))
+        print(self.lines[0].get_block(54).get_section())
+        print(self.lines[0].blocks[54].get_section())
+
+    def create_blocks(self, file, line, table, headers):
         ## Create block lists
-        for x in range(red_table.rowCount()):
+        for x in range(table.rowCount()):
             section = ''
             number = 0
-            length = 0
-            grade = 0
-            limit = 0
-            elevation = 0
             new_block = Block(section, number)
 
             ## Get section, number, length, grade, speed limit, and elevation for new block
-            for i in range(len(red_headers)):
-                if red_headers[i] is not None:
-                    if (red_headers[i].text() == "Section"):
-                        new_block.section = file.get_cell_text(red_table, x, i)
-                    elif (red_headers[i].text() == "Block Number"):
-                        new_block.number = file.get_cell_text(red_table, x, i)
-                    elif (red_headers[i].text() == "Block Length (m)"):
-                        new_block.length = file.get_cell_text(red_table, x, i)
-                    elif (red_headers[i].text() == "Block Grade (%)"):
-                        new_block.grade = file.get_cell_text(red_table, x, i)
-                    elif (red_headers[i].text() == "Speed Limit (Km/Hr)"):
-                        new_block.commanded_speed = file.get_cell_text(red_table, x, i)
-                    elif (red_headers[i].text() == "ELEVATION (M)"):
-                        new_block.elevation = file.get_cell_text(red_table, x, i)
-                    elif (red_headers[i].text() == "Infrastructure"):
-                        self.load_infra_values(file, red_table, new_block, x, i)
+            for i in range(len(headers)):
+                if headers[i] is not None:
+                    if (headers[i].text() == "Section"):
+                        new_block.section = file.get_cell_text(table, x, i)
+                    elif (headers[i].text() == "Block Number"):
+                        new_block.number = int(file.get_cell_text(table, x, i))
+                    elif (headers[i].text() == "Block Length (m)"):
+                        new_block.length = int(file.get_cell_text(table, x, i))
+                    elif (headers[i].text() == "Block Grade (%)"):
+                        new_block.grade = int(file.get_cell_text(table, x, i))
+                    elif (headers[i].text() == "Speed Limit (Km/Hr)"):
+                        new_block.commanded_speed = file.get_cell_text(table, x, i)
+                    elif (headers[i].text() == "ELEVATION (M)"):
+                        new_block.elevation = file.get_cell_text(table, x, i)
+                    elif (headers[i].text() == "Infrastructure"):
+                        self.load_infra_values(file, table, new_block, x, i)
 
-            ## Add new block to block list for red line
-            self.lines[0].blocks.append(new_block)
+            ## Add new block to block list for correct line
+            line.blocks.append(new_block)
 
-        for x in range(green_table.rowCount()):
-            section = ''
-            number = 0
-
-            ## Get section and number for new block
-            for i in range(len(green_headers)):
-                if green_headers[i] is not None:
-                    if (green_headers[i].text() == "Section"):
-                        section = file.get_cell_text(green_table, x, i)
-                    if (green_headers[i].text() == "Block Number"):
-                        number = file.get_cell_text(green_table, x, i)
-
-            ## Add new block to block list for green line
-            new_block = Block(section, number)
-            self.lines[1].blocks.append(new_block)
+        ## Set beacon values for the blocks
+        for j in range(table.rowCount()):
+            self.set_beacon_values(line, line.get_block(j))
 
     def load_infra_values(self, file, table, block, row, col):
         ## Get station and other infrastructure information
@@ -110,4 +101,41 @@ class TrackModel:
             ## Set name to corresponding station
             block.get_station().set_name(name)
 
-    def set_beacon_values()
+    ## Call function after all blocks for each line are set
+    def set_beacon_values(self, line, block):
+        station1 = ""
+        station2 = ""
+        side = ""
+
+        ## Create new beacon for each block
+        block.beacon = Beacon(station1, station2, side)
+
+        ## Set station to yard at first block for each line
+        num = block.get_number()
+        if (num == 1):
+            block.set_station(Station())
+            block.get_station().set_name("YARD")
+
+        ## Get previous station
+        n = num
+        while (n > 1):
+            ## Iterate through previous block until the most recent station is found
+            n -= 1
+            prev_station = line.get_block(n).get_station()
+            if prev_station is not None:
+                station1 = prev_station
+                break
+
+        ## Get upcoming station
+        n = num
+        while (n < (len(line.blocks) - 1)):
+            ## Iterate through previous block until the most recent station is found
+            n += 1
+            if line.get_block(n) is not None:
+                next_station = line.get_block(n).get_station()
+                if next_station is not None:
+                    station2 = next_station
+                    break
+
+        ## Send previous and next station data to the corresponding block
+        block.set_beacon(station1, station2, side)
