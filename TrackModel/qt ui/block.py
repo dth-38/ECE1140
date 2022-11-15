@@ -7,11 +7,18 @@ class Block:
         self.elevation = 0
         self.authority = 0
         self.occupancy = False
-        #self.failure = null
+        self.failure = None
         self.direction = 0
         self.number = number
-        #self.rail_crossing = null
-        #self.beacon = null
+        self.rail_crossing = None
+        self.beacon = NotImplemented
+        self.station = None
+
+    def set_rail_cross(self, RailwayCrossing):
+        self.rail_crossing = RailwayCrossing
+
+    def set_station(self, Station):
+        self.station = Station
 
     def get_section(self):
         return self.section
