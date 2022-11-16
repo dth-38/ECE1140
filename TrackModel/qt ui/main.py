@@ -201,33 +201,6 @@ class MyWidget(QWidget):
         self.tabs.addTab(self.home,"Home")
         self.tabs.addTab(self.track_info,"Track Info")
         
-        ## HOME TAB
-        # Create first tab
-        self.home.layout = QHBoxLayout(self)
-
-        # Create track layout .png
-        self.label = QLabel(self)
-        pixmap = QPixmap('C:/Users/rachs/OneDrive/Documents/ECE1140/ECE1140/TrackModel/qt ui/tracklayout.png')
-        self.label.setPixmap(pixmap)
-        self.resize(pixmap.width(), pixmap.height())
-
-        # Create table widget to display current block values
-        self.table = QTableWidget(self.home)
-        self.table.setColumnCount(1)
-        self.table.setRowCount(13)
-        self.table.setVerticalHeaderLabels(['Line', 'Section', 'Block #', 'Block Length',
-                                            'Block Grade (%)', 'Commanded Speed (mph)', 'Authority (blocks)',
-                                            'Elevation', 'Failure', 'Stop Signal', 'Beacon',
-                                            'Oncoming Passengers', 'Crew Count', 'Block Occupancy'])
-
-        # Add track layout .png to the home tab
-        self.home.layout.addWidget(self.label)
-        self.home.setLayout(self.home.layout)
-        
-        # Add table to the home page
-        self.home.layout.addWidget(self.table)
-        self.home.setLayout(self.home.layout)
-        
         ## TRACK INFO TAB
         # Create second tab with 2 tabs on it
         self.track_info.layout = QVBoxLayout(self)
@@ -259,6 +232,29 @@ class MyWidget(QWidget):
         # Add line tabs to track info tab widget
         self.track_info.layout.addWidget(self.lines)
         self.track_info.setLayout(self.track_info.layout)
+
+        ## HOME TAB
+        # Create first tab
+        self.home.layout = QHBoxLayout(self)
+
+        # Create track layout .png
+        self.label = QLabel(self)
+        pixmap = QPixmap('C:/Users/rachs/OneDrive/Documents/ECE1140/ECE1140/TrackModel/qt ui/tracklayout.png')
+        self.label.setPixmap(pixmap)
+        self.resize(pixmap.width(), pixmap.height())
+
+        # Create table widget to display current block values
+        self.table = QTableWidget(self.home)
+        model.curr_table_setup(self.table)
+        model.print_table(self.table)
+
+        # Add track layout .png to the home tab
+        self.home.layout.addWidget(self.label)
+        self.home.setLayout(self.home.layout)
+        
+        # Add table to the home page
+        self.home.layout.addWidget(self.table)
+        self.home.setLayout(self.home.layout)
 
         # Add tabs to widget
         self.layout.addWidget(self.tabs)

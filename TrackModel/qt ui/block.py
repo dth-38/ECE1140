@@ -1,6 +1,7 @@
 from beacon import *
 from station import *
 from railwaycrossing import *
+from failure import *
 
 class Block:
     def __init__(self, section, number):
@@ -41,6 +42,9 @@ class Block:
     def get_section(self):
         return self.section
 
+    def get_beacon(self):
+        return "stat"
+
     def get_length(self):
         return self.length
 
@@ -49,3 +53,21 @@ class Block:
     
     def get_occupancy(self):
         return self.occupancy
+
+    def get_authority(self):
+        return self.authority
+
+    def get_commanded_speed(self):
+        return self.commanded_speed
+
+    def get_failure_status(self):
+        if self.failure is not None:
+            return self.failure.get_state()
+        else:
+            return False
+
+    def get_elevation(self):
+        return self.elevation
+
+    def get_light_status(self):
+        return "GREEN"

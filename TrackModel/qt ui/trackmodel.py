@@ -2,8 +2,12 @@ from line import *
 from heater import *
 from trainloc import *
 from track_info import *
+
+import sys
+sys.path.append('ECE1140')
+
+from TrainModel import *
 import Signals
-import Train
 
 class TrackModel:
     def __init__(self):
@@ -12,6 +16,7 @@ class TrackModel:
         self.lines = []
         self.train_locs = [len(self.trains)]
         self.heaters = []
+        self.current = []
 
     ## Add new train to the map
     def add_train(self, route):
@@ -157,16 +162,40 @@ class TrackModel:
         block.set_beacon(station1, station2, side)
 
     ## Set up current block values table
-    def curr_table_setup(self):
-        self.current_table.setColumnCount(1)
-        self.current_table.setRowCount(13)
-        self.current_table.setVerticalHeaderLabels(['Line', 'Section', 'Block #', 'Block Length',
-                                                    'Block Grade (%)', 'Commanded Speed (mph)', 'Authority (blocks)',
-                                                    'Elevation', 'Failure', 'Stop Signal', 'Beacon',
-                                                    'Oncoming Passengers', 'Crew Count', 'Block Occupancy'])
+    def curr_table_setup(self, current_table):
+        # Create new array of QWidget Items
+        for x in range(12):
+            self.current.append(QTableWidgetItem())
+        
+        current_table.setColumnCount(1)
+        current_table.setRowCount(12)
+        current_table.setHorizontalHeaderLabels([''])
+        current_table.setVerticalHeaderLabels(['Line', 'Section', 'Block #', 'Block Length',
+                                                'Block Grade (%)', 'Commanded Speed (mph)', 'Authority (blocks)',
+                                                'Elevation', 'Failure', 'Stop Signal', 'Beacon', 'Block Occupancy'])
 
-        # fill in table with current values
-        ## self.current_table
+    ## Fill in table with current values
+    def set_current(self, line, block):
+        # Set current values for the corresponding block
+        self.current[0].setText(line.get_name())
+        self.current[1].setText(block.get_section())
+        self.current[2].setText(str(block.get_number()))
+        self.current[3].setText(str(block.get_length()))
+        self.current[4].setText(str(block.get_grade()))
+        self.current[5].setText(str(block.get_commanded_speed()))
+        self.current[6].setText(str(block.get_authority()))
+        self.current[7].setText(str(block.get_elevation()))
+        self.current[8].setText(str(block.get_failure_status()))
+        self.current[9].setText(block.get_light_status())
+        self.current[10].setText(block.get_beacon())
+        self.current[11].setText(str(block.get_occupancy()))
+
+    ## Print values to the main GUI
+    def print_table(self, table):
+        self.set_current(self.lines[0], self.lines[0].get_block(13))
+        # Iterate through current[] values list, print to GUI table
+        for i in range(len(self.current)):
+            table.setItem(0, i, self.current[i])
 
     ## Signal handlers
     def setup_signals(self):
