@@ -11,8 +11,8 @@ form_mainWindow = uic.loadUiType("TrainController.ui")[0]
 class train_status:
 
     def __init__(self):
-        self.speed_limit = 100
-        self.commanded_speed = 100  #commended speed (from manual mode) OR desired speed, 100 by default
+        self.speed_limit = 43.496  #maximum speed in mph (70km/hr)
+        self.commanded_speed = 0  #commended speed (from manual mode) OR desired speed, 100 by default
         self.speed = 0            #actual speed of train
         self.authority = 0
         self.door_left = "On"
@@ -298,10 +298,10 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             return False
 
         if self.auto_f == False and self.manual_f == True:
-            if (self.cs_box.toPlainText().isdigit() == False or self.cs_box.toPlainText() == "0"):
+            if (self.cs_box.toPlainText().isdigit() == False):
                 self.main_warning.signal_detected("Your commanded speed is incorrect. Try again")
                 return False
-            elif (self.temperature_box.toPlainText().isdigit() == False or self.temperature_box.toPlainText() == "0"):
+            elif (self.temperature_box.toPlainText().isdigit() == False):   # or self.temperature_box.toPlainText() == "0"
                 self.main_warning.signal_detected("Your temperature is incorrect. Try again")
                 return False
             elif self.check_radio_box() == False:
@@ -412,7 +412,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         # print("speed: " + str(self.real_train.get_speed()))
         # print("commanded: "+ str(self.real_train.get_commanded_speed()))
         #if brake flags = True, set power = 0 to decrease speed
-        
+
         #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
         if self.norm_brake_flag == True or self.emer_brake_flag == True:
             self.real_train.set_power(0)
