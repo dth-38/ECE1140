@@ -3,7 +3,6 @@ import shutil
 import pathlib
 import os
 import copy
-import time
 
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QGridLayout, QPushButton, QWidget, QLabel
 from PyQt5.QtGui import QFont

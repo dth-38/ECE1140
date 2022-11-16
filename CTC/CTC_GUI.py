@@ -1,10 +1,10 @@
 from re import T
 from PyQt5 import QtCore, QtGui, QtWidgets
-from maintenance_screen import maintenance_screen
+from CTC.maintenance_screen import maintenance_screen
 
-from train_screen import train_screen
-from maintenance_screen import maintenance_screen
-from test_sceeen import test_screen
+from CTC.train_screen import train_screen
+from CTC.maintenance_screen import maintenance_screen
+from CTC.test_sceeen import test_screen
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling,True)
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps,True)
