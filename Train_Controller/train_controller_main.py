@@ -186,9 +186,9 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.emer_brake_flag = False
 
         #update train controller display every 1 sec
-        self.timer_update = QtCore.QTimer(self) 
-        self.timer_update.start(1000)
-        self.timer_update.timeout.connect(self.update_in_controller) 
+        # self.timer_update = QtCore.QTimer(self) 
+        # self.timer_update.start(1000)
+        # self.timer_update.timeout.connect(self.update_in_controller) 
 
         # print(self.real_train.get_power())
 
@@ -406,10 +406,13 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         #NOTE Update power. Train model uses power --> speed & pass actual speed + commanded speed to train controller
         self.real_train.update_power() 
 
-        print(self.real_train.get_power())
-        print("speed: " + str(self.real_train.get_speed()))
-        print("commanded: "+ str(self.real_train.get_commanded_speed()))
+        #if power = 0, train model automatically reduces the speed by 25 mph or something
+
+        # print(self.real_train.get_power())
+        # print("speed: " + str(self.real_train.get_speed()))
+        # print("commanded: "+ str(self.real_train.get_commanded_speed()))
         #if brake flags = True, set power = 0 to decrease speed
+        
         #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
         if self.norm_brake_flag == True or self.emer_brake_flag == True:
             self.real_train.set_power(0)
