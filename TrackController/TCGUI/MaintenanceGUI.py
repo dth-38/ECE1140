@@ -101,7 +101,7 @@ class MaintenanceGUI(QWidget):
                 l_Label = QLabel("Light #" + str(i) + ":")
                 l_State = QComboBox()
                 l_State.setEditable(True)
-                l_State.addItems(["RED", "YELLOW", "GREEN"])
+                l_State.addItems(["RED", "GREEN"])
                 l_State.setCurrentText(self.get_Track()[block].light_To_Str(i))
                 set_Light_Part = functools.partial(self.get_Track()[block].set_Light, i)
                 l_State.currentTextChanged.connect(lambda: set_Light_Part(l_State.currentText()))

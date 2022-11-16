@@ -9,7 +9,7 @@ N green_J_63
 L 1
 END BLOCK
 
-BLOCK yard
+BLOCK green___0
 P START
 N green_J_63
 L 1
@@ -18,7 +18,7 @@ END BLOCK
 ;switches to yard when switch is off(False)
 BLOCK green_J_63
 M 43
-S PREV, yard, green_J_62
+S PREV, green___0, green_J_62
 N green_J_64
 END BLOCK
 
@@ -59,7 +59,7 @@ END TRACK
 DEFINE LOGIC
 ;controls switch position
 ;only switches to yard if yard is occupied and 62 is not
-NOT t[0], yard:occupied
+NOT t[0], green___0:occupied
 OR green_J_63:switch[0], green_J_62:occupied, t[0]
 
 
@@ -70,8 +70,8 @@ NOT t[2], green_J_63:switch[0]
 OR green_J_62:light[0].RED, t[1], t[2]
 NOT green_J_62:light[0].GREEN, green_J_62:light[0].RED
 
-OR yard:light[0].RED, t[1], green_J_63:switch[0]
-NOT yard:light[0].GREEN, yard:light[0].RED
+OR green___0:light[0].RED, t[1], green_J_63:switch[0]
+NOT green___0:light[0].GREEN, green___0:light[0].RED
 
 ;controls station light
 EQ green_J_65:light[0].RED, green_J_65:occupied

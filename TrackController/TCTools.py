@@ -73,60 +73,21 @@ def block_to_string(line, section, num):
     block = line + "_" + section + "_" + str(num)
     return block
 
-#gets the controllers connected to a block
-#returns an array of controllers since there can be more than one
-#all track equipment is controlled by the first controller in the array
-def get_controlling_controller(block):
-    controller = -1
+#this does no error checking/handling, use carefully
+def decompose_block(block):
+    d_block = []
 
-    if block[:3] == "red":
-        line = "RED" 
+    l = block[:3]
+
+    if l == "red":
+        d_block.append(l.upper())
+        #red_A_1
+        n = block[6:]
+        d_block.append(int(n))
     else:
-        line = "GREEN"
+        d_block.append("GREEN")
+        #green_A_1
+        n = block[8:]
+        d_block.append(int(n))
 
-    num_str = ""
-    j = 0
-    for i in range(len(block)):
-        if block[i] == "_":
-            if j < 2:
-                j += 1
-            else:
-                num_str += block[i]
-
-    num = int(num_str)
-
-    if line == "RED":
-        pass
-    else:
-        if num == 1 or num == 12 or num == 13:
-            controller = 13
-        elif num > 1 and num < 12:
-            controller = 14
-        elif (num > 13 and num < 31) or 150:
-            controller = 12
-        elif num > 30 and num < 36:
-            controller = 11
-        elif num > 35 and num < 59:
-            controller = 10
-        elif num > 58 and num < 62:
-            controller = 0
-        elif num > 61 and num < 69:
-            controller = 1
-        elif num > 68 and num < 76:
-            controller = 2
-        elif (num > 75 and num < 85) or num == 101:
-            controller = 3
-        elif num == 85 or num == 86 or num == 100:
-            controller = 4
-        elif num > 86 and num < 100:
-            controller = 5
-        elif num > 101 and num < 111:
-            controller = 6
-        elif num > 110 and num < 123:
-            controller = 7
-        elif num > 122 and num < 145:
-            controller = 8
-        else:
-            controller = 9
-
-    return controller
+    return d_block

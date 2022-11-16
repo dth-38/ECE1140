@@ -49,7 +49,6 @@ class Signals(QObject):
     #(str block, str next_block)
     set_tc_switch = pyqtSignal(str, str)
 
-
     #------------------------------------------
     # TRACK MODEL SIGNALS
     #------------------------------------------
@@ -58,8 +57,6 @@ class Signals(QObject):
     send_tc_occupancy = pyqtSignal(str, int)
     #(str block, int True/False)
     send_tc_failure = pyqtSignal(str, int)
-
-
 
 
 signals = Signals()

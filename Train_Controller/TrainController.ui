@@ -1404,7 +1404,7 @@ p, li { white-space: pre-wrap; }
       <string>Failure Status :</string>
      </property>
     </widget>
-    <widget class="QTextBrowser" name="FailureOutput">
+    <widget class="QTextBrowser" name="failure_output">
      <property name="geometry">
       <rect>
        <x>380</x>

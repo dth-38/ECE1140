@@ -86,14 +86,14 @@ OR t[0], t[0], green_N_83:occupied
 OR t[0], t[0], green_N_84:occupied
 OR t[0], t[0], green_N_85:occupied
 NOT t[0], t[0]
-AND green_N_77:switch[0], t[0], green_Q_100:occupied
+AND green_N_85:switch[0], t[0], green_Q_100:occupied
 
 ;light control for O_86
-EQ green_O_86:light[0].RED, green_O_86:switch[0]
+EQ green_O_86:light[0].RED, green_N_85:switch[0]
 NOT green_O_86:light[0].GREEN, green_O_86:light[0].RED
 
 ;light control for Q_100
-EQ green_Q_100:light[0].GREEN, green_O_86:switch[0]
+EQ green_Q_100:light[0].GREEN, green_N_85:switch[0]
 NOT green_Q_100:light[0].RED, green_Q_100:light[0].GREEN
 
 END LOGIC

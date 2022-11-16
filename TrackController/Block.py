@@ -1,10 +1,13 @@
+
+#block constants for switches
+TO_NONE = 0
+TO_NEXT = 1
+TO_PREV = 2
+
 class Block:
 
     def __init__(self, id = ""):
         #constants for if the switch is connected to next blocks or previous blocks
-        self.TO_NONE = 0
-        self.TO_NEXT = 1
-        self.TO_PREV = 2
 
         self.id = id
         self.authority = 0
@@ -17,7 +20,7 @@ class Block:
         self.failed = False
         self.closed = False
         self.is_Exit = False
-        self.switch_To = self.TO_NONE
+        self.switch_To = TO_NONE
         self.switches = []
         self.lights = []
         self.gates = []
@@ -74,11 +77,11 @@ class Block:
     def add_Switch(self, dir, off, on):
         self.switches.append(0)
         if dir == "NEXT":
-            self.switch_To = self.TO_NEXT
+            self.switch_To = TO_NEXT
             self.next_Blocks.append(off)
             self.next_Blocks.append(on)
         else:
-            self.switch_To = self.TO_PREV
+            self.switch_To = TO_PREV
             self.previous_Blocks.append(off)
             self.previous_Blocks.append(on)
 
@@ -108,6 +111,26 @@ class Block:
             switch_Str = "OFF"
 
         return switch_Str
+
+    def get_switched_to(self, switchNum=0):
+        block = ""
+
+        if self.switch_To == TO_PREV:
+            if self.switches[switchNum] == True:
+                block = self.previous_Blocks[1]
+            else:
+                block = self.previous_Blocks[0]
+        elif self.switch_To == TO_NEXT:
+            if self.switches[switchNum] == True:
+                block = self.next_Blocks[1]
+            else:
+                block = self.next_Blocks[0]
+        else:
+            pass
+
+        return block
+
+            
 
 #---------------------------------------------------------
 # MUTATORS & ACCESSORS FOR GATES
@@ -186,7 +209,7 @@ class Block:
 # ACCESSORS FOR NEXT/PREVIOUS BLOCKS SINCE THEY HAVE CUSTOM LOGIC
 #--------------------------------------------------------------------
     def get_Next_Block(self):
-        if self.switch_To == self.TO_NEXT:
+        if self.switch_To == TO_NEXT:
             val = int(self.switches[0])
         else:
             val = 0
@@ -194,7 +217,7 @@ class Block:
         return self.next_Blocks[val]
 
     def get_Previous_Block(self):
-        if self.switch_To == self.TO_PREV:
+        if self.switch_To == TO_PREV:
             val = int(self.switches[0])
         else:
             val = 0
