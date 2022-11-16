@@ -10,7 +10,7 @@ class Signals(QObject):
     #-----------------------------------------
 
     #(int id)
-    tc_update = pyqtSignal(int)
+    tc_update = pyqtSignal()
 
     #(str line, int block_num, int True/False)
     send_ctc_occupancy = pyqtSignal(str, int, int)
