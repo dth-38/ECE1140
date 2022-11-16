@@ -21,10 +21,9 @@ from Train_Table import Train_Table
 
 #TRAIN SCREEN WINDOW 
 class train_screen(QWidget):
-    def __init__(self,scheduler,clock):
+    def __init__(self,ctc):
         super(train_screen,self).__init__()
-        self.schedule = scheduler
-        self.clock = clock
+        self.ctc = ctc
         self.setupUi()
         self.show()
     def setupUi(self):

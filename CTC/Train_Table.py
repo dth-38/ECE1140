@@ -5,6 +5,8 @@ class Train_Table:
         self.table = []
     def add_entry(self,id,position,states,destinations,authority,line,arrival_time):
         print("ADD TRAIN ENTRY!!!!!")
+        #create instance of the train
+        #a_train = new trainmodel()
         self.table.append([id,position,states,destinations,authority,line,arrival_time])
     def remove_entry(self):
         print("REMOVE TRAIN ENTRY!!!!")

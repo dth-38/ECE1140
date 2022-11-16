@@ -1,6 +1,9 @@
 #from signals import signals
 
 #TODO: GET BLOCK SWITCH POSITIONS FROM TRACK CONTROLLER TO SWITCH THEM AT THAT POSITION IN SET MAINTENANCE
+from numpy import block
+
+
 class Block_Table: 
     def __init__(self):
         self.table = []
@@ -13,6 +16,16 @@ class Block_Table:
     def add_entry(self,blk,states):
         print("ADD BLOCK ENTRY!!!!!!")
         self.table.append([blk,states])
+    def add_occupancy(self,line,block_num,occ):
+        self.table.append(["Occupancy",line,block_num,occ])
+    def add_failure(self,line,block_num,failure):
+        self.table.append(["Failure",line,block_num,failure])
+    def add_switch(self,line,block_num,next_block_num):
+        self.table.append(["Switch",line,block_num,next_block_num])
+    def add_light(self,line,block_num,color):
+        self.table.append(["Light",line,block_num,color])
+    def add_gate(self,line,block_num,status):
+        self.table.append([line,block_num,status])
     def set_maintenance(self,blk,section,line):
         print("MAINTENANCE SET!!!!!!")
         #TODO: CHANGE BLOCK SWITCH POSITIONS FROM TRACK CONTROLLER AND SWITCH THEM IF NEEDED FOR MAINTENANCE
