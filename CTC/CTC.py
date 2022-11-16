@@ -64,7 +64,7 @@ class CTC(QWidget):
             elif self.scheudle.train_table.get_line(0) == "Green":
                 signals.send_tc_speed.emit(tc_block,self.scheudle.green_speed)
             signals.send_tc_maintenance.emit(tc_block,0)
-    
+            print("")
     
 
 
