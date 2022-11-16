@@ -1,5 +1,6 @@
 import sys
 
+
 from PyQt5.QtCore import QTimer ,QThreadPool
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QGridLayout, QLineEdit, QWidget
 from PyQt5.QtGui import QFont
@@ -25,6 +26,7 @@ class NSE_Simulation(QMainWindow):
         self.HEIGHT = 400
 
         self.UPDATE_PERIOD = 1
+        self.MULTIPLIER_LIMIT = 15
         self.update_period_multiplier = 1
 
 
@@ -35,9 +37,11 @@ class NSE_Simulation(QMainWindow):
 
         super().__init__()
 
-        #creates track controllers
+
+        #creates track controllers + calls tick to setup default track state
         for i in range(self.NUM_CONTROLLERS):
             self.track_controllers.append(TrackController(i, True))
+            self.track_controllers[i].tick()
 
 
         self.scheduler = Scheduler.Scheduler()
@@ -47,17 +51,19 @@ class NSE_Simulation(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(lambda: self.pool.start(self.scheduler))
 
-        #allows us to start the system automatically by passing True when declaring the NSE_Sim
-        if run == True:
-            self.start_Sim()
-
 
         self.setup_GUI()
         self.show()
+
+        #allows us to start the system automatically by passing True when declaring the NSE_Sim
+        if run == True:
+            self.start_clicked()
+        else:
+            self.stop_clicked()
         
 
     def start_sim(self, multiplier=0):
-        if multiplier > 0:
+        if multiplier > 0 and multiplier < self.MULTIPLIER_LIMIT:
             self.update_period_multiplier = multiplier
 
         #period is calculated in miliseconds cause thats what the timer takes
@@ -118,21 +124,43 @@ class NSE_Simulation(QMainWindow):
         self.train_controller_button.setFont(widget_font)
         self.train_controller_button.setMinimumWidth(min_width)
         self.train_controller_button.setMinimumHeight(min_height)
+        
+        self.start_button = QPushButton("Run Simulation", self)
+        self.start_button.clicked.connect(self.start_clicked)
+        self.start_button.setFont(widget_font)
+        self.start_button.setMinimumWidth(min_width)
+        self.start_button.setMinimumHeight(min_height)
 
+        self.stop_button = QPushButton("Stop Simulation", self)
+        self.stop_button.clicked.connect(self.stop_clicked)
+        self.stop_button.setFont(widget_font)
+        self.stop_button.setMinimumWidth(min_width)
+        self.stop_button.setMinimumHeight(min_height)
 
         self.nse_layout = QGridLayout()
 
-        self.nse_layout.addWidget(self.ctc_button, 0, 0)
-        self.nse_layout.addWidget(self.track_model_button, 0, 1)
-        self.nse_layout.addWidget(self.num_select_textbox, 2, 0)
-        self.nse_layout.addWidget(self.track_controller_button, 1, 1)
-        self.nse_layout.addWidget(self.train_model_button, 2, 1)
-        self.nse_layout.addWidget(self.train_controller_button, 3, 1)
+        self.nse_layout.addWidget(self.start_button, 0, 0)
+        self.nse_layout.addWidget(self.stop_button, 0, 1)
+        self.nse_layout.addWidget(self.ctc_button, 1, 0)
+        self.nse_layout.addWidget(self.track_model_button, 1, 1)
+        self.nse_layout.addWidget(self.num_select_textbox, 3, 0)
+        self.nse_layout.addWidget(self.track_controller_button, 2, 1)
+        self.nse_layout.addWidget(self.train_model_button, 3, 1)
+        self.nse_layout.addWidget(self.train_controller_button, 4, 1)
 
         self.main_widget.setLayout(self.nse_layout)
         self.setCentralWidget(self.main_widget)
 
 
+    def start_clicked(self):
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(True)
+        self.start_sim()
+
+    def stop_clicked(self):
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
+        self.stop_sim()
 
     def open_ctc(self):
         #self.ctc.show()

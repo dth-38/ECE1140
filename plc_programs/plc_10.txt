@@ -134,10 +134,10 @@ DEFINE TRACK
     BLOCK green_I_57
         M 19
         P green_I_56
-        S NEXT, yard, green_J_58
+        S NEXT, green___0, green_J_58
     END BLOCK
 
-    BLOCK yard
+    BLOCK green___0
         P green_I_57
         N END
         L 1
@@ -156,8 +156,8 @@ DEFINE LOGIC
 EQ green_I_57:switch[0], green_J_58:exit
 
 ;light controls
-EQ yard:light[0].GREEN, green_I_57:switch[0]
-NOT yard:light[0].RED, yard:light[0].GREEN
+EQ green___0:light[0].GREEN, green_I_57:switch[0]
+NOT green___0:light[0].RED, green___0:light[0].GREEN
 
 EQ green_J_58:light[0].RED, green_I_57:switch[0]
 NOT green_J_58:light[0].GREEN, green_J_58:light[0].RED
