@@ -40,7 +40,9 @@ class Signals(QObject):
     #CONVERT line,block_num format TO line_section_block_num i.e.(green, 2 -> green_A_2)
     #USING TCTools convert_to_block function
     ctc_update = pyqtSignal()
-    
+
+    #int True/False
+    send_tm_dispatch = pyqtSignal(int)
 
     #(str block, int authority)
     send_tc_authority = pyqtSignal(str, int)

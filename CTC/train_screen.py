@@ -14,6 +14,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import *
 
+from PyQt5.QtWidgets import QWidget 
+
 from CTC.CTC_Scheduler import CTC_Scheduler
 from CTC.CTC_Clock import CTC_Clock
 from CTC.Block_Table import Block_Table
@@ -142,7 +144,7 @@ class train_screen(QWidget):
         arrival_time = (self.hour_selection.value(),self.minute_selection.value(),self.second_selection.value())
         print(arrival_time)
         destinations = self.destination_selection.toPlainText()
-        self.train_entries, travel_time = self.schedule.manual_dispatch_train(arrival_time,self.train_selection.value(),self.line_train_selection.currentText(),destinations)
+        self.train_entries, travel_time = self.ctc.schedule.manual_dispatch_train(arrival_time,self.train_selection.value(),self.line_train_selection.currentText(),destinations)
         self.train_table_display.addItem("NEW TRAIN DISPATCHED!!!!!!!!!")
         self.train_table_display.addItem("Train #: " + str(self.train_entries[0]))
         self.train_table_display.addItem("Position: " + str(self.train_entries[1]))
@@ -158,22 +160,22 @@ class train_screen(QWidget):
     #TODO GET TICKET SALES FROM TRACKMODEL
     def output_throughput(self):
         line = self.line_throughput_selection.currentText()
-        throughput = self.schedule.calc_throughput(line=line,ticket_sales=10,hours=self.current_hour.value())
+        throughput = self.ctc.schedule.calc_throughput(line=line,ticket_sales=10,hours=self.current_hour.value())
         self.throughput_output.setText(str(throughput))
     
     def add_schedule(self):
         file = QFileDialog.getOpenFileName(self,"Open File", "", "All Files (*);;Xlsx Files(*.xlsx)")
-        self.schedule.upload_schedule(file)
+        self.ctc.schedule.upload_schedule(file)
     
     def update_current_time(self):
         print("Update Time")
-        self.clock.update_time()
-        authority, position = self.schedule.update_trains()
+        self.ctc.clock.update_time()
+        authority, position = self.ctc.schedule.update_trains()
         print("authority: " + str(authority))
         print("position: " + str(position))
-        self.current_hour.setValue(self.clock.get_hours())
-        self.current_minute.setValue(self.clock.get_minutes())
-        self.current_second.setValue(self.clock.get_seconds())
+        self.current_hour.setValue(self.ctc.clock.get_hours())
+        self.current_minute.setValue(self.ctc.clock.get_minutes())
+        self.current_second.setValue(self.ctc.clock.get_seconds())
         #Only one train working currently 
         if self.train_table_display.count() > 0:
             self.train_table_display.takeItem(2)

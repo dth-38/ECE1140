@@ -22,7 +22,7 @@ class CTC_Scheduler:
         self.block_table = Block_Table()
         self.train_id = 1
         #TODO: CREATE OBJECT OF TRACKMODEL
-        self.track_model = TrackModel()
+        #self.track_model = TrackModel()
         #route for trains, 0 = yard
         self.green_route_blocks = [0, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
                                    77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92,
@@ -256,16 +256,6 @@ class CTC_Scheduler:
                 dist += self.green_route_blocks[i]
             travel_time = dist/(self.green_speed*1000)
         return travel_time
-    def get_block_occupancies(self,block_occupancies):
-        self.block_occupancies = block_occupancies
-    def get_block_failures(self,block_failures):
-        self.block_failures = block_failures
-    def get_ticket_sales(self,ticket_sales):
-        self.ticket_sales = ticket_sales
-    def get_train_states(self,engine_failure,brake_failure):
-        self.train_states = [engine_failure,brake_failure]
-    def get_train_position(self,position):
-        self.train_position = position
     """"
     def update_track_controller(self):
 

@@ -26,6 +26,7 @@ class CTC(QWidget):
         sys.exit(app.exec_())
     def setup_signals(self):
         signals.ctc_update.connect(self.tick)
+        signals.send_ctc_ticket_sales.connect(self.update_ticket_sales)
         signals.send_ctc_occupancy.connect(self.update_occupancy)
         signals.send_ctc_failure.connect(self.update_failure)
         signals.broadcast_switch.connect(self.update_switch)
@@ -56,8 +57,11 @@ class CTC(QWidget):
         self.schedule.block_table.add_light(line,block,color)
     def update_gate(self,line,block_num,status):
         self.scheudle.block_table.add_gate(line,block_num,status)
+    def update_ticket_sales(self,line,ticket_sales):
+        self.scheudle.calc_throughput(line,ticket_sales,self.clock.get_hours())
     def tick(self): 
         if self.scheudle.train_table.get_table_length() > 0:
+            signals.send_tm_dispatch.emit(1)
             tc_block = convert_to_block(self.scheudle.train_table.get_line(0),self.scheudle.train_table.get_position(0))
             signals.send_tc_authority.emit(tc_block,self.train_table.get_authority())
             if self.scheudle.train_table.get_line(0) == "Red":
@@ -81,3 +85,7 @@ class CTC(QWidget):
         while self.clock.get_time() < (23,59,59):
             self.clock.update_time(10)
     """
+
+
+ctc = CTC()
+ctc.add_ui()
