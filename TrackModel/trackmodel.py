@@ -195,7 +195,12 @@ class TrackModel:
     ## Update current track information every second
     #def update_model(self):
 
-    ## Calculate train position
-    def calc_train_pos(self, train):
-        position = train.position
+    # ## Calculate train position
+    # def calc_train_pos(self, train):
+    #     position = train.position
+    #     line = train.line
 
+    #     # Iterate through block lengths to find out where the train is
+    #     total_block_length = 0
+    #     for b in line.blocks:
+    #         total_block_length += 

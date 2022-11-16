@@ -2,6 +2,7 @@ from beacon import *
 from station import *
 from railwaycrossing import *
 from failure import *
+from light import *
 
 class Block:
     def __init__(self, section, number):
@@ -18,9 +19,13 @@ class Block:
         self.rail_crossing = None
         self.beacon = NotImplemented
         self.station = None
+        self.light = None
 
     def set_rail_cross(self, RailwayCrossing):
         self.rail_crossing = RailwayCrossing
+
+    def set_light(self, Light):
+        self.light = Light
 
     def set_beacon(self, s1, s2, s3):
         ## s1 = Outgoing Station
