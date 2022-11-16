@@ -16,6 +16,7 @@ class CTC(QWidget):
         self.clock = clk
         self.scheudle = sch
         self.track_model = a_model
+        self.setup_signals()
     #CREATE UI
     def add_ui(self,ctc):
         app = QtWidgets.QApplication(sys.argv)
@@ -25,6 +26,7 @@ class CTC(QWidget):
         MainWindow.show()
         sys.exit(app.exec_())
     def setup_signals(self):
+        signals.ctc_update.connect(self.tick)
         signals.send_ctc_occupancy.connect(self.update_occupancy)
         signals.send_ctc_failure.connect(self.update_failure)
         signals.broadcast_switch.connect(self.update_switch)
@@ -64,7 +66,6 @@ class CTC(QWidget):
             elif self.scheudle.train_table.get_line(0) == "Green":
                 signals.send_tc_speed.emit(tc_block,self.scheudle.green_speed)
             signals.send_tc_maintenance.emit(tc_block,0)
-    
     
 
 
