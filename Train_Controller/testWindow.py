@@ -1,54 +1,11 @@
 import sys
+from simple_pid import PID
 from PyQt5 import QtCore, QtWidgets
 from PyQt5 import uic
 from errorWindow import warningWindow
 from logWindow import logWindow
 
 form_testWindow = uic.loadUiType("TrainControllerTest.ui")[0]
-
-#for power
-class power_calculation:
-    def __init__(self):
-        self.ki = 0.0
-        self.kp = 0.0
-        self.power = 0.0
-        self.u_k = 0.0
-        self.u_k_1 = 0.0
-        self.e_k = 0.0
-        self.e_k_1 = 0.0
-        self.T = 1.0    #Time interval 1 sec, same as Timer rate
-        self.train_velocity = 0.0
-
-    #get methods
-    def get_ki(self):
-        return self.ki
-    def get_kp(self):
-        return self.kp
-
-    #set methods
-    def set_ki(self, num):
-        self.ki = num    
-    def set_kp(self, num):
-        self.kp = num
-    def set_train_velocity(self, num):
-        self.train_velocity = num
-    def calculate_power(self, actual_speed):
-        self.e_k = actual_speed - self.train_velocity
-        self.u_k = self.u_k_1 + (self.T / 2) * (self.e_k + self.e_k_1)
-        self.e_k_1 = self.e_k   #update e_k_1
-        self.power = (self.kp * self.e_k) + (self.ki * self.u_k)
-        return self.power
-
-    def reset_all(self):
-        self.ki = 0.0
-        self.kp = 0.0
-        self.power = 0.0
-        self.u_k = 0.0
-        self.u_k_1 = 0.0
-        self.e_k = 0.0
-        self.e_k_1 = 0.0
-        self.T = 1.0    #Time interval 1 sec, same as Timer rate
-        self.train_velocity = 0.0
 
 #for train
 class trainBody:
@@ -66,8 +23,12 @@ class trainBody:
         self.ad = ""
         self.horn = ""
         self.temp = 0.0
-
-        self.pp = power_calculation()
+        
+        self.ki = 0.01
+        self.kp = 1
+        self.pid = PID(self.kp, self.ki, 0, setpoint=self.commanded_speed) # initialize pid with fixed values
+        self.pid.outer_limits = (0, 120000)                                  # clamp at max power output specified in datasheet 120kW
+        self.power = 0
 
     #set methods
     def set_authority(self, num):
@@ -94,11 +55,12 @@ class trainBody:
         self.horn = state
     def set_temp(self, num):
         self.temp = num
-    
     def set_ki(self, num):
-        self.pp.set_ki(num)
+        self.ki = num
     def set_kp(self, num):
-        self.pp.set_kp(num)
+        self.kp = num
+    def set_power(self, num):
+        self.power = num
 
     #get methods
     def get_speed_limit(self):
@@ -130,17 +92,29 @@ class trainBody:
         self.ki = 0.0
         self.kp = 0.0
         self.power = 0.0
-        self.u_k = 0.0
-        self.u_k_1 = 0.0
-        self.e_k = 0.0
-        self.e_k_1 = 0.0
-        self.T = 1.0    #Time interval 1 sec, same as Timer rate
-        self.train_velocity = 0.0
-        self.pp.reset_all()
 
-    #power calculation
-    def get_power(self, s): #s = acual speed
-        return self.pp.calculate_power(s)
+    def get_power(self):
+        return self.power
+
+    def initialize_PID(self, kp_val, ki_val):
+        self.k_p = kp_val
+        self.k_i = ki_val
+        self.pid = PID(self.k_p, self.k_i, 0, setpoint=self.commanded_speed)
+        self.pid.outer_limits = (0, 120000) # clamp at max power output specified in datasheet 120kW
+
+    def get_power_output(self): 
+        self.pid.setpoint = self.commanded_speed    #commanded speed = desired speed
+        self.power = self.pid(self.speed)   #if train has speed, you get less power to speed up than starting from speed = 0
+        if self.power > 0:
+            return self.power
+        
+        else:
+            self.power = 0
+            return self.power
+
+    def update_power(self):
+        self.initialize_PID()
+        self.get_power_output()
 
 class testWindow(QtWidgets.QMainWindow, form_testWindow) :
     #signal for window changing
@@ -473,7 +447,7 @@ class testWindow(QtWidgets.QMainWindow, form_testWindow) :
 
             #reduce speed by half before the authority
             if (self.block_num == (self.thomas.get_authority())):
-                self.thomas.set_speed(self.thomas.get_speed() - self.thomas.get_commanded_speed() / 2)
+                self.thomas.set_speed(self.thomas.get_speed() - self.thomas.get_commanded_speed()/2)
 
             #if speeds are not the same
             elif (self.thomas.get_speed() != self.thomas.get_commanded_speed()):
@@ -523,16 +497,18 @@ class testWindow(QtWidgets.QMainWindow, form_testWindow) :
 
         if (self.auto_flag == True and self.failure_flag == True):  #emergency brake raised automatically in auto mode
             self.emer_brake = True
+            self.thomas.set_commanded_speed(self.thomas.get_commanded_speed() - 25)
+            if (self.thomas.get_commanded_speed() < 0):
+                self.thomas.set_commanded_speed(0)
             self.thomas.set_speed(self.thomas.get_speed() - 25)
             #self.thomas.set_commanded_speed(self.thomas.get_speed())
 
         elif(self.manual_flag == True):
             if (self.emer_brake == True):
-                self.thomas.set_speed(self.thomas.get_speed() - 25) #slow down 25mph per block
-                #self.thomas.set_commanded_speed(self.thomas.get_speed())
+                self.thomas.set_speed(self.thomas.get_commanded_speed() - 25)
+
             elif (self.norm_brake == True):
-                self.thomas.set_speed(self.thomas.get_speed() - 10) #slow down 10mph per block
-                #self.thomas.set_commanded_speed(self.thomas.get_speed())
+                self.thomas.set_speed(self.thomas.get_commanded_speed() - 10)
 
         #if speed <= 0, stop train immediately
         if (self.thomas.get_speed() <= 0):
@@ -566,8 +542,14 @@ class testWindow(QtWidgets.QMainWindow, form_testWindow) :
         self.result_block.append("Horn: {}".format(self.thomas.get_horn()))
         self.result_block.append("Temperature: {}".format(self.thomas.get_temp()))
 
-        #power calculation here
-        self.result_block.append("Power: {}".format(self.thomas.get_power(self.thomas.get_speed())))
+        #power calculation
+        self.thomas.update_power()
+        if (self.emer_brake == True or self.block_num == self.thomas.get_authority()):
+            self.thomas.set_power(0)
+        elif self.norm_brake == True:
+            self.thomas.set_power(0)
+
+        self.result_block.append("Power: {}".format(self.thomas.get_power()))
 
         #-------------------------------------------------------------------------------------
 

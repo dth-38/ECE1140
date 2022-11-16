@@ -12,8 +12,8 @@ class train_status:
 
     def __init__(self):
         self.speed_limit = 100
-        self.commanded_speed = 0.0  #commended speed (from manual mode) OR desired speed
-        self.speed = 0.0            #actual speed of train
+        self.commanded_speed = 100  #commended speed (from manual mode) OR desired speed
+        self.speed = 0            #actual speed of train
         self.authority = 0.0
         self.door_left = "Off"
         self.door_right = "Off"
@@ -26,8 +26,8 @@ class train_status:
         self.failure_flag = False
         self.passenger_brake_flag = False
 
-        self.ki = 0
-        self.kp = 0
+        self.ki = 0.01
+        self.kp = 1
         self.pid = PID(self.kp, self.ki, 0, setpoint=self.commanded_speed) # initialize pid with fixed values
         self.pid.outer_limits = (0, 120000)                                  # clamp at max power output specified in datasheet 120kW
         self.power = 0
@@ -65,6 +65,8 @@ class train_status:
         self.ki = num
     def set_kp(self, num):
         self.kp = num
+    def set_power(self, num):
+        self.power = num
 
     #get methods
     def get_speed_limit(self):  #desired speed from train model
@@ -97,10 +99,14 @@ class train_status:
         return self.passenger_brake_flag
     def get_power(self):
         return self.power
+    def get_ki(self):
+        return self.ki
+    def get_kp(self):
+        return self.kp
 
     def reset_all_train(self):
-        self.ki = 0.0
-        self.kp = 0.0
+        self.ki = 0.01
+        self.kp = 1.0
         self.power = 0.0
 
     def initialize_PID(self, kp_val, ki_val):
@@ -109,16 +115,17 @@ class train_status:
         self.pid = PID(self.k_p, self.k_i, 0, setpoint=self.commanded_speed)
         self.pid.outer_limits = (0, 120000) # clamp at max power output specified in datasheet 120kW
 
-    def get_power_output(self):
-        self.pid.setpoint = self.commanded_speed    #commanded speed = desired speed
-        self.power = self.pid(self.speed)
-        if self.power > 0:
-            return self.power
-        
-        else:
-            self.power = 0
-            return self.power
+    def get_power_output(self): 
 
+        self.pid.setpoint = self.commanded_speed    #commanded speed = desired speed
+        self.power = self.pid(self.speed)   #if train has speed, you get less power to speed up than starting from speed = 0
+
+        if self.power < 0:
+            self.power = 0
+
+    def update_power(self):
+        self.initialize_PID(self.get_kp(), self.get_ki())
+        self.get_power_output()
 
 class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     def __init__(self) :
@@ -150,10 +157,29 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.auto_f = False     #flag for auto mode
         self.manual_f = False   #flag for manual mode
 
+        self.norm_brake_flag = False
+        self.emer_brake_flag = False
+
         #update train controller display every 1 sec
-        self.timer_update = QtCore.QTimer(self) 
-        self.timer_update.start(1000)
-        self.timer_update.timeout.connect(self.update_train_display) 
+        # self.timer_update = QtCore.QTimer(self) 
+        # self.timer_update.start(1000)
+        # self.timer_update.timeout.connect(self.update_train_display) 
+
+        print(self.real_train.get_power())
+
+        self.real_train.set_commanded_speed(60) #whereas speed = 0
+        self.real_train.update_power()
+        print(self.real_train.get_power())
+
+        self.real_train.set_speed(self.real_train.get_commanded_speed())    #60
+        self.real_train.set_commanded_speed(40)
+        self.real_train.update_power()
+        print(self.real_train.get_power())
+
+        self.real_train.set_speed(10)
+        self.real_train.set_commanded_speed(50)
+        self.real_train.update_power()
+        print(self.real_train.get_power())
 
     def pop_test(self):
         self.hide()
@@ -184,31 +210,31 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
     #normal brake
     def normal_slow(self):
-        #decrease power to slow down
-        val = self.real_train.get_speed() - 10
-        if (val < 0) : val = 0
-        self.real_train.set_speed(val)
-        self.train_speed.display(val)
+        if self.normal_brake.text() == "Normal Brake":
+            self.normal_brake.setStyleSheet("background-color: red")
+            self.normal_brake.setText("Normal Brake On")
+
+            # val = self.real_train.get_speed() - 10
+            # if (val < 0) : val = 0
+            # self.real_train.set_speed(val)
+
+        else:
+            self.normal_brake.setStyleSheet("background-color: light gray")
+            self.normal_brake.setText("Normal Brake")
 
     #ememrgency brake
     def emergency_slow(self):
-        #decrease power to slow down
-        val = self.real_train.get_speed() - 25  #deacceleration rate = 25
-        if (val < 0) : val = 0
-        self.real_train.set_speed(val)
-        self.train_speed.display(val)
+        if self.emergency_brake.text() == "Emergency Brake":
+            self.emergency_brake.setStyleSheet("background-color: red")
+            self.emergency_brake.setText("Emergency Brake On")
 
-    def activate_program(self):
-        t = self.activate_button.text()
-        if t == "Activate":
-            #self.apply_driver_change()
-            self.activate_button.setText("Waiting..")
-            self.activate_button.setStyleSheet("background-color: red")
-        elif t == "Waiting..":
-            self.activate_button.setText("Activate")
-            self.activate_button.setStyleSheet("background-color: light gray")
+            # val = self.real_train.get_speed() - 25  #deacceleration rate = 25
+            # if (val < 0) : val = 0
+            # self.real_train.set_speed(val)
 
-        #also add ki, kp
+        else:
+            self.emergency_brake.setStyleSheet("background-color: light gray")
+            self.emergency_brake.setText("Emergency Brake")
 
     def begin_state(self):
         self.failure_frame.hide()
@@ -233,6 +259,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.set_ad(self.check_ad())
         self.real_train.set_horn(self.check_horn())
 
+        #self.update_train_display()
+
     #Check if all the inputs are in.
     def check_value(self):
 
@@ -248,9 +276,9 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         elif self.check_radio_box() == False:
             self.main_warning.signal_detected("Didn't select On/Off for all. Try again")
             return False
-        elif self.check_ki_kp() == False:
-            self.main_warning.signal_detected("Incorrect Ki, KP value. Try again")
-            return False
+        # elif self.check_ki_kp() == False:
+        #     self.main_warning.signal_detected("Incorrect Ki, KP value. Try again")
+        #     return False
         return True
 
     #prevent speed from exceeding the limit
@@ -261,8 +289,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.real_train.set_speed(self.real_train.get_commanded_speed())    #for now
 
     def apply_engineer_change(self):
-        if self.check_ki_kp() == False:
-            return
+        #if self.check_ki_kp() == False:
+        #    return
 
         #apply ki kp values
         self.real_train.set_ki(float(self.ki_box.toPlainText()))
@@ -335,7 +363,9 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         #if failure occurs
         if self.real_train.get_failure_flag() == True:
             #decrease speed
-            self.emergency_slow()   #or set power = 0
+            self.emergency_slow()
+            self.failure_frame.setStyleSheet("background-color: red")
+            self.failure_output.append("Exists!")
 
         #baesd on the authority & beacon (name of station), I should also know when to stop --> raise emergency_slow() flag
 
@@ -343,8 +373,17 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         if self.real_train.get_power() == 0:
             self.auto_train_stopped()
 
-        #NOTE we try to reach desired speed by giving more power
-        self.real_train.get_power_output(self.real_train.get_commanded_speed()) 
+        #NOTE Update power. Train model uses power --> speed & pass actual speed + commanded speed to train controller
+        self.real_train.update_power() 
+
+        #if brake flags = True, set power = 0 to decrease speed
+        #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
+        if self.norm_brake_flag == True or self.emer_brake_flag == True:
+            self.real_train.set_power(0)
+
+        #within update function, if power != 0, turn external light on
+        if self.real_train.get_power() != 0:
+            self.real_train.set_external_light(True)
 
         #update to screen
         self.update_train_display()
@@ -435,7 +474,21 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         #ki, kp
         self.ki_box.clear()
         self.kp_box.clear()
-    
+
+        self.auto_f = False
+        self.manual_f = False
+        self.norm_brake_flag = False
+        self.emer_brake_flag = False
+
+        self.emergency_brake.setStyleSheet("background-color: light gray")
+        self.emergency_brake.setText("Emergency Brake")
+
+        self.normal_brake.setStyleSheet("background-color: light gray")
+        self.normal_brake.setText("Normal Brake")
+
+        self.failure_frame.setStyleSheet("background-color: light gray")
+        self.failure_output.append("N/A")
+
     def partial_reset(self):
         #clear input boxes
         self.cs_box.clear()
@@ -501,7 +554,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     #  Modes   #
     ############
     def automatic_mode(self):
-        self.partial_reset()    #clear out partially
+        self.partial_reset()    #clear out manual input section (partially)
 
         self.auto_f = True
         self.manual_f = False
