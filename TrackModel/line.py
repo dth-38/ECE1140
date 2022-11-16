@@ -5,6 +5,7 @@ class Line:
         self.name = name
         self.blocks = []
         self.line_ticket_sales = 0
+        self.total_length = 0
 
     ## Returns block object by calling the block number
     def get_block(self, number):
@@ -12,3 +13,8 @@ class Line:
 
     def get_name(self):
         return self.name
+
+    ## Calculates the total track length of the line
+    def calc_line_length(self):
+        for b in self.blocks:
+            self.total_length += b.get_length()

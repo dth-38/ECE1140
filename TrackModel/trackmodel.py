@@ -3,26 +3,22 @@ from heater import *
 from trainloc import *
 from track_info import *
 
-import sys
-sys.path.append('ECE1140')
-
-from TrainModel import *
-import Signals
+##from TrainModel import Train
+##import Signals
 
 class TrackModel:
     def __init__(self):
         self.trains = []
         self.controllers = []
         self.lines = []
-        self.train_locs = [len(self.trains)]
         self.heaters = []
         self.current = []
 
-    ## Add new train to the map
-    def add_train(self, route):
-        id = len(self.trains)
-        t = Train(id, route)
-        self.trains.append(t)
+    # ## Add new train to the map
+    # def add_train(self, route):
+    #     id = len(self.trains)
+    #     t = Train(id, route)
+    #     self.trains.append(t)
 
     ## Delete trains from the map
     def remove_train(self, id):
@@ -34,7 +30,7 @@ class TrackModel:
 
     def load_model(self, red_table, green_table):
         ## Load the excel file, take in data
-        file = TrackInfo(fp = "C:/Users/rachs/OneDrive/Documents/ECE1140/ECE1140/TrackModel/qt ui/track_layout.xlsx")
+        file = TrackInfo(fp = "C:/Users/rachs/OneDrive/Documents/ECE1140/ECE1140/TrackModel/track_layout.xlsx")
         file.load_excel_data(file.get_sheet(0), red_table)
         file.load_excel_data(file.get_sheet(1), green_table)
 
@@ -55,10 +51,9 @@ class TrackModel:
         self.create_blocks(file, self.lines[0], red_table, headers)
         self.create_blocks(file, self.lines[1], green_table, headers)
 
-        ## Check that blocks were created
-        print(len(self.lines[0].blocks))
-        print(self.lines[0].get_block(54).get_section())
-        print(self.lines[0].blocks[54].get_section())
+        ## Calculate total track length for green and red lines
+        self.lines[0].calc_line_length()
+        self.lines[1].calc_line_length()
 
     def create_blocks(self, file, line, table, headers):
         ## Create block lists
@@ -192,14 +187,15 @@ class TrackModel:
 
     ## Print values to the main GUI
     def print_table(self, table):
-        self.set_current(self.lines[0], self.lines[0].get_block(13))
+        # self.set_current(self.lines[0], self.lines[0].get_block(13))
         # Iterate through current[] values list, print to GUI table
         for i in range(len(self.current)):
             table.setItem(0, i, self.current[i])
 
-    ## Signal handlers
-    def setup_signals(self):
-        Signals.tc_update.connect(self.tick)
-
     ## Update current track information every second
     #def update_model(self):
+
+    ## Calculate train position
+    def calc_train_pos(self, train):
+        position = train.position
+
