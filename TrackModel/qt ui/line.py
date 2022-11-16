@@ -9,3 +9,6 @@ class Line:
     ## Returns block object by calling the block number
     def get_block(self, number):
         return self.blocks[number]
+
+    def get_name(self):
+        return self.name

@@ -9,6 +9,7 @@ class TrackInfo:
         self.sheets = self.propogate_sheets()
         self.red_table = QTableWidget()
         self.green_table = QTableWidget()
+        self.current_table = QTableWidget()
         self.red_length = 0
         self.green_length = 0
 

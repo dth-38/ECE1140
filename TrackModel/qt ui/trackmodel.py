@@ -2,6 +2,8 @@ from line import *
 from heater import *
 from trainloc import *
 from track_info import *
+import Signals
+import Train
 
 class TrackModel:
     def __init__(self):
@@ -10,6 +12,20 @@ class TrackModel:
         self.lines = []
         self.train_locs = [len(self.trains)]
         self.heaters = []
+
+    ## Add new train to the map
+    def add_train(self, route):
+        id = len(self.trains)
+        t = Train(id, route)
+        self.trains.append(t)
+
+    ## Delete trains from the map
+    def remove_train(self, id):
+        self.trains.pop(id)
+
+    ## Return train object based upon ID
+    def get_train(self, id):
+        return self.trains[id]
 
     def load_model(self, red_table, green_table):
         ## Load the excel file, take in data
@@ -140,5 +156,21 @@ class TrackModel:
         ## Send previous and next station data to the corresponding block
         block.set_beacon(station1, station2, side)
 
+    ## Set up current block values table
+    def curr_table_setup(self):
+        self.current_table.setColumnCount(1)
+        self.current_table.setRowCount(13)
+        self.current_table.setVerticalHeaderLabels(['Line', 'Section', 'Block #', 'Block Length',
+                                                    'Block Grade (%)', 'Commanded Speed (mph)', 'Authority (blocks)',
+                                                    'Elevation', 'Failure', 'Stop Signal', 'Beacon',
+                                                    'Oncoming Passengers', 'Crew Count', 'Block Occupancy'])
+
+        # fill in table with current values
+        ## self.current_table
+
+    ## Signal handlers
+    def setup_signals(self):
+        Signals.tc_update.connect(self.tick)
+
     ## Update current track information every second
-    ##def update_model(self):
+    #def update_model(self):
