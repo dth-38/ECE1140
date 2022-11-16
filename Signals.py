@@ -53,10 +53,23 @@ class Signals(QObject):
     # TRACK MODEL SIGNALS
     #------------------------------------------
 
+    #(str line, int ticket_sales)
+    send_ctc_ticket_sales = pyqtSignal(str, int)
+    
     #(str block, int True/False)
     send_tc_occupancy = pyqtSignal(str, int)
     #(str block, int True/False)
     send_tc_failure = pyqtSignal(str, int)
 
+    #(str block, int authority)
+    send_tm_authority = pyqtSignal(str, int)
+    #(str block, int grade)
+    send_tm_grade = pyqtSignal(str, int)
+    #(str block, int True/False)
+    send_tm_failure = pyqtSignal(str, int)
+    #(str block, str station1, str station2, str side)
+    send_tm_beacon = pyqtSignal(str, str, str, str)
+    #(str block, int passenger_count)
+    send_tm_passenger_count = pyqtSignal(str, int)
 
 signals = Signals()
