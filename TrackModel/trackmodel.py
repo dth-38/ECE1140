@@ -156,6 +156,22 @@ class TrackModel:
         ## Send previous and next station data to the corresponding block
         block.set_beacon(station1, station2, side)
 
+    ## Add light signals to the track model
+    def add_lights(self):
+        # Light signals on the red line
+        line = self.lines[0]
+        red_lights = [1, 13, 28, 76, 77, 85, 98, 150]
+        for r in red_lights:
+            luz = Light()
+            line.get_block(r).set_light(luz)
+
+        # Light signals on the green line
+        line = self.lines[1]
+        green_lights = [1, 15, 27, 32, 38, 43, 52, 66, 67, 71, 72, 76]
+        for g in green_lights:
+            luz = Light()
+            line.get_block(g).set_light(luz)
+
     ## Set up current block values table
     def curr_table_setup(self, current_table):
         # Create new array of QWidget Items
