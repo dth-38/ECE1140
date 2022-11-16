@@ -51,7 +51,7 @@ class CTC_Scheduler:
         self.green_speed = 70
         self.destination_index = 0
         self.red_stations = []
-        self.green_stations = [[2,"Pioneer"],[9,"Edgebrook"],[16,"Station"],[
+        self.green_stations = [[0,"Yard"],[2,"Pioneer"],[9,"Edgebrook"],[16,"Station"],[
             19,"Railway_Crossing"],[22,"Whited"],[31,"South_Bank"],[39,"Central"],
             [48,"Inglewood"],[57,"Overbrook"],[65,"Glenbury"],[73,"Dormont"],
             [77,"Mt_Lebanon"],[88,"Poplar"],[96,"Castle_Shannon"]]

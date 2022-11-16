@@ -25,7 +25,7 @@ class CTC(QWidget):
         self.MainWindow = QtWidgets.QMainWindow()
         ui = Ui_MainWindow(self)
         ui.setupUi(self.MainWindow)
-        #MainWindow.show()
+        #self.MainWindow.show()
         #sys.exit(app.exec_())
     def setup_signals(self):
         signals.ctc_update.connect(self.tick)
