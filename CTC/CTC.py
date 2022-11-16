@@ -1,15 +1,15 @@
-from CTC_Scheduler import CTC_Scheduler
-from CTC_GUI import Ui_MainWindow
-from common import TrackModel
-from CTC_Clock import CTC_Clock
-from CTC_GUI import Ui_MainWindow
+from CTC.CTC_Scheduler import CTC_Scheduler
+from CTC.CTC_GUI import Ui_MainWindow
+from TrackModel import TrackModel
+from CTC.CTC_Clock import CTC_Clock
+from CTC.CTC_GUI import Ui_MainWindow
 
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget
 
 from Signals import signals
-from TCTools import convert_to_block
+from TrackController.TCTools import convert_to_block
 
 class CTC(QWidget): 
     def __init__(self, clk, sch, a_model):

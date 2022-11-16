@@ -14,10 +14,10 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5 import *
 
-from CTC_Scheduler import CTC_Scheduler
-from CTC_Clock import CTC_Clock
-from Block_Table import Block_Table
-from Train_Table import Train_Table
+from CTC.CTC_Scheduler import CTC_Scheduler
+from CTC.CTC_Clock import CTC_Clock
+from CTC.Block_Table import Block_Table
+from CTC.Train_Table import Train_Table
 
 #TRAIN SCREEN WINDOW 
 class train_screen(QWidget):

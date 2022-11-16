@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import * 
 from PyQt5.QtCore import *
 from PyQt5 import *
-from Block_Table import Block_Table
+from CTC.Block_Table import Block_Table
 
 #MAINTENANCE_SCREEN
 class maintenance_screen(QWidget):

@@ -1,14 +1,13 @@
-import sched
 import pandas as pd
 import numpy as np
-from CTC_Clock import CTC_Clock
+from CTC.CTC_Clock import CTC_Clock
 #TODO: GROUP SIGNALS FILE
 
 #TODO: GET TRAIN FROM TRAIN MODEL AND LINE,STATION, AND TRACKMODEL FROM TRACK MODEL
-from common import Train, Line, Station, TrackModel
-from Train_Table import Train_Table
-from Block_Table import Block_Table
-from CTC_Clock import  CTC_Clock
+from CTC.common import Train, Line, Station, TrackModel
+from CTC.Train_Table import Train_Table
+from CTC.Block_Table import Block_Table
+from CTC.CTC_Clock import  CTC_Clock
 
 class CTC_Scheduler: 
     def __init__(self):
