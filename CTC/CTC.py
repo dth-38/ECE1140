@@ -12,10 +12,9 @@ from Signals import signals
 from TCTools import convert_to_block
 
 class CTC(QWidget): 
-    def __init__(self, clk, sch, a_model):
-        self.clock = clk
-        self.scheudle = sch
-        self.track_model = a_model
+    def __init__(self):
+        self.clock = CTC_Clock()
+        self.scheudle = CTC_Scheduler()
         self.setup_signals()
     #CREATE UI
     def add_ui(self,ctc):
@@ -66,13 +65,7 @@ class CTC(QWidget):
             elif self.scheudle.train_table.get_line(0) == "Green":
                 signals.send_tc_speed.emit(tc_block,self.scheudle.green_speed)
             signals.send_tc_maintenance.emit(tc_block,0)
-    
-
-
-    #GET LAYOUT FROM TRACKMODEL
-    def add_track_model(self):
-        self.track_model.get_layout()
-    
+    """""
     def add_schedule(self):
         print("ADD SCHEDULE!!!!!")
         self.scheudle.upload_schedule("./input/Schedule_v2.xlsx")
@@ -87,3 +80,4 @@ class CTC(QWidget):
         print("MANUAL DISPATCH")
         while self.clock.get_time() < (23,59,59):
             self.clock.update_time(10)
+    """
