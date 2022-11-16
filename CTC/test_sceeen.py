@@ -14,8 +14,8 @@ from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import * 
 from PyQt5.QtCore import *
-from CTC_Scheduler import CTC_Scheduler
-from common import Train, TrackModel, Line, Station
+from CTC.CTC_Scheduler import CTC_Scheduler
+from CTC.common import Train, TrackModel, Line, Station
 
 class test_screen(QWidget):
     def __init__(self):

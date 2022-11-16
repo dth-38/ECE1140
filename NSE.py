@@ -1,5 +1,5 @@
 import sys
-
+import math
 
 from PyQt5.QtCore import QTimer ,QThreadPool
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QGridLayout, QLineEdit, QWidget
@@ -11,13 +11,14 @@ from TrackController.TrackController import TrackController
 #import TrainModel.Train
 #import TrackModel
 #import CTC.CTC
+from CTC.CTC import CTC
 
 
 class NSE_Simulation(QMainWindow):
 
     def __init__(self, run=False):
         #idk number of track controllers yet
-        self.NUM_CONTROLLERS = 14
+        self.NUM_CONTROLLERS = 15
         self.SEC_TO_MSEC = 1000
 
         self.X_OFFSET = 80
@@ -31,8 +32,8 @@ class NSE_Simulation(QMainWindow):
 
 
         self.track_controllers = []
+        self.ctc = CTC()
         #self.track = TrackModel.main.main()
-        self.ctc = 0
     
 
         super().__init__()
@@ -49,7 +50,7 @@ class NSE_Simulation(QMainWindow):
         self.pool = QThreadPool.globalInstance()
 
         self.timer = QTimer()
-        self.timer.timeout.connect(lambda: self.pool.start(self.scheduler))
+        self.timer.timeout.connect(self.create_scheduler)
 
 
         self.setup_GUI()
@@ -66,8 +67,11 @@ class NSE_Simulation(QMainWindow):
         if multiplier > 0 and multiplier < self.MULTIPLIER_LIMIT:
             self.update_period_multiplier = multiplier
 
+        self.multiplier_input.setText(str(self.update_period_multiplier))
+
         #period is calculated in miliseconds cause thats what the timer takes
         period = (self.UPDATE_PERIOD / multiplier) * self.SEC_TO_MSEC
+        period = math.floor(period)
 
         self.timer.start(period)
 
@@ -137,25 +141,45 @@ class NSE_Simulation(QMainWindow):
         self.stop_button.setMinimumWidth(min_width)
         self.stop_button.setMinimumHeight(min_height)
 
+        self.multiplier_input = QLineEdit()
+        self.multiplier_input.setMaxLength(2)
+        self.multiplier_input.setMinimumWidth(min_width)
+        self.multiplier_input.setFont(widget_font)
+        self.multiplier_input.setText(str(self.update_period_multiplier))
+        
+        self.multiplier_label = QLabel("Multiplier: ")
+        self.multiplier_label.setMinimumWidth(min_width)
+        self.multiplier_label.setMinimumHeight(min_height)
+        self.multiplier_label.setFont(widget_font)
+
         self.nse_layout = QGridLayout()
 
         self.nse_layout.addWidget(self.start_button, 0, 0)
         self.nse_layout.addWidget(self.stop_button, 0, 1)
-        self.nse_layout.addWidget(self.ctc_button, 1, 0)
-        self.nse_layout.addWidget(self.track_model_button, 1, 1)
-        self.nse_layout.addWidget(self.num_select_textbox, 3, 0)
-        self.nse_layout.addWidget(self.track_controller_button, 2, 1)
-        self.nse_layout.addWidget(self.train_model_button, 3, 1)
-        self.nse_layout.addWidget(self.train_controller_button, 4, 1)
+        self.nse_layout.addWidget(self.multiplier_label, 1, 0)
+        self.nse_layout.addWidget(self.multiplier_input, 1, 1)
+        self.nse_layout.addWidget(self.ctc_button, 2, 0)
+        self.nse_layout.addWidget(self.track_model_button, 2, 1)
+        self.nse_layout.addWidget(self.num_select_textbox, 4, 0)
+        self.nse_layout.addWidget(self.track_controller_button, 3, 1)
+        self.nse_layout.addWidget(self.train_model_button, 4, 1)
+        self.nse_layout.addWidget(self.train_controller_button, 5, 1)
 
         self.main_widget.setLayout(self.nse_layout)
         self.setCentralWidget(self.main_widget)
 
 
     def start_clicked(self):
+        mult = self.multiplier_input.text()
+        try:
+            mult = int(mult)
+        except:
+            mult = 0
+            print("Error: multiplier not a number")
+
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
-        self.start_sim()
+        self.start_sim(mult)
 
     def stop_clicked(self):
         self.start_button.setEnabled(True)
@@ -163,8 +187,7 @@ class NSE_Simulation(QMainWindow):
         self.stop_sim()
 
     def open_ctc(self):
-        #self.ctc.show()
-        pass
+        self.ctc.MainWindow.show()
 
 
     def open_track_controller(self):
@@ -202,7 +225,9 @@ class NSE_Simulation(QMainWindow):
             print("Error: Selection is not a number.")
 
 
-
+    def create_scheduler(self):
+        s = Scheduler.Scheduler()
+        self.pool.start(s)
 
 #-------------------------------------------
 # MAIN FOR WHOLE PROJECT

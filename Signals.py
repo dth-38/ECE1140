@@ -10,7 +10,7 @@ class Signals(QObject):
     #-----------------------------------------
 
     #(int id)
-    tc_update = pyqtSignal(int)
+    tc_update = pyqtSignal()
 
     #(str line, int block_num, int True/False)
     send_ctc_occupancy = pyqtSignal(str, int, int)
@@ -39,6 +39,11 @@ class Signals(QObject):
     #FOR SIGNALS TO TRACK CONTROLLERS:
     #CONVERT line,block_num format TO line_section_block_num i.e.(green, 2 -> green_A_2)
     #USING TCTools convert_to_block function
+    ctc_update = pyqtSignal()
+
+    #TODO: need to tell track model the line as well, right?
+    #int True/False
+    send_tm_dispatch = pyqtSignal(int)
 
     #(str block, int authority)
     send_tc_authority = pyqtSignal(str, int)
@@ -52,6 +57,8 @@ class Signals(QObject):
     #------------------------------------------
     # TRACK MODEL SIGNALS
     #------------------------------------------
+
+    tm_update = pyqtSignal()
 
     #(str line, int ticket_sales)
     send_ctc_ticket_sales = pyqtSignal(str, int)
@@ -71,5 +78,19 @@ class Signals(QObject):
     send_tm_beacon = pyqtSignal(str, str, str, str)
     #(str station, int passenger_count)
     send_tm_passenger_count = pyqtSignal(str, int)
+
+    #-----------------------------------------
+    # Train Model Signals
+    #-----------------------------------------
+
+
+    #-----------------------------------------
+    # Signals to open train/track model gui
+    #-----------------------------------------
+
+    #(int id)
+    open_tm_gui = pyqtSignal(int)
+    #(int id)
+    open_tc_gui = pyqtSignal(int)
 
 signals = Signals()

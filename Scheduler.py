@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QRunnable
+from Signals import signals
 
 #imports signals class whenever we sort that out
 
@@ -10,6 +11,4 @@ class Scheduler(QRunnable):
     
     #ovverides run method to have it be run in threadpool
     def run(self):
-        #each module's update function is called using signals
-        #still gotta figure it out
-        pass
+        signals.tc_update.emit()

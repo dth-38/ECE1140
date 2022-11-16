@@ -1,10 +1,10 @@
 from re import T
 from PyQt5 import QtCore, QtGui, QtWidgets
-from maintenance_screen import maintenance_screen
+from CTC.maintenance_screen import maintenance_screen
 
-from train_screen import train_screen
-from maintenance_screen import maintenance_screen
-from test_sceeen import test_screen
+from CTC.train_screen import train_screen
+from CTC.maintenance_screen import maintenance_screen
+from CTC.test_sceeen import test_screen
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling,True)
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps,True)
@@ -22,10 +22,9 @@ from PyQt5.QtCore import *
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
-    def __init__(self,scheduler,clock):
+    def __init__(self,ctc):
         super().__init__()
-        self.scheduler = scheduler
-        self.clock = clock
+        self.ctc = ctc
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1440, 875)
@@ -64,7 +63,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     
     def train_screen(self):
         self.hide()
-        self.train = train_screen(self.scheduler,self.clock)
+        self.train = train_screen(self.ctc)
 
 
     def maintenance_screen(self):
