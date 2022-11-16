@@ -3,8 +3,9 @@ from heater import *
 from trainloc import *
 from track_info import *
 
+from PyQt5.QtCore import pyqtSlot
 ##from TrainModel import Train
-##import Signals
+from Signals import signals
 
 class TrackModel:
     def __init__(self):
@@ -159,18 +160,25 @@ class TrackModel:
     ## Add light signals to the track model
     def add_lights(self):
         # Light signals on the red line
+        # forked to by switch
         line = self.lines[0]
         red_lights = [1, 13, 28, 76, 77, 85, 98, 150]
         for r in red_lights:
-            luz = Light()
-            line.get_block(r).set_light(luz)
+            line.get_block(r).set_light(Light())
+        # at station block
+        for y in range(len(line)):
+            if line.get_block(y).get_station() is not None:
+                line.get_block(r).set_light(Light())
 
         # Light signals on the green line
-        line = self.lines[1]
+        line1 = self.lines[1]
         green_lights = [1, 15, 27, 32, 38, 43, 52, 66, 67, 71, 72, 76]
         for g in green_lights:
-            luz = Light()
-            line.get_block(g).set_light(luz)
+            line1.get_block(g).set_light(Light())
+        # at station block
+        for y in range(len(line)):
+            if line.get_block(y).get_station() is not None:
+                line.get_block(y).set_light(Light())
 
     ## Set up current block values table
     def curr_table_setup(self, current_table):
@@ -208,6 +216,15 @@ class TrackModel:
         for i in range(len(self.current)):
             table.setItem(0, i, self.current[i])
 
+    ## Return which line the block is on
+    def get_line(self, block):
+        for l in self.lines:
+            for b in l.blocks:
+                if b == block:
+                    return l
+                else:
+                    return None
+
     ## Update current track information every second
     #def update_model(self):
 
@@ -220,3 +237,44 @@ class TrackModel:
     #     total_block_length = 0
     #     for b in line.blocks:
     #         total_block_length += 
+
+    ## SIGNAL SECTION
+    #  Initial set up of transmitted signals
+    def track_model_signals(self):
+        # signals sent to track controller
+        signals.send_tc_occupancy.connect(self.signal_occupancy)
+        signals.send_tc_failure.connect(self.signal_failure)
+        
+        # signals sent to train model
+        signals.send_tm_authority.connect(self.signal_authority)
+        signals.send_tm_grade.connect(self.signal_grade)
+        signals.send_tm_failure.connect(self.signal_failure)
+        signals.send_tm_beacon.connect(self.signal_beacon)
+        signals.send_tm_passenger_count(self.passenger_count)
+
+    #  Signal handlers
+    @pyqtSlot(str, int)
+    def signal_occupancy(self, block, occupancy):
+        t = True; i = 0
+        line = self.get_line(block)
+        if line is not None:
+            while(t):
+                if (block == line.get_block(i)):
+                    self.line.get_block(i).set_occupancy(occupancy)
+                    t = False
+                    break
+
+    # @pyqtSlot(str, int)
+    # def signal_failure(self, block, failure):
+
+    # @pyqtSlot(str, int)
+    # def signal_authority(self, block, authority):
+
+    # @pyqtSlot(str, int)
+    # def signal_grade(self, block, grade):
+
+    # @pyqtSlot(str, str, str, str)
+    # def signal_beacon(self, block, station1, station2, side):
+
+    # @pyqtSlot(str, int)
+    # def signal_passenger_count(self, station, passenger_count):

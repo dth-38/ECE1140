@@ -69,7 +69,7 @@ class Signals(QObject):
     send_tm_failure = pyqtSignal(str, int)
     #(str block, str station1, str station2, str side)
     send_tm_beacon = pyqtSignal(str, str, str, str)
-    #(str block, int passenger_count)
+    #(str station, int passenger_count)
     send_tm_passenger_count = pyqtSignal(str, int)
 
 signals = Signals()
