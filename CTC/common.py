@@ -364,8 +364,11 @@ class Train:
                         self.block_list.pop(0)
                         self.current_block = self.block_list[0]
                         current_block = self.block_list[0]
+                        #update track circuit
+                        self.train_model_update_command_speed(current_block.getCommandSpeed())
                 
                         #send block occupancy to track model
+                        #update track signa
                         #signals.track_model_update_block_occupancy.emit(self.id, current_block)
 
                 #convert metric to imperial
