@@ -41,7 +41,7 @@ class Signals(QObject):
     #USING TCTools convert_to_block function
     ctc_update = pyqtSignal()
 
-    #TODO: need to tell track model the line as well, right?
+    #TODO: need to tell track model the line to dispatch on as well, right?
     #int True/False
     send_tm_dispatch = pyqtSignal(int)
 
