@@ -658,13 +658,17 @@ class TrackController(QMainWindow):
                 self.previous_Occupations.remove(self.next_Track_State[self.final_Block].get_Previous_Block())
 
 
-            #TODO: resignal authority changes here
 
             #train padding check: creates a safety zone with all recently occupied blocks
             #this is done last so that previous occupancies have a chance to update
             for bl in self.previous_Occupations:
                 if bl != "START" and bl != "END":
                     self.next_Track_State[bl].authority = 0
+                    if self.current_Track_State[bl].authority != self.next_Track_State[bl].authority:
+                        d_bl = decompose_block(bl)
+
+                        signals.send_track_authority.emit(d_bl[0], d_bl[1], self.next_Track_State[bl].authority)
+                        self.current_Track_State[bl].authority = copy.copy(self.next_Track_State[bl].authority)
 
 
     #helper function to handle situations where a train is in two blocks at once

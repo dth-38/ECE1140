@@ -11,6 +11,7 @@ from TrackController.TrackController import TrackController
 #import TrainModel.Train
 #import TrackModel
 #import CTC.CTC
+from CTC.CTC import CTC
 
 
 class NSE_Simulation(QMainWindow):
@@ -31,8 +32,8 @@ class NSE_Simulation(QMainWindow):
 
 
         self.track_controllers = []
+        self.ctc = CTC()
         #self.track = TrackModel.main.main()
-        self.ctc = 0
     
 
         super().__init__()
@@ -186,8 +187,7 @@ class NSE_Simulation(QMainWindow):
         self.stop_sim()
 
     def open_ctc(self):
-        #self.ctc.show()
-        pass
+        self.ctc.MainWindow.show()
 
 
     def open_track_controller(self):
