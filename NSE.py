@@ -89,7 +89,7 @@ class NSE_Simulation(QMainWindow):
         widget_font = QFont('Times', 16)
 
         min_width = (self.WIDTH // 2) - 20
-        min_height = (self.HEIGHT // 4) - 20
+        min_height = (self.HEIGHT // 6) - 20
 
         self.ctc_button = QPushButton("CTC Office", self)
         self.ctc_button.clicked.connect(self.open_ctc)
