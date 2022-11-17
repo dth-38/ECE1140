@@ -13,7 +13,7 @@ class maintenance_screen(QtWidgets.QWidget):
     def __init__(self):
         super(maintenance_screen,self).__init__()
         self.setupUi()
-        self.show()
+        #self.show()
     def setupUi(self):
         self.main_button = QtWidgets.QPushButton(self)
         self.main_button.setGeometry(QtCore.QRect(1260, 560, 161, 221))

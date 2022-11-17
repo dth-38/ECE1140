@@ -21,7 +21,7 @@ class test_screen(QtWidgets.QWidget):
     def __init__(self):
         super(test_screen,self).__init__()
         self.setupUi()
-        self.show()
+        #self.show()
     def setupUi(self):
         self.label = QtWidgets.QLabel(self)
         self.label.setGeometry(QtCore.QRect(0, 130, 211, 371))
