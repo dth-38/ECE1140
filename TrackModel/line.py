@@ -1,5 +1,5 @@
-from block import *
-from linked_list import *
+from TrackModel.block import *
+from TrackModel.linked_list import *
 
 class Line:
     def __init__(self, name):

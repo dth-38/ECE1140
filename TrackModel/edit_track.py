@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtGui import QIcon
 import pandas as pd
-from subsection import Ui_SubsectionWindow
+from TrackModel.subsection import Ui_SubsectionWindow
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True) #enable highdpi scaling
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True) #use highdpi icons
