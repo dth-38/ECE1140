@@ -4,7 +4,6 @@ from PyQt5 import QtCore, QtWidgets
 import sys
 sys.path.append(".")
 from train_model_signals import *
-from pprint import pprint
 from Train_Controller.train_controller_main import WindowClass
 from Signals import signals
 from PyQt5.QtCore import pyqtSlot
@@ -106,7 +105,7 @@ class Train:
         self.train_model = QtWidgets.QMainWindow()
         self.ui = TrainData_Ui()
         self.ui.setupUi(self.train_model)
-        self.train_model.show()
+        #self.train_model.show()
 
         #train controller that controls this train
         self.train_ctrl = WindowClass()
@@ -197,7 +196,7 @@ class Train:
 
     #sets train lights
     def train_model_display_internal_lights(self):
-        print("Interior lights: ", self.interior_light_cmd)
+        #print("Interior lights: ", self.interior_light_cmd)
         if(self.interior_light_cmd == "On"):
             self.ui.int_light_line.setText("On")
         else:
@@ -489,11 +488,11 @@ class Train:
 
                 #ACCELERATION CALCULATION
                 #pprint(self.passenger_ebrake)
-                print("pass brake: ", self.passenger_ebrake)
-                print("force: ", self.force)
-                print("mass", self.mass)
-                print("sbrake: ", self.sbrake)
-                print("ebrake: ", self.ebrake)
+                #print("pass brake: ", self.passenger_ebrake)
+                #print("force: ", self.force)
+                #print("mass", self.mass)
+                #print("sbrake: ", self.sbrake)
+                #print("ebrake: ", self.ebrake)
                 temp_acceleration = self.force/mass
                 if(temp_acceleration > self.ACCELERATION_LIMIT):
                     temp_acceleration = self.ACCELERATION_LIMIT
@@ -507,8 +506,8 @@ class Train:
 
                 #VELOCITY CALCULATION
 
-                print("temp accel: ", temp_acceleration)
-                print("prev accel: ", prev_acceleration)
+                #print("temp accel: ", temp_acceleration)
+                #print("prev accel: ", prev_acceleration)
                 temp_velocity = temp_actual_speed + ((sample_period/2) * (temp_acceleration + prev_acceleration))
                 if(temp_velocity > self.VELOCITY_LIMIT):
                     temp_velocity = self.VELOCITY_LIMIT
@@ -546,7 +545,7 @@ class Train:
                 #if (self.actual_speed > self.train_ctrl.real_train.get_commanded_speed()):
                 #    self.actual_speed = self.train_ctrl.real_train.get_commanded_speed()
 
-                print("speed: ", self.actual_speed)
+                #print("speed: ", self.actual_speed)
                 self.ui.velocity_line.setText(str(round(self.actual_speed, 2)))
 
                 self.acceleration = temp_acceleration * 3.28084
@@ -561,8 +560,8 @@ class Train:
                 #self.real_train.set_commanded_speed(self.commanded_speed)
                 #self.power = self.train_ctrl.real_train.power_calculation(self.actual_speed)
 
-                print("power:" , self.power)
-                pprint("-------------------------------")
+                #print("power:" , self.power)
+                #pprint("-------------------------------")
 
                 self.ui.power_line.setText(str(round(self.power,1)))
 
