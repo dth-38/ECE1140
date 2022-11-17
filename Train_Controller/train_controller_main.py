@@ -156,7 +156,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     def __init__(self) :
         super().__init__()
         self.init_ui()
-        self.show()
+        #self.show()
 
     def init_ui(self):
         self.setupUi(self)
