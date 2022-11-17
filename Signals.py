@@ -82,6 +82,10 @@ class Signals(QObject):
     # Train Model Signals
     #-----------------------------------------
 
+    train_update = pyqtSignal()
+
+    #(int id, float distance)
+    send_tm_distance = pyqtSignal(int, float)
 
     #-----------------------------------------
     # Signals to open train/track model gui

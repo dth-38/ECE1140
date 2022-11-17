@@ -45,7 +45,7 @@ class maintenance_screen(QWidget):
         self.retranslateUi(self)
         #QtCore.QMetaObject.connectSlotsByName()
         self.maintenance()
-        self.maintenance_button.clicked.connect(lambda:self.pressed())
+        self.maintenance_button.clicked.connect(lambda:self.maintenance_pressed())
         self.main_button.clicked.connect(lambda:self.closescr())
     
     def closescr(self):
@@ -64,7 +64,7 @@ class maintenance_screen(QWidget):
             self.maintenance_output.setText("True")
             maintenance_track = Track(id_n=self.block_selection.value(),sec=self.section_selection.currentText(),main_signal="True")
     """
-    def pressed(self):
+    def maintenance_pressed(self):
         if self.status_selection.currentText() == "Open":
             self.maintenance_output.setText("False")
         else:
