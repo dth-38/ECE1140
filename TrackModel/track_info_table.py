@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QTabWidget, QTableWidget, QTableWidgetItem, QPushButton, QHeaderView, QHBoxLayout, QVBoxLayout
 from PyQt5.QtCore import Qt
-from track_info import *
+from TrackModel.track_info import *
 
 class MyApp(QWidget):
     def __init__(self):

@@ -1,7 +1,7 @@
-from line import *
-from heater import *
-from trainloc import *
-from track_info import *
+from TrackModel.line import *
+from TrackModel.heater import *
+from TrackModel.trainloc import *
+from TrackModel.track_info import *
 
 import pathlib
 
