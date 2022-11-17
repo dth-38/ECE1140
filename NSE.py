@@ -7,7 +7,7 @@ from PyQt5.QtGui import QFont
 
 import Scheduler
 from TrackController.TrackController import TrackController
-#from TrackModel.trackmodel import TrackModel
+from TrackModel.track_model_main import App
 from CTC.CTC import CTC
 from Signals import signals
 
@@ -31,7 +31,7 @@ class NSE_Simulation(QMainWindow):
 
         self.track_controllers = []
         self.ctc = CTC()
-        #self.track = TrackModel.main.main()
+        self.track = App()
     
 
         super().__init__()
@@ -200,8 +200,7 @@ class NSE_Simulation(QMainWindow):
             print("Error: Selection is not a number.")
 
     def open_track_model(self):
-        #self.track_model.show()
-        pass
+        self.track.show()
 
     def open_train_model(self):
         try:
