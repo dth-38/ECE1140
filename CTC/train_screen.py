@@ -176,7 +176,7 @@ class train_screen(QtWidgets.QWidget):
     def update_current_time(self):
         #print("Update Time")
         self.ctc.clock.update_time()
-        authority, position = self.ctc.schedule.update_trains()
+        #authority, position = self.ctc.schedule.update_trains()
         #print("authority: " + str(authority))
         #print("position: " + str(position))
         self.current_hour.setValue(self.ctc.clock.get_hours())
@@ -185,9 +185,9 @@ class train_screen(QtWidgets.QWidget):
         #Only one train working currently 
         if self.train_table_display.count() > 0:
             self.train_table_display.takeItem(2)
-            self.train_table_display.insertItem(2,"Position: " + str(position))
+            self.train_table_display.insertItem(2,"Position: " + str(self.ctc.schedule.train_table.get_position(0)))
             self.train_table_display.takeItem(5)
-            self.train_table_display.insertItem(5,"Authority: " + str(authority))
+            self.train_table_display.insertItem(5,"Authority: " + str(self.ctc.schedule.train_table.get_authority(0)))
         length = self.ctc.block_table.get_table_length()
         if length > 0:
             self.block_table_display.addItem(self.ctc.block_table.get_last_entry())
