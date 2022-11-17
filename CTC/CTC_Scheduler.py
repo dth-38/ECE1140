@@ -114,7 +114,7 @@ class CTC_Scheduler:
         #print("travel_time: " + str(travel_time))
         arrival_time = [int(travel_time[0] + departure_time[0]), int(travel_time[1] + departure_time[1]), int(travel_time[2] + departure_time[2])]
         #print("ADD TRAIN ENTRY")
-        self.train_table.add_entry(id=self.train_id,position=self.train_position,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
+        self.train_table.add_entry(id=self.train_id,position=0,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
         self.train_id += 1
         #add it to the yard
         #return the new entry added for each train dispatched

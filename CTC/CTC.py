@@ -38,20 +38,26 @@ class CTC(QWidget):
         signals.broadcast_gate.connect(self.update_gate)
     def update_occupancy(self,line,block_num,occ):
         print("updating occupancy")
+        print("occ: " + str(occ))
         num_trains = self.schedule.train_table.get_table_length()
         if occ == 0:
             for i in range(num_trains):
                 train = self.schedule.train_table.get_entry(i)
-                if train[5] == line and train[1] == block_num:
+                temp = train[5].upper()
+                if temp == line and train[1] == block_num:
                     #waiting state
+                    print("Waiting State")
                     train[1] = -1
         else:
+            print("Occupied")
             for i in range(num_trains):
                 train = self.schedule.train_table.get_entry(i)
-                if train[5] == line and train[1] == -1:
+                temp = train[5].upper()
+                if temp == line and train[1] == -1:
                     #change block position
                     train[1] = block_num
                     #decrement authority
+                    print("authority decremented")
                     train[4] -= 1
         self.schedule.block_table.add_occupancy(line,block_num,occ)
     def update_failure(self,line,block_num,failure):
