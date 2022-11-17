@@ -12,4 +12,4 @@ class SignalsClass(QObject):
     test_power = pyqtSignal(float)    
 
 
-signals = SignalsClass()
+ui_sig = SignalsClass()

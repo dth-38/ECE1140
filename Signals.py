@@ -61,7 +61,7 @@ class Signals(QObject):
 
     #(str line, int ticket_sales)
     send_ctc_ticket_sales = pyqtSignal(str, int)
-    
+
     #(str block, int True/False)
     send_tc_occupancy = pyqtSignal(str, int)
     #(str block, int True/False)
@@ -77,6 +77,9 @@ class Signals(QObject):
     send_tm_beacon = pyqtSignal(str, str, str, str)
     #(str station, int passenger_count)
     send_tm_passenger_count = pyqtSignal(str, int)
+
+    #(int commanded speed)
+    send_tm_commanded_speed = pyqtSignal(int)
 
     #-----------------------------------------
     # Train Model Signals
