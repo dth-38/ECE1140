@@ -317,64 +317,62 @@ class Train:
         #signals.train_model_update.emit()
 
     #transfer grade
-    def get_grade(self, new_grade):
-        self.grade = new_grade
-        self.ui.grade_line.setText(str(self.grade))
-        #signals.train_model_update.emit()        
+    def get_grade(self, trainnum, new_grade):
+        if(self.id == trainnum):
+            self.grade = new_grade
+            self.ui.grade_line.setText(str(self.grade))
+            #signals.train_model_update.emit()        
 
     #update authority
-    def train_model_update_authority(self, new_auth):
-        if(self.signal_pickup_failure):
-            self.authority = 0
-        else:    
-            self.authority = new_auth
+    def train_model_update_authority(self, trainnum, new_auth):
+        if(self.id == trainnum):
+            if(self.signal_pickup_failure):
+                self.authority = 0
+            else:    
+                self.authority = new_auth
 
-        self.ui.authority_line.setText(str(self.authority))
+            self.ui.authority_line.setText(str(self.authority))
         #signals.train_model_update.emit()
 
     #update commanded speed
-    def train_model_update_command_speed(self, new_cmd_speed):
-        if(self.signal_pickup_failure):
-            self.commanded_speed = 0
-        else:    
-            self.commanded_speed = new_cmd_speed
+    def train_model_update_command_speed(self, trainnum, new_cmd_speed):
+        if(self.id == trainnum):
+            if(self.signal_pickup_failure):
+                self.commanded_speed = 0
+            else:    
+                self.commanded_speed = new_cmd_speed
 
-        #send to train controller
-        #self.train_ctrl.train_status.set_commanded_speed(self.commanded_speed)
-
-        self.ui.suggested_speed_line.setText(str(self.commanded_speed))
+            self.ui.suggested_speed_line.setText(str(self.commanded_speed))
         #signals.train_model_update.emit()
 
     #update passenger count and calculate new mass
-    def train_model_update_passengers(self, pass_count):
-        if(pass_count > self.PASSENGER_LIMIT):
-            self.passenger_count = self.PASSENGER_LIMIT
-        else:
-            self.passenger_count = pass_count
-        if(pass_count > 0):
-            self.mass = 40.25 + ((self.crew_count + self.passenger_count) * 0.0738155)
-        self.ui.mass_line.setText(str(self.mass))
-        self.ui.passenger_line.setText(str(self.passenger_count))
-        #signals.train_model_update.emit()
+    def train_model_update_passengers(self, trainnum, pass_count):
+        if(self.id == trainnum):
+            if(pass_count > self.PASSENGER_LIMIT):
+                self.passenger_count = self.PASSENGER_LIMIT
+            else:
+                self.passenger_count = pass_count
+            if(pass_count > 0):
+                self.mass = 40.25 + ((self.crew_count + self.passenger_count) * 0.0738155)
+            self.ui.mass_line.setText(str(self.mass))
+            self.ui.passenger_line.setText(str(self.passenger_count))
+            #signals.train_model_update.emit()
 
     #sets beacon info
-    def train_model_transfer_beacon(self, door_side, station):
-        self.door_side = door_side
-        self.next_station = station
-        self.ui.station_line = station
-        #signals.train_model_update.emit()
+    def train_model_transfer_beacon(self, trainnum, door_side, station):
+        if(self.id == trainnum):
+            self.door_side = door_side
+            self.next_station = station
+            self.ui.station_line = station
+            #signals.train_model_update.emit()
 
-    #sets route
-    def transfer_block_list(self, blocklist):
-       self.block_list = blocklist
-
+    def get_track_failure(self, trainnum, failure):
+        if(self.id == trainnum):
+            self.track_fail = failure
+    
     #stops train
     def stop_train(self):
         self.run_continuously = False
-
-    def get_track_failure(self, failure):
-        self.track_fail = failure
-    
     
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Murphy Inputs -------------------------------------------------

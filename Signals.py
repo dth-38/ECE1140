@@ -67,19 +67,18 @@ class Signals(QObject):
     #(str block, int True/False)
     send_tc_failure = pyqtSignal(str, int)
 
-    #(str block, int authority)
-    send_tm_authority = pyqtSignal(str, int)
-    #(str block, int grade)
-    send_tm_grade = pyqtSignal(str, int)
-    #(str block, int True/False)
-    send_tm_failure = pyqtSignal(str, int)
+    #(int id, int commanded speed)
+    send_tm_commanded_speed = pyqtSignal(int, int)
+    #(int id, int authority)
+    send_tm_authority = pyqtSignal(int, int)
+    #(int id, float grade)
+    send_tm_grade = pyqtSignal(int, float)
+    #(int id, int True/False)
+    send_tm_failure = pyqtSignal(int, int)
     #(str block, str station1, str station2, str side)
     send_tm_beacon = pyqtSignal(str, str, str, str)
-    #(str station, int passenger_count)
-    send_tm_passenger_count = pyqtSignal(str, int)
-
-    #(int commanded speed)
-    send_tm_commanded_speed = pyqtSignal(int)
+    #(int id, int passenger_count)
+    send_tm_passenger_count = pyqtSignal(int, int)
 
     #-----------------------------------------
     # Train Model Signals
