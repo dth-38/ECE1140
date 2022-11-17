@@ -9,7 +9,6 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from train_model_signals import ui_sig
 
 class TrainData_Ui(object):
     def setupUi(self, train_model):

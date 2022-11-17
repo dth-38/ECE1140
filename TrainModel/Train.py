@@ -40,7 +40,7 @@ class Train:
         self.power = 0.0                #kilowatts
         self.acceleration = 0           #ft/s^2
         self.authority = 0
-        self.position = 0               #meters
+        self.distance = 0               #meters
         self.force = 0
 
         #various train functions
@@ -86,8 +86,6 @@ class Train:
         signals.send_tm_beacon.connect(self.get_beacon)
         signals.send_tm_passenger_count.connect(self.train_model_update_passengers)
         signals.send_tm_commanded_speed.connect(self.train_model_update_command_speed)
-
-        signals.send_tm_distance.connect()
 
         #open ui
         signals.open_tm_gui.connect(self.show_tm_ui)
@@ -177,26 +175,10 @@ class Train:
 
         self.train_ctrl.update_train_display()
         self.show_tc_ui(0)
-    
-    def update_power(self, power):
-        self.power = power
-        self.ui.power_line.setText(str(self.power))
-        self.train_model_update_speed()
-
 
 # ---------------------------------------------------------------------------------------------
-# ----------------------------- Dispatch Train? ------------------------------------------------
+# ----------------------------- Show UIs ------------------------------------------------------
 # ---------------------------------------------------------------------------------------------
-
-    #dont know if need dispatch function or train can be initialized with dispatch info
-
-    #def dispatch_train(self,destination, blockroute):
-        #self.route = blockroute
-        #self.destination_block = destination
-
-        #keep track of time? 
-    
-        # tell controller train has bend dispatched
 
     #show train model ui
     def show_tm_ui(self, id):
@@ -296,17 +278,6 @@ class Train:
     def train_model_display_temp(self):
         self.ui.temp_line.setText(str(self.ac_cmd))
         #signals.train_model_update.emit()
-
-# ---------------------------------------------------------------------------------------------
-# ----------------------------- Train Controller Outputs ---------------------------------------
-# ---------------------------------------------------------------------------------------------
-    
-    #do i need this?????!?!??!?!?
-    #train_ctrl.brake_failure = self.brake_failure
-    #train_ctrl.engine_failure = self.engine_failure
-    #train_ctrl.signal_pickup_failure = self.signal_pickup_failure
-    #pass commanded speed
-    #pass authority
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Track Model Inputs --------------------------------------------
@@ -446,7 +417,7 @@ class Train:
             #ft/s^2 to m/s^2
             prev_acceleration = self.acceleration / 3.28084
             sample_period = 1
-            prev_position = self.position
+            prev_distance = self.distance
             #mph to m/s
             temp_actual_speed = self.actual_speed / 2.237
             #imperial tons to metric tons
@@ -546,8 +517,10 @@ class Train:
 
                 #pprint(temp_velocity)
 
-                #POSITION CALCULATION
-                # temp_position = prev_position + (temp_velocity * sample_period)
+                #DISTANCE CALCULATION
+                temp_distance = prev_distance + (temp_velocity * sample_period)
+                self.distance = temp_distance
+                signals.send_tm_distance.emit(self.id, self.distance)
                 
                 # #if position length is greater than block length, move to next block
                 # if (temp_position > current_block_length):
@@ -566,9 +539,6 @@ class Train:
                 
                         #send block occupancy to track model
                         #signals.track_model_update_block_occupancy.emit(self.id, current_block)
-
-                #convert metric to imperial
-                #self.position = temp_position
                 
                 self.actual_speed = temp_velocity * 2.237
                 #if (self.actual_speed > self.VELOCITY_LIMIT):
