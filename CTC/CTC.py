@@ -76,6 +76,7 @@ class CTC(QWidget):
             elif self.schedule.train_table.get_line(i) == "Green":
                 print("green speed")
                 signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
+            
 
             #THIS SHOULD NOT BE HERE
             #signals.send_tc_maintenance.emit(tc_block,0)
