@@ -1,24 +1,21 @@
-from re import T
-from PyQt5 import QtCore, QtGui, QtWidgets
 from CTC.maintenance_screen import maintenance_screen
 
 from CTC.train_screen import train_screen
 from CTC.maintenance_screen import maintenance_screen
 from CTC.test_sceeen import test_screen
 
+#import enum
+import sys
+from PyQt5 import QtCore, QtWidgets
+#from PyQt5.QtWidgets import QComboBox, QHBoxLayout, QVBoxLayout 
+#from PyQt5.QtCore import QTime, Qt, QEvent
+#from PyQt5.QtGui import QStandardItem
+#from PyQt5.QtWidgets import * 
+#from PyQt5.QtGui import * 
+#from PyQt5.QtCore import *
+
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling,True)
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps,True)
-
-import enum
-import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QComboBox, QHBoxLayout, QVBoxLayout 
-from PyQt5.QtCore import QTime, Qt, QEvent
-from PyQt5.QtGui import QStandardItem
-from PyQt5.QtWidgets import * 
-from PyQt5.QtGui import * 
-from PyQt5.QtCore import *
-
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
