@@ -1,14 +1,13 @@
 import math
-from Block import Block
 from train_ui import TrainData_Ui
 from PyQt5 import QtCore, QtWidgets
 import sys
+sys.path.append(".")
 from train_model_signals import *
 from pprint import pprint
-
 #from Train_Controller import train_controller_main
-#import Train_Controller.train_controller_main as train_controller_main
-import train_controller_main
+#import Train_Controller.train_controller_main as WindowClass
+from Train_Controller.train_controller_main import WindowClass
 
 class Train:
     
@@ -105,7 +104,7 @@ class Train:
         self.train_model.show()
 
         #train controller that controls this train
-        self.train_ctrl = train_controller_main.WindowClass()
+        self.train_ctrl = WindowClass()
 
         #train runs until it reaches destination
         self.run_continuously = True
@@ -118,7 +117,7 @@ class Train:
         self.train_timer.start(1000)
         self.train_timer.timeout.connect(self.update_values)
 
-        sys.exit(self.app.exec_())
+        
 
 
 # ---------------------------------------------------------------------------------------------
@@ -595,4 +594,6 @@ class Train:
                 #signals.train_model_update.emit()
 
 if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
     TrainModel = Train()
+    sys.exit(app.exec_())

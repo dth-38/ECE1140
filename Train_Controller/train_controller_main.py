@@ -2,10 +2,10 @@ import sys
 from simple_pid import PID
 from PyQt5 import QtCore, QtWidgets
 from PyQt5 import uic
-from errorWindow import warningWindow
-from testWindow import testWindow
+from Train_Controller.errorWindow import warningWindow
+from Train_Controller.testWindow import testWindow
 
-form_mainWindow = uic.loadUiType("TrainController.ui")[0]
+form_mainWindow = uic.loadUiType("Train_Controller/TrainController.ui")[0]
 
 #for keeping values of train
 class train_status:
