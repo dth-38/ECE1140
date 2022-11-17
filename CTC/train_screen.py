@@ -188,7 +188,14 @@ class train_screen(QtWidgets.QWidget):
             self.train_table_display.insertItem(2,"Position: " + str(position))
             self.train_table_display.takeItem(5)
             self.train_table_display.insertItem(5,"Authority: " + str(authority))
+        length = self.ctc.block_table.get_table_length()
+        if length > 0:
+            self.block_table_display.addItem(self.ctc.block_table.get_last_entry())
 
+    def output_block_table(self):
+        length = self.ctc.block_table.get_table_length()
+        for i in range(length):
+            self.block_table_display.addItem(self.ctc.block_table.get_entry(i))
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate

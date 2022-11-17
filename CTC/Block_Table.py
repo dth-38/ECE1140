@@ -45,6 +45,8 @@ class Block_Table:
         return self.maintenance_signal
     def get_table_length(self):
         return self.length
+    def get_last_entry(self):
+        return self.table[self.length - 1]
 
     
 
