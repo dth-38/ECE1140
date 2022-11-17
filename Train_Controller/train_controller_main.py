@@ -394,10 +394,16 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             #decrease speed
             self.emergency_slow()
             self.failure_frame.setStyleSheet("background-color: red")
+            self.failure_output.clear()
             self.failure_output.append("Exists!")
         else:
             self.failure_frame.setStyleSheet("background-color: white")
-            self.failure_output.append("Exists!")
+            self.failure_output.clear()
+            self.failure_output.append("N/A")
+            self.real_train.set_failure_flag(False)
+            self.emergency_brake.setStyleSheet("background-color: light gray")
+            self.emergency_brake.setText("Emergency Brake")
+            self.emer_brake_flag = False
 
         #if train came to stop (fully) in auto mode
         if self.real_train.get_power() == 0 and self.auto_f == True:
