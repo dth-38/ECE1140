@@ -24,7 +24,7 @@ class train_status:
         self.horn = "On"
         self.temp = 68
         self.failure_flag = False
-        self.passenger_brake_flag = False
+        #self.passenger_brake_flag = False
 
         self.ki = 0.01
         self.kp = 1
@@ -59,8 +59,8 @@ class train_status:
         self.temp = num
     def set_failure_flag(self, state):
         self.failure_flag = state
-    def set_passenger_brake_flag(self, state):
-        self.passenger_brake_flag = state
+    # def set_passenger_brake_flag(self, state):
+    #     self.passenger_brake_flag = state
     def set_ki(self, num):
         self.ki = num
     def set_kp(self, num):
@@ -95,8 +95,8 @@ class train_status:
         return self.temp
     def get_failure_flag(self):
         return self.failure_flag
-    def get_passenger_brake_flag(self):
-        return self.passenger_brake_flag
+    # def get_passenger_brake_flag(self):
+    #     return self.passenger_brake_flag
     def get_power(self):
         return self.power
     def get_ki(self):
@@ -119,7 +119,7 @@ class train_status:
         self.horn = "On"
 
         self.failure_flag = False
-        self.passenger_brake_flag = False
+        # self.passenger_brake_flag = False
 
         self.ki = 0.01
         self.kp = 1.0
@@ -396,9 +396,6 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.failure_frame.setStyleSheet("background-color: red")
             self.failure_output.append("Exists!")
 
-        # if self.real_train.get_authority() == 0:
-        #     self.emer_brake_flag = True
-
         #if train came to stop (fully) in auto mode
         if self.real_train.get_power() == 0 and self.auto_f == True:
             self.auto_train_stopped()
@@ -406,12 +403,9 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         #NOTE Update power. Train model uses power --> speed & pass actual speed + commanded speed to train controller
         self.real_train.update_power() 
 
-        #if power = 0, train model automatically reduces the speed by 25 mph or something
-
-        # print(self.real_train.get_power())
-        # print("speed: " + str(self.real_train.get_speed()))
-        # print("commanded: "+ str(self.real_train.get_commanded_speed()))
-        #if brake flags = True, set power = 0 to decrease speed
+        #if train reaches the end of track (authority = 0), set power = 0
+        # if self.real_train.get_authority() == 0:
+        #     self.real_train.set_power(0)            
 
         #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
         if self.norm_brake_flag == True or self.emer_brake_flag == True:
@@ -427,6 +421,18 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.set_external_light("On")
         self.real_train.set_annun("On")
         self.real_train.set_horn("On")
+
+    def get_emer_brake_flag(self):
+        return self.emer_brake_flag
+    
+    def get_norm_brake_flag(self):
+        return self.norm_brake_flag
+
+    def set_emer_brake_flag(self, state):
+        self.emer_brake_flag = state
+
+    def set_norm_brake_flag(self, state):
+        self.norm_brake_flag = state
 
     def reset(self):
         self.real_train.reset_all_train()

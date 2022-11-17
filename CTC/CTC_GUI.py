@@ -23,7 +23,7 @@ from PyQt5.QtCore import *
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self,ctc):
-        super().__init__()
+        super(Ui_MainWindow,self).__init__()
         self.ctc = ctc
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
