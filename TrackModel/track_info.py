@@ -9,6 +9,7 @@ class TrackInfo:
         self.sheets = self.propogate_sheets()
         self.red_table = QTableWidget()
         self.green_table = QTableWidget()
+        self.blue_table = QTableWidget()
         self.current_table = QTableWidget()
         self.red_length = 0
         self.green_length = 0
@@ -47,19 +48,22 @@ class TrackInfo:
         else:
             r = self.green_table.rowCount()
 
-        for x in range(r):
+        for x in range(r - 1):
+            x = x + 1
             red_cell = self.get_cell(self.red_table, x, 0)
             green_cell = self.get_cell(self.green_table, x, 0)
             
             ## If cell is blank (NoneType), set text to ""
             if red_cell is None:
                 self.red_table.setRowCount(x + 1)
-                self.red_table.setItem(x, 0, QTableWidgetItem(""))
-                red_cell = self.get_cell(self.red_table, x, 0)
+                red_cell = QTableWidgetItem()
+                red_cell.setText("")
+                self.red_table.setItem(x, 0, red_cell)
             if green_cell is None:
                 self.green_table.setRowCount(x + 1)
-                self.green_table.setItem(x, 0, QTableWidgetItem(""))
-                green_cell = self.get_cell(self.green_table, x, 0)
+                green_cell = QTableWidgetItem()
+                green_cell.setText("")
+                self.green_table.setItem(x, 0, green_cell)
                 
             ## Add to table length if cell is filled
             if (red_cell.text().lower() == "red"):
@@ -94,6 +98,8 @@ class TrackInfo:
             self.red_table = table
         elif (worksheet_name.lower() == "green line"):
             self.green_table = table
+        elif (worksheet_name.lower() == "blue line"):
+            self.blue_table = table
         
         df = pd.read_excel(self.filepath, worksheet_name)
         if df.size == 0:

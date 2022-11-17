@@ -15,13 +15,26 @@ class Block:
         self.occupancy = False
         self.failure = None
         self.direction = 0
+        self.bidirectional = False
         self.number = number
         self.rail_crossing = None
         self.beacon = NotImplemented
         self.station = None
         self.light = None
+        self.infra_text = ""
 
-    ##def propogate_block(self, )
+    def set_infra(self, t):
+        self.infra_text = t
+
+    def set_directionality(self):
+        bi_sections = []
+        uni_sections = []
+        s = self.get_section()
+
+    def get_bidirectional(self):
+        # False -- train can only move 1 way
+        # True -- train can move both ways
+        return self.bidirectional
 
     def set_rail_cross(self, RailwayCrossing):
         self.rail_crossing = RailwayCrossing

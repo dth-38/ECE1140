@@ -8,12 +8,21 @@ class Node:
     def __init__(self, data):
         # Standard node
         self.data = data
+        self.name = str(data.get_section()) + str(data.get_number())
         self.next = None
         self.prev = None
 
         # Linked to more than 1 node
         self.next2 = None
         self.prev2 = None
+        self.next3 = None
+        self.prev3 = None
+
+    def get_name(self):
+        return self.name
+
+    def get_block_number(self):
+        return self.data.get_number()
 
 # Create the doubly linked list class
 class doubly_linked_list:
@@ -53,3 +62,23 @@ class doubly_linked_list:
         last.next = NewNode
         NewNode.prev = last
         return
+
+    # Set other next values according to switch (or lackthereof)
+    def set_other_links(self, node, switch_bool, switch):
+        # Reverse direction
+        node.next2 = node.prev
+        node.prev2 = node.next
+
+    # Print the Doubly Linked list		
+    def tracklistprint(self, node):
+        i = 0
+        if node.prev is not None:
+            print("node " + str(-1) + ":", end = " ")
+            print(node.prev.get_name())
+
+        while (node is not None):
+            print("node " + str(i) + ":", end = " ")
+            print(node.get_name())
+            last = node
+            node = node.next
+            i += 1
