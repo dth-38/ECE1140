@@ -90,7 +90,7 @@ class Signals(QObject):
     send_tm_distance = pyqtSignal(int, float)
 
     #-----------------------------------------
-    # Signals to open train/track model gui
+    # Signals to open train controller/track model gui
     #-----------------------------------------
 
     #(int id)
