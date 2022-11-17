@@ -405,7 +405,12 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         #if train reaches the end of track (authority = 0), set power = 0
         # if self.real_train.get_authority() == 0:
-        #     self.real_train.set_power(0)            
+        #     self.real_train.set_power(0)
+        # 
+        if self.real_train.get_authority() == 0:
+            self.set_norm_brake_flag(True)
+        else:
+            self.set_norm_brake_flag(False)
 
         #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
         if self.norm_brake_flag == True or self.emer_brake_flag == True:

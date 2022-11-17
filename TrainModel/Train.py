@@ -286,6 +286,7 @@ class Train:
         #signals.train_model_update.emit()
 
     #get grade from track model
+    @pyqtSlot(int, float)
     def get_grade(self, trainnum, new_grade):
         if(self.id == trainnum):
             self.grade = new_grade
@@ -293,6 +294,7 @@ class Train:
             #signals.train_model_update.emit()        
 
     #update authority
+    @pyqtSlot(int, int)
     def train_model_update_authority(self, trainnum, new_auth):
         if(self.id == trainnum):
             if(self.signal_pickup_failure):
@@ -304,6 +306,7 @@ class Train:
         #signals.train_model_update.emit()
 
     #update commanded speed
+    @pyqtSlot(int, int)
     def train_model_update_command_speed(self, trainnum, new_cmd_speed):
         if(self.id == trainnum):
             if(self.signal_pickup_failure):
@@ -315,6 +318,7 @@ class Train:
         #signals.train_model_update.emit()
 
     #update passenger count and calculate new mass
+    @pyqtSlot(int, int)
     def train_model_update_passengers(self, trainnum, pass_count):
         if(self.id == trainnum):
             if(pass_count > self.PASSENGER_LIMIT):
@@ -523,6 +527,7 @@ class Train:
 
                 #DISTANCE CALCULATION
                 temp_distance = prev_distance + (temp_velocity * sample_period)
+                #temp_distance = prev_distance + (self.actual_speed + temp_velocity)/2 * sample_period
                 self.distance = temp_distance
                 signals.send_tm_distance.emit(self.id, self.distance)
                 
