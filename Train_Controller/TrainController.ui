@@ -636,7 +636,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>80</x>
-       <y>290</y>
+       <y>300</y>
        <width>261</width>
        <height>71</height>
       </rect>
@@ -653,9 +653,9 @@ p, li { white-space: pre-wrap; }
     <widget class="QGroupBox" name="LeftDoorGroupBox">
      <property name="geometry">
       <rect>
-       <x>580</x>
+       <x>490</x>
        <y>220</y>
-       <width>261</width>
+       <width>351</width>
        <height>71</height>
       </rect>
      </property>
@@ -678,7 +678,7 @@ p, li { white-space: pre-wrap; }
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>101</width>
+        <width>171</width>
         <height>51</height>
        </rect>
       </property>
@@ -694,15 +694,15 @@ p, li { white-space: pre-wrap; }
        </font>
       </property>
       <property name="text">
-       <string>On</string>
+       <string>Opened</string>
       </property>
      </widget>
      <widget class="QRadioButton" name="left_off">
       <property name="geometry">
        <rect>
-        <x>140</x>
+        <x>190</x>
         <y>10</y>
-        <width>111</width>
+        <width>151</width>
         <height>51</height>
        </rect>
       </property>
@@ -718,16 +718,16 @@ p, li { white-space: pre-wrap; }
        </font>
       </property>
       <property name="text">
-       <string>Off</string>
+       <string>Closed</string>
       </property>
      </widget>
     </widget>
     <widget class="QGroupBox" name="RightDoorGroupBox">
      <property name="geometry">
       <rect>
-       <x>580</x>
+       <x>490</x>
        <y>310</y>
-       <width>261</width>
+       <width>351</width>
        <height>71</height>
       </rect>
      </property>
@@ -744,7 +744,7 @@ p, li { white-space: pre-wrap; }
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>101</width>
+        <width>171</width>
         <height>51</height>
        </rect>
       </property>
@@ -760,15 +760,15 @@ p, li { white-space: pre-wrap; }
        </font>
       </property>
       <property name="text">
-       <string>On</string>
+       <string>Opened</string>
       </property>
      </widget>
      <widget class="QRadioButton" name="right_off">
       <property name="geometry">
        <rect>
-        <x>140</x>
+        <x>190</x>
         <y>10</y>
-        <width>101</width>
+        <width>151</width>
         <height>51</height>
        </rect>
       </property>
@@ -784,7 +784,7 @@ p, li { white-space: pre-wrap; }
        </font>
       </property>
       <property name="text">
-       <string>Off</string>
+       <string>Closed</string>
       </property>
      </widget>
     </widget>

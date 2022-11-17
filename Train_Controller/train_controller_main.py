@@ -5,7 +5,7 @@ from PyQt5 import uic
 from Train_Controller.errorWindow import warningWindow
 from Train_Controller.testWindow import testWindow
 
-form_mainWindow = uic.loadUiType("Train_Controller/TrainController.ui")[0]
+form_mainWindow = uic.loadUiType("Train_Controller/temp_ui/TrainController_1.ui")[0]
 
 #for keeping values of train
 class train_status:
@@ -15,8 +15,8 @@ class train_status:
         self.commanded_speed = 0  #commended speed (from manual mode) OR desired speed, 100 by default
         self.speed = 0            #actual speed of train
         self.authority = 0
-        self.door_left = "On"
-        self.door_right = "On"
+        self.door_left = "Opened"
+        self.door_right = "Opened"
         self.internal_light = "On"
         self.external_light = "Off"
         self.annun = "On"
@@ -109,8 +109,8 @@ class train_status:
         self.authority = 0
         self.commanded_speed = 100
         self.speed = 0
-        self.door_left = "On"
-        self.door_right = "On"
+        self.door_left = "Opened"
+        self.door_right = "Opened"
         self.internal_light = "On"
         self.external_light = "On"
         self.ad = "On"
@@ -126,8 +126,8 @@ class train_status:
         self.power = 0.0
 
     def train_running(self):
-        self.door_left = "Off"
-        self.door_right = "Off"
+        self.door_left = "Closed"
+        self.door_right = "Closed"
         self.internal_light = "On"
         self.external_light = "On"
         self.ad = "Off"
@@ -416,8 +416,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
     #if train is at stop, status changes accordingly
     def auto_train_stopped(self):
-        self.real_train.set_door_left("On")
-        self.real_train.set_door_right("On")
+        self.real_train.set_door_left("Opened")
+        self.real_train.set_door_right("Opened")
         self.real_train.set_external_light("On")
         self.real_train.set_annun("On")
         self.real_train.set_horn("On")

@@ -5,9 +5,9 @@ import sys
 sys.path.append(".")
 from train_model_signals import *
 from pprint import pprint
-#from Train_Controller import train_controller_main
-#import Train_Controller.train_controller_main as WindowClass
 from Train_Controller.train_controller_main import WindowClass
+from Signals import signals
+from PyQt5.QtCore import pyqtSlot
 
 class Train:
     
@@ -62,6 +62,8 @@ class Train:
         self.passenger_ebrake = False
         self.ebrake = False
         self.sbrake = False
+
+        self.track_fail = False
         
         #constants
         self.GRAVITY = 9.80665                     #m/s^2
@@ -75,26 +77,31 @@ class Train:
         self.MAX_GRADIENT = 60
 
         #signals
-        ##signals.train_model_dispatch_train.connect()
-        #signals.train_model_transfer_lights.connect(self.train_model_transfer_lights)
-        #signals.train_model_transfer_doors.connect(self.train_model_transfer_doors)
-        #signals.train_model_transfer_announcement.connect(self.train_model_transfer_announcement)
-        #signals.train_model_transfer_ads.connect(self.train_model_transfer_ads)
-        #signals.train_model_transfer_temp(self.train_model_transfer_temp)
-        #signals.train_model_transfer_service_brake(self.train_model_transfer_service_brake)
-        #signals.train_model_transfer_emergency_brake(self.train_model_transfer_emergency_brake)
-        #signals.train_model_transfer_grade(self.train_model_transfer_grade)
-        #signals.train_model_update_authority(self.train_model_update_authority)
-        #signals.train_model_update_command_speed(self.train_model_update_command_speed)
-        #signals.train_model_update_passengers(self.train_model_update_passengers)
-        #signals.train_model_update_beacon(self.train_model_update_beacon)
-        signals.train_model_transfer_brake_failure.connect(self.train_model_transfer_brake_failure)
-        signals.train_model_transfer_engine_falure.connect(self.train_model_transfer_engine_failure)
-        signals.train_model_transfer_signal_pickup_failure.connect(self.train_model_transfer_signal_pickup_failure)
-        signals.train_model_fix_failure.connect(self.train_model_fix_failure)
-        signals.train_model_transfer_passenger_ebrake.connect(self.train_model_passenger_ebrake)
-        #signals.train_model_transfer_circuit(self.train_model_transfer_circuit)
-        #signals.train_model_transfer_horn(self.train_model_transfer_horn)
+
+        #track model
+
+        signals.send_tm_authority.connect(self.train_model_update_authority)
+        signals.send_tm_grade.connect(self.get_grade)
+        signals.send_tm_failure.connect(self.get_track_failure)
+        signals.send_tm_beacon.connect(self.get_beacon)
+        signals.send_tm_passenger_count.connect(self.train_model_update_passengers)
+        signals.send_tm_commanded_speed.connect(self.train_model_update_command_speed)
+
+        signals.send_tm_distance.connect()
+
+        #open ui
+        signals.open_tm_gui.connect(self.show_tm_ui)
+        signals.open_tm_gui.connect(self.show_tc_ui)
+
+        #update function
+        signals.train_update.connect(self.update_values)
+
+        #from ui
+        ui_sig.train_model_transfer_brake_failure.connect(self.train_model_transfer_brake_failure)
+        ui_sig.train_model_transfer_engine_falure.connect(self.train_model_transfer_engine_failure)
+        ui_sig.train_model_transfer_signal_pickup_failure.connect(self.train_model_transfer_signal_pickup_failure)
+        ui_sig.train_model_fix_failure.connect(self.train_model_fix_failure)
+        ui_sig.train_model_transfer_passenger_ebrake.connect(self.train_model_passenger_ebrake)
 
         #setup ui
         self.app = QtWidgets.QApplication(sys.argv)
@@ -116,9 +123,6 @@ class Train:
         self.train_timer = QtCore.QTimer()
         self.train_timer.start(1000)
         self.train_timer.timeout.connect(self.update_values)
-
-        
-
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Update Train? ------------------------------------------------
@@ -308,12 +312,12 @@ class Train:
 # ----------------------------- Track Model Inputs --------------------------------------------
 # ---------------------------------------------------------------------------------------------
 
-    def train_model_transfer_beacon_info(self, beacon):
+    def get_beacon(self, beacon):
         self.station_name = beacon
         #signals.train_model_update.emit()
 
     #transfer grade
-    def train_model_transfer_grade(self, new_grade):
+    def get_grade(self, new_grade):
         self.grade = new_grade
         self.ui.grade_line.setText(str(self.grade))
         #signals.train_model_update.emit()        
@@ -367,6 +371,9 @@ class Train:
     #stops train
     def stop_train(self):
         self.run_continuously = False
+
+    def get_track_failure(self, failure):
+        self.track_fail = failure
     
     
 # ---------------------------------------------------------------------------------------------
