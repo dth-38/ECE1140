@@ -27,18 +27,18 @@ class train_screen(QtWidgets.QWidget):
     def setupUi(self):
         #print("SETUP UI")
         self.train_selection = QtWidgets.QSpinBox(self)
-        self.train_selection.setGeometry(QtCore.QRect(70, 620, 48, 24))
+        self.train_selection.setGeometry(QtCore.QRect(70, 630, 48, 24))
         self.train_selection.setSpecialValueText("")
         self.train_selection.setMinimum(0)
         self.train_selection.setObjectName("train_selection")
         self.hour_selection = QtWidgets.QSpinBox(self)
-        self.hour_selection.setGeometry(QtCore.QRect(120, 760, 48, 24))
+        self.hour_selection.setGeometry(QtCore.QRect(120, 740, 48, 24))
         self.hour_selection.setObjectName("hour_selection")
         self.minute_selection = QtWidgets.QSpinBox(self)
-        self.minute_selection.setGeometry(QtCore.QRect(170, 760, 48, 24))
+        self.minute_selection.setGeometry(QtCore.QRect(170, 740, 48, 24))
         self.minute_selection.setObjectName("minute_selection")
         self.second_selection = QtWidgets.QSpinBox(self)
-        self.second_selection.setGeometry(QtCore.QRect(220, 760, 48, 24))
+        self.second_selection.setGeometry(QtCore.QRect(220, 740, 48, 24))
         self.second_selection.setObjectName("second_selection")
         self.label = QtWidgets.QLabel(self)
         self.label.setGeometry(QtCore.QRect(10, 590, 141, 201))
@@ -60,16 +60,16 @@ class train_screen(QtWidgets.QWidget):
         self.main_button.setGeometry(QtCore.QRect(1210, 580, 231, 221))
         self.main_button.setObjectName("main_button")
         self.line_train_selection = QtWidgets.QComboBox(self)
-        self.line_train_selection.setGeometry(QtCore.QRect(60, 650, 104, 26))
+        self.line_train_selection.setGeometry(QtCore.QRect(60, 660, 104, 26))
         self.line_train_selection.setObjectName("line_train_selection")
         self.line_throughput_selection = QtWidgets.QComboBox(self)
         self.line_throughput_selection.setGeometry(QtCore.QRect(350, 610, 104, 26))
         self.line_throughput_selection.setObjectName("line_throughput_selection")
-        self.starting_location_selection = QtWidgets.QComboBox(self)
-        self.starting_location_selection.setGeometry(QtCore.QRect(130, 680, 113, 21))
-        self.starting_location_selection.setObjectName("starting_location_output")
+        #self.starting_location_selection = QtWidgets.QComboBox(self)
+        #self.starting_location_selection.setGeometry(QtCore.QRect(130, 680, 113, 21))
+        #self.starting_location_selection.setObjectName("starting_location_output")
         self.destination_selection = QtWidgets.QTextEdit(self)
-        self.destination_selection.setGeometry(QtCore.QRect(100, 710, 200, 40))
+        self.destination_selection.setGeometry(QtCore.QRect(100, 690, 200, 40))
         self.destination_selection.setObjectName("destination_output")
         self.throughput_output = QtWidgets.QLineEdit(self)
         self.throughput_output.setGeometry(QtCore.QRect(400, 640, 113, 21))
@@ -107,7 +107,7 @@ class train_screen(QtWidgets.QWidget):
         self.line_train_selection.raise_()
         self.line_throughput_selection.raise_()
         self.train_selection.raise_()
-        self.starting_location_selection.raise_()
+        #self.starting_location_selection.raise_()
         self.destination_selection.raise_()
         self.throughput_output.raise_()
 
@@ -133,9 +133,9 @@ class train_screen(QtWidgets.QWidget):
     def setup_inputs(self):
         print("DISPATCH")
         lines = ["Red","Green"]
-        stations = ["Yard","Shadyside", "Herron Ave", "Swissville", "Penn Station", "Steel Plaza", "First Ave", "Station Square", "South Hills Junction"]
+        #stations = ["Yard","Shadyside", "Herron Ave", "Swissville", "Penn Station", "Steel Plaza", "First Ave", "Station Square", "South Hills Junction"]
         self.line_train_selection.addItems(lines)
-        self.starting_location_selection.addItems(stations)
+        #self.starting_location_selection.addItems(stations)
         self.line_throughput_selection.addItems(lines)
 
     def dispatch_pressed(self):
@@ -152,7 +152,7 @@ class train_screen(QtWidgets.QWidget):
         self.train_table_display.addItem("NEW TRAIN DISPATCHED!!!!!!!!!")
         self.train_table_display.addItem("Train #: " + str(self.train_entries[0]))
         self.train_table_display.addItem("Position: " + str(self.train_entries[1]))
-        self.train_table_display.addItem("States: " + str(self.train_entries[2]))
+        #self.train_table_display.addItem("States: " + str(self.train_entries[2]))
         self.train_table_display.addItem("Destinations: " + str(self.train_entries[3]))
         self.train_table_display.addItem("Authority: " + str(self.train_entries[4]))
         self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
@@ -203,8 +203,6 @@ class train_screen(QtWidgets.QWidget):
         self.label.setText(_translate("Form", "- Train #: \n"
 "\n"
 "- Line:\n"
-"\n"
-"- Starting Location: \n"
 "\n"
 "- Destination: \n"
 "\n"
