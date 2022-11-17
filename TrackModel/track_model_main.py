@@ -10,7 +10,6 @@ QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True) #en
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True) #use highdpi icons
 
 class App(QMainWindow):
-
     def __init__(self):
         super().__init__()
         self.title = 'Track Model'
@@ -21,8 +20,8 @@ class App(QMainWindow):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         
-        self.table_widget = MyWidget(self)
-        self.setCentralWidget(self.table_widget)
+        self.main_widget = MyWidget(self)
+        self.setCentralWidget(self.main_widget)
         
         self.show()
     
@@ -97,9 +96,9 @@ class MyWidget(QWidget):
         self.home.layout = QHBoxLayout(self)
 
         # Create track layout .png
-        self.label = QLabel(self)
+        self.track_png = QLabel(self)
         pixmap = QPixmap('C:/Users/rachs/OneDrive/Documents/ECE1140/ECE1140/TrackModel/tracklayout.png')
-        self.label.setPixmap(pixmap)
+        self.track_png.setPixmap(pixmap)
         self.resize(pixmap.width(), pixmap.height())
 
         # Create table widget to display current block values
@@ -108,7 +107,7 @@ class MyWidget(QWidget):
         model.print_table(self.table)
 
         # Add track layout .png to the home tab
-        self.home.layout.addWidget(self.label)
+        self.home.layout.addWidget(self.track_png)
         self.home.setLayout(self.home.layout)
         
         # Add table to the home page

@@ -21,6 +21,8 @@ class Block:
         self.station = None
         self.light = None
 
+    ##def propogate_block(self, )
+
     def set_rail_cross(self, RailwayCrossing):
         self.rail_crossing = RailwayCrossing
 
