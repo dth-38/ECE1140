@@ -11,4 +11,6 @@ class Scheduler(QRunnable):
     
     #ovverides run method to have it be run in threadpool
     def run(self):
+        signals.ctc_update.emit()
+        
         signals.tc_update.emit()

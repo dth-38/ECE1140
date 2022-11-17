@@ -41,8 +41,8 @@ class Signals(QObject):
     #USING TCTools convert_to_block function
     ctc_update = pyqtSignal()
 
-    #int True/False
-    send_tm_dispatch = pyqtSignal(int)
+    #(str line)
+    send_tm_dispatch = pyqtSignal(str)
 
     #(str block, int authority)
     send_tc_authority = pyqtSignal(str, int)
@@ -56,6 +56,8 @@ class Signals(QObject):
     #------------------------------------------
     # TRACK MODEL SIGNALS
     #------------------------------------------
+
+    tm_update = pyqtSignal()
 
     #(str line, int ticket_sales)
     send_ctc_ticket_sales = pyqtSignal(str, int)
@@ -73,7 +75,21 @@ class Signals(QObject):
     send_tm_failure = pyqtSignal(str, int)
     #(str block, str station1, str station2, str side)
     send_tm_beacon = pyqtSignal(str, str, str, str)
-    #(str block, int passenger_count)
+    #(str station, int passenger_count)
     send_tm_passenger_count = pyqtSignal(str, int)
+
+    #-----------------------------------------
+    # Train Model Signals
+    #-----------------------------------------
+
+
+    #-----------------------------------------
+    # Signals to open train/track model gui
+    #-----------------------------------------
+
+    #(int id)
+    open_tm_gui = pyqtSignal(int)
+    #(int id)
+    open_tc_gui = pyqtSignal(int)
 
 signals = Signals()

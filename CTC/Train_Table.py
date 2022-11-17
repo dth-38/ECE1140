@@ -26,9 +26,9 @@ class Train_Table:
         return len(self.table)
     def change_authority(self,position,authority):
         if len(self.table) > 0:
-            print("authority: " + str(authority))
+            #print("authority: " + str(authority))
             self.table[position][4] = authority
     def change_position(self,position,location):
         if len(self.table) > 0:
-            print("location:" + str(location))
+            #print("location:" + str(location))
             self.table[position][1] = location

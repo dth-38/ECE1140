@@ -3,23 +3,21 @@ import enum
 import sched
 import sys
 import time
-from turtle import position 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTime, Qt, QEvent, QTimer
-from PyQt5.QtGui import QStandardItem
-from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import *
-from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtGui import * 
 from PyQt5.QtCore import *
-from PyQt5 import *
+#from PyQt5 import *
 
 from PyQt5.QtWidgets import QWidget 
 
-from CTC.CTC_Scheduler import CTC_Scheduler
-from CTC.CTC_Clock import CTC_Clock
-from CTC.Block_Table import Block_Table
-from CTC.Train_Table import Train_Table
+#from CTC.CTC_Scheduler import CTC_Scheduler
+#from CTC.CTC_Clock import CTC_Clock
+#from CTC.Block_Table import Block_Table
+#from CTC.Train_Table import Train_Table
+
+from Signals import signals
 
 #TRAIN SCREEN WINDOW 
 class train_screen(QWidget):
@@ -122,10 +120,12 @@ class train_screen(QWidget):
         self.retranslateUi(self)
         self.main_button.clicked.connect(lambda:self.closescr())
         self.setup_inputs()
-        self.dispatch_button.clicked.connect(lambda:self.pressed())
+        self.dispatch_button.clicked.connect(lambda:self.dispatch_pressed())
         self.throughput_button.clicked.connect(lambda:self.output_throughput())
         self.schedule_button.clicked.connect(lambda:self.add_schedule())
-        self.timer.timeout.connect(lambda: self.update_current_time())
+
+        #DISABLED TIMER BECAUSE IT IS BROKEN
+        #self.timer.timeout.connect(lambda: self.update_current_time())
         self.timer.start(1000)
     
     def closescr(self):
@@ -140,11 +140,17 @@ class train_screen(QWidget):
         self.starting_location_selection.addItems(stations)
         self.line_throughput_selection.addItems(lines)
 
-    def pressed(self):
+    def dispatch_pressed(self):
         arrival_time = (self.hour_selection.value(),self.minute_selection.value(),self.second_selection.value())
         print(arrival_time)
         destinations = self.destination_selection.toPlainText()
         self.train_entries, travel_time = self.ctc.schedule.manual_dispatch_train(arrival_time,self.train_selection.value(),self.line_train_selection.currentText(),destinations)
+
+        #sends dispatch signal
+        line = str(self.train_entries[5])
+        line.upper()
+        signals.send_tm_dispatch.emit(line)
+
         self.train_table_display.addItem("NEW TRAIN DISPATCHED!!!!!!!!!")
         self.train_table_display.addItem("Train #: " + str(self.train_entries[0]))
         self.train_table_display.addItem("Position: " + str(self.train_entries[1]))
@@ -153,6 +159,8 @@ class train_screen(QWidget):
         self.train_table_display.addItem("Authority: " + str(self.train_entries[4]))
         self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
         self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
+
+
         
     
     #TODO: WHEN AND HOW TO DISPLAY BLOCK TABLE?
@@ -168,11 +176,11 @@ class train_screen(QWidget):
         self.ctc.schedule.upload_schedule(file)
     
     def update_current_time(self):
-        print("Update Time")
+        #print("Update Time")
         self.ctc.clock.update_time()
         authority, position = self.ctc.schedule.update_trains()
-        print("authority: " + str(authority))
-        print("position: " + str(position))
+        #print("authority: " + str(authority))
+        #print("position: " + str(position))
         self.current_hour.setValue(self.ctc.clock.get_hours())
         self.current_minute.setValue(self.ctc.clock.get_minutes())
         self.current_second.setValue(self.ctc.clock.get_seconds())

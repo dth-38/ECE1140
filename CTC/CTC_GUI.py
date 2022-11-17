@@ -23,7 +23,7 @@ from PyQt5.QtCore import *
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self,ctc):
-        super().__init__()
+        super(Ui_MainWindow,self).__init__()
         self.ctc = ctc
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -54,9 +54,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.menubar.addAction(self.menuCTC_Office.menuAction())
         self.menubar.addAction(self.menuMain_Window.menuAction())
 
-        self.train_button.clicked.connect(self.train_screen)
-        self.maintenance_button.clicked.connect(self.maintenance_screen)
-        self.test_button.clicked.connect(self.test_screen)
+        self.train_button.clicked.connect(lambda: self.train_screen())
+        self.maintenance_button.clicked.connect(lambda: self.maintenance_screen())
+        self.test_button.clicked.connect(lambda: self.test_screen())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
