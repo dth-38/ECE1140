@@ -5,8 +5,6 @@ import sys
 sys.path.append(".")
 from train_model_signals import *
 from pprint import pprint
-#from Train_Controller import train_controller_main
-#import Train_Controller.train_controller_main as WindowClass
 from Train_Controller.train_controller_main import WindowClass
 
 class Train:

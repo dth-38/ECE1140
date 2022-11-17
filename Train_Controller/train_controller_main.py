@@ -5,7 +5,7 @@ from PyQt5 import uic
 from Train_Controller.errorWindow import warningWindow
 from Train_Controller.testWindow import testWindow
 
-form_mainWindow = uic.loadUiType("Train_Controller/TrainController.ui")[0]
+form_mainWindow = uic.loadUiType("Train_Controller/temp_ui/TrainController_1.ui")[0]
 
 #for keeping values of train
 class train_status:
@@ -288,7 +288,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.set_ad(self.check_ad())
         self.real_train.set_horn(self.check_horn())
 
-        self.update_train_display()
+        #self.update_train_display()
 
     #Check if all the inputs are in.
     def check_value(self):
