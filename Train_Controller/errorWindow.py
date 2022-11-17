@@ -2,7 +2,7 @@ import sys
 from PyQt5 import QtWidgets, QtCore
 from PyQt5 import uic
 
-form_class = uic.loadUiType("warning.ui")[0]
+form_class = uic.loadUiType("Train_Controller/warning.ui")[0]
 
 class warningWindow(QtWidgets.QMainWindow, form_class) :
     def __init__(self) :

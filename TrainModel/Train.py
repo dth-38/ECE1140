@@ -1,29 +1,17 @@
 import math
-from Block import Block
 from train_ui import TrainData_Ui
-from test_ui import test_Ui
 from PyQt5 import QtCore, QtWidgets
 import sys
+sys.path.append(".")
 from train_model_signals import *
 from pprint import pprint
-
 #from Train_Controller import train_controller_main
-#import Train_Controller.train_controller_main as train_controller_main
-import train_controller_main
-
-
+#import Train_Controller.train_controller_main as WindowClass
+from Train_Controller.train_controller_main import WindowClass
 
 class Train:
     
-    def __init__(self, ID = 0, route = []):
-
-        #pprint(sys.path)
-        
-        #train controller that controls this train
-        # self.train_ctrl = train_controller_main.WindowClass()
-        # #= self.train_ctrl.real_train.get()
-
-        # self.real_train = self.train_ctrl.train_status()
+    def __init__(self, ID = 0):
 
         #train id
         self.id = ID
@@ -31,9 +19,7 @@ class Train:
         #dispatch information???
         #self.destination_block = destination_block
         #self.line = line
-
         #block list = array of blocks from starting block to destination block
-        self.block_list = route
 
         #beacon info
         self.next_station = ""
@@ -55,6 +41,7 @@ class Train:
         self.acceleration = 0           #ft/s^2
         self.authority = 0
         self.position = 0               #meters
+        self.force = 0
 
         #various train functions
         self.ac_cmd = 70.0              #degrees farenheight
@@ -109,27 +96,15 @@ class Train:
         #signals.train_model_transfer_circuit(self.train_model_transfer_circuit)
         #signals.train_model_transfer_horn(self.train_model_transfer_horn)
 
-        #testui
-        signals.test_power.connect(self.update_power)
-
         #setup ui
         self.app = QtWidgets.QApplication(sys.argv)
-        train_model = QtWidgets.QMainWindow()
+        self.train_model = QtWidgets.QMainWindow()
         self.ui = TrainData_Ui()
-        self.ui.setupUi(train_model)
-        train_model.show()
+        self.ui.setupUi(self.train_model)
+        self.train_model.show()
 
         #train controller that controls this train
-        self.train_ctrl = train_controller_main.WindowClass()
-        #= self.train_ctrl.real_train.get()
-
-
-        test = QtWidgets.QMainWindow()
-        self.testt = test_Ui()
-        self.testt.setupUi(test)
-        #test.show()
-
-        #self.train_ctrl.myWindow
+        self.train_ctrl = WindowClass()
 
         #train runs until it reaches destination
         self.run_continuously = True
@@ -142,7 +117,7 @@ class Train:
         self.train_timer.start(1000)
         self.train_timer.timeout.connect(self.update_values)
 
-        sys.exit(self.app.exec_())
+        
 
 
 # ---------------------------------------------------------------------------------------------
@@ -154,15 +129,15 @@ class Train:
     def update_values(self):    #run every 1 sec (infinite loop)
         #set values of connected train controller
         self.train_ctrl.real_train.set_authority(self.authority)    #authoritys
-
-        # self.train_ctrl.real_train.set_commanded_speed(40) #desired speed
+        
+        #uncomment this shi for whole system
+        #self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
 
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
         if(self.engine_failure or self.brake_failure or self.signal_pickup_failure):
             self.train_ctrl.real_train.set_failure_flag(True)
         else:
             self.train_ctrl.real_train.set_failure_flag(False)
-        #self.train_ctrl.real_train.set_passenger_brake(self.passenger_ebrake)
 
         self.train_ctrl.update_in_controller()
 
@@ -179,26 +154,31 @@ class Train:
         self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
         self.ac_cmd = self.train_ctrl.real_train.get_temp()
         self.horn = self.train_ctrl.real_train.get_horn()
-
+        self.sbrake = self.train_ctrl.get_norm_brake_flag()
+        self.ebrake = self.train_ctrl.get_emer_brake_flag()
+        self.announcement_cmd = self.train_ctrl.real_train.get_annun()
+        self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
 
         self.train_model_display_announcement()
+        self.train_model_display_adv()
         self.train_model_display_temp()
         self.train_model_display_external_lights()
         self.train_model_display_internal_lights()
         self.train_model_display_horn()
-
+        self.train_model_display_left_door()
+        self.train_model_display_right_door()
 
         #self.door_side[] = self.train_ctrl.get_door_left()
         #self.power = self.train_ctrl.get_train_power()
 
-        #update train controller values
-        # self.train_ctrl.update_values_controller()
         self.train_ctrl.update_train_display()
+        self.show_tc_ui(0)
     
     def update_power(self, power):
         self.power = power
         self.ui.power_line.setText(str(self.power))
         self.train_model_update_speed()
+
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Dispatch Train? ------------------------------------------------
@@ -214,13 +194,25 @@ class Train:
     
         # tell controller train has bend dispatched
 
+    #show train model ui
+    def show_tm_ui(self, id):
+        if(self.id == id):
+            self.train_model.show()
+
+    #show train controller ui
+    def show_tc_ui(self, ctrlid):
+        if(self.id == ctrlid):
+            self.train_ctrl.show()
+
+
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Train Controller Inputs ---------------------------------------
 # ---------------------------------------------------------------------------------------------
 
     #sets train lights
     def train_model_display_internal_lights(self):
-        if(self.interior_light_cmd == True):
+        print("Interior lights: ", self.interior_light_cmd)
+        if(self.interior_light_cmd == "On"):
             self.ui.int_light_line.setText("On")
         else:
             self.ui.int_light_line.setText("Off")
@@ -231,6 +223,13 @@ class Train:
             self.ui.ext_light_line.setText("On")
         else:
             self.ui.ext_light_line.setText("Off")
+        #signals.train_model_update.emit()
+
+    def train_model_display_adv(self):
+        if(self.advertisement_cmd):
+            self.ui.advertisement_line.setText("On")
+        else:
+            self.ui.advertisement_line.setText("Off")
         #signals.train_model_update.emit()
 
     #sets status of doors
@@ -250,7 +249,22 @@ class Train:
             self.right_door_cmd = 0
         #signals.train_model_update.emit()
 
-    #get announcement from train controller
+    #display left door
+    def train_model_display_left_door(self):
+        if(self.left_door_cmd):
+            self.ui.left_door_line.setText("Open")
+        else:
+            self.ui.left_door_line.setText("Closed")
+        #signals.train_model_update.emit()
+
+    #display right door
+    def train_model_display_right_door(self):
+        if(self.right_door_cmd):
+            self.ui.right_door_line.setText("Open")
+        else:
+            self.ui.right_door_line.setText("Closed")
+        #signals.train_model_update.emit()
+
     def train_model_display_announcement(self):
         if(self.announcement_cmd):
             self.ui.announcement_line.setText("On")
@@ -258,7 +272,7 @@ class Train:
             self.ui.announcement_line.setText("Off")
         #signals.train_model_update.emit()
 
-    #get horn from train controller
+    #display horn
     def train_model_display_horn(self):
         if(self.horn):
             self.ui.horn_line.setText("On")
@@ -274,26 +288,9 @@ class Train:
             self.ui.advertisement_line.setText("Off")
         #signals.train_model_update.emit()
 
-    #get temperature from train controller
+    #display temp
     def train_model_display_temp(self):
         self.ui.temp_line.setText(str(self.ac_cmd))
-        #signals.train_model_update.emit()
-    
-    #get service brake from train controller
-    # def train_model_transfer_service_brake(self, service_brake):
-    #     if(not self.brake_failure):
-    #         self.sbrake = service_brake
-    #     else:
-    #         self.sbrake = False
-    #     #signals.train_model_update.emit()
-
-    # #get emergency brake from train controller
-    # def train_model_transfer_emergency_brake(self, emergency_brake):
-    #     self.ebrake = emergency_brake
-    #     #signals.train_model_update.emit()
-
-    def train_model_transfer_beacon_info(self, beacon):
-        self.station_name = beacon
         #signals.train_model_update.emit()
 
 # ---------------------------------------------------------------------------------------------
@@ -306,10 +303,14 @@ class Train:
     #train_ctrl.signal_pickup_failure = self.signal_pickup_failure
     #pass commanded speed
     #pass authority
-    
+
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Track Model Inputs --------------------------------------------
 # ---------------------------------------------------------------------------------------------
+
+    def train_model_transfer_beacon_info(self, beacon):
+        self.station_name = beacon
+        #signals.train_model_update.emit()
 
     #transfer grade
     def train_model_transfer_grade(self, new_grade):
@@ -323,9 +324,6 @@ class Train:
             self.authority = 0
         else:    
             self.authority = new_auth
-
-        #send to train controller
-        #self.train_ctrl.train_status.set_authority(self.authority)
 
         self.ui.authority_line.setText(str(self.authority))
         #signals.train_model_update.emit()
@@ -374,6 +372,8 @@ class Train:
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Murphy Inputs -------------------------------------------------
 # ---------------------------------------------------------------------------------------------
+
+# need to connect to signals
 
     #murphy fixes any failure
     def train_model_fix_failure(self):
@@ -474,53 +474,65 @@ class Train:
             if (run):
                 #FORCE CALCULATION
                 #if (self.sbrake or self.ebrake or self.passenger_ebrake or self.power == 0):
-                if (self.power == 0):
-                    force = 0
-                    force -= self.FRICTION_COE * mass * self.GRAVITY * math.cos(self.grade)
+                #if power is 0 and train is moving
+                if (self.power == 0 and temp_actual_speed > 0):
+                    self.force = 0
+                    self.force -= self.FRICTION_COE * mass * self.GRAVITY * math.cos(self.grade)
+                #else if power is 0 and train is not moving
+                elif (self.power == 0 and temp_actual_speed == 0):
+                    self.force = 0
+                #else power is greater than 0 and train is moving
                 else:
                     if(temp_actual_speed == 0):
-                        force = self.FRICTION_COE * mass * self.GRAVITY * math.cos(self.grade)
+                        self.force = self.FRICTION_COE * mass * self.GRAVITY * math.cos(self.grade)
                     # if brakes off
-                    #elif(not(self.sbrake) and not(self.ebrake) and not(self.passenger_ebrake)):
+                    elif(not(self.sbrake) and not(self.ebrake) and not(self.passenger_ebrake)):
+                    #else:
+                        self.force = (power / temp_actual_speed)
+                        self.force -= self.FRICTION_COE * mass * self.GRAVITY * math.cos(self.grade)
                     else:
-                        force = (power / temp_actual_speed)
-                        force -= self.FRICTION_COE * mass * self.GRAVITY * math.cos(self.grade)
+                        self.force = 0
                     #if service brake on
-                    # elif(self.sbrake and not self.ebrake and not self.passenger_ebrake):
-                    #     force = (power / temp_actual_speed)
-                    #     force -= self.FRICTION_COE * (1.01605 * self.mass * 1000) * self.GRAVITY * math.cos(self.grade)
-                    #     force -= self.DECELERATION_SERVICE * self.mass
-                    #  #if passenger ebrake or ebrake is on
-                    # elif(not(self.sbrake) and (self.ebrake or self.passenger_ebrake)):
-                    #     force = (power / temp_actual_speed)
-                    #     force -= self.FRICTION_COE * (1.01605 * self.mass * 1000) * self.GRAVITY * math.cos(self.grade)
-                    #     force -= self.DECELERATION_EMERGENCY * self.mass
-                    if(force < 0):
-                        force = 0
+                    #elif(self.sbrake and not self.ebrake and not self.passenger_ebrake):
+                    #    self.force = (power / temp_actual_speed)
+                    #    self.force -= self.FRICTION_COE * mass * self.GRAVITY * math.cos(self.grade)
+                    #    self.force -= self.DECELERATION_SERVICE * self.mass
+                    #if passenger ebrake or ebrake is on
+                    #elif(self.ebrake or self.passenger_ebrake):
+                    #    self.force = (power / temp_actual_speed)
+                    #    self.force -= self.FRICTION_COE * mass * self.GRAVITY * math.cos(self.grade)
+                    #    self.force -= self.DECELERATION_EMERGENCY * self.mass
+                    #if(self.force < 0):
+                    #    self.force = 0
 
+                    #MOVE EBRAKE PASSENGER BRAKE
 
                 # pprint("Force: ")
                 # pprint(force)
-                self.ui.grade_line.setText(str(round(force,1)))
+                self.ui.grade_line.setText(str(round(self.force,1)))
 
                 #ACCELERATION CALCULATION
-                temp_acceleration = force/mass
+                #pprint(self.passenger_ebrake)
+                print("pass brake: ", self.passenger_ebrake)
+                print("force: ", self.force)
+                print("mass", self.mass)
+                print("sbrake: ", self.sbrake)
+                print("ebrake: ", self.ebrake)
+                temp_acceleration = self.force/mass
                 if(temp_acceleration > self.ACCELERATION_LIMIT):
                     temp_acceleration = self.ACCELERATION_LIMIT
-                # elif(self.sbrake and not self.ebrake and not self.passenger_ebrake):
-                #     self.acceleration = self.DECELERATION_SERVICE
-                # elif(not self.sbrake and (self.ebrake or self.passenger_ebrake)):
-                #     temp_acceleration = self.DECELERATION_EMERGENCY
-                # elif(self.sbrake and (self.ebrake or self.passenger_ebrake)):
-                #     temp_acceleration = self.DECELERATION_EMERGENCY
+                elif(self.sbrake and not(self.ebrake or self.passenger_ebrake)):
+                    temp_acceleration = self.DECELERATION_SERVICE
+                elif(self.ebrake or self.passenger_ebrake):
+                    temp_acceleration = self.DECELERATION_EMERGENCY
                 
                 
                 #pprint(temp_acceleration)
 
                 #VELOCITY CALCULATION
 
-                # pprint(temp_acceleration)
-                # pprint(prev_acceleration)
+                print("temp accel: ", temp_acceleration)
+                print("prev accel: ", prev_acceleration)
                 temp_velocity = temp_actual_speed + ((sample_period/2) * (temp_acceleration + prev_acceleration))
                 if(temp_velocity > self.VELOCITY_LIMIT):
                     temp_velocity = self.VELOCITY_LIMIT
@@ -554,13 +566,12 @@ class Train:
                 #self.position = temp_position
                 
                 self.actual_speed = temp_velocity * 2.237
-                if (self.actual_speed > self.VELOCITY_LIMIT):
-                    self.actual_speed = self.VELOCITY_LIMIT
+                #if (self.actual_speed > self.VELOCITY_LIMIT):
+                #    self.actual_speed = self.VELOCITY_LIMIT
                 #if (self.actual_speed > self.train_ctrl.real_train.get_commanded_speed()):
                 #    self.actual_speed = self.train_ctrl.real_train.get_commanded_speed()
-                    
-                pprint("speed")
-                pprint(self.actual_speed)
+
+                print("speed: ", self.actual_speed)
                 self.ui.velocity_line.setText(str(round(self.actual_speed, 2)))
 
                 self.acceleration = temp_acceleration * 3.28084
@@ -575,12 +586,14 @@ class Train:
                 #self.real_train.set_commanded_speed(self.commanded_speed)
                 #self.power = self.train_ctrl.real_train.power_calculation(self.actual_speed)
 
-                pprint("Power: ")
-                pprint(self.power)
+                print("power:" , self.power)
+                pprint("-------------------------------")
 
-                self.ui.power_line.setText(str(self.power))
+                self.ui.power_line.setText(str(round(self.power,1)))
 
                 #signals.train_model_update.emit()
 
 if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
     TrainModel = Train()
+    sys.exit(app.exec_())
