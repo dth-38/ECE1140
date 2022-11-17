@@ -118,9 +118,9 @@ class Train:
 
         #self.train_model_update_authority(100)
 
-        self.train_timer = QtCore.QTimer()
-        self.train_timer.start(1000)
-        self.train_timer.timeout.connect(self.update_values)
+        # self.train_timer = QtCore.QTimer()
+        # self.train_timer.start(1000)
+        # self.train_timer.timeout.connect(self.update_values)
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Update Train? ------------------------------------------------
@@ -133,7 +133,7 @@ class Train:
         self.train_ctrl.real_train.set_authority(self.authority)    #authoritys
         
         #uncomment this shi for whole system
-        #self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
+        self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
 
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
         if(self.engine_failure or self.brake_failure or self.signal_pickup_failure):
@@ -485,7 +485,7 @@ class Train:
 
                 # pprint("Force: ")
                 # pprint(force)
-                self.ui.grade_line.setText(str(round(self.force,1)))
+                #self.ui.grade_line.setText(str(round(self.force,1)))
 
                 #ACCELERATION CALCULATION
                 #pprint(self.passenger_ebrake)
