@@ -124,7 +124,7 @@ class Train:
 
 
     def update_values(self):    #run every 1 sec (infinite loop)
-        #set values of connected train controller
+        #get values from track model
         self.train_ctrl.real_train.set_authority(self.authority)    #authoritys
         self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
@@ -137,6 +137,7 @@ class Train:
 
         #call controller update function
         self.train_ctrl.update_in_controller()
+        
 
         #do run kinematics calculation
         self.power = self.train_ctrl.real_train.get_power()
@@ -151,6 +152,8 @@ class Train:
         self.ac_cmd = self.train_ctrl.real_train.get_temp()
         self.horn = self.train_ctrl.real_train.get_horn()
         self.sbrake = self.train_ctrl.get_norm_brake_flag()
+        if(self.brake_failure):
+            self.sbrake = False
         self.ebrake = self.train_ctrl.get_emer_brake_flag()
         self.announcement_cmd = self.train_ctrl.real_train.get_annun()
         self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
@@ -234,7 +237,7 @@ class Train:
     #display left door
     def train_model_display_left_door(self):
         if(self.left_door_cmd == "Opened"):
-            self.ui.left_door_line.setText("Opened")
+            self.ui.left_door_line.setText("Open")
         else:
             self.ui.left_door_line.setText("Closed")
         #signals.train_model_update.emit()
@@ -242,7 +245,7 @@ class Train:
     #display right door
     def train_model_display_right_door(self):
         if(self.right_door_cmd == "Opened"):
-            self.ui.right_door_line.setText("Opened")
+            self.ui.right_door_line.setText("Open")
         else:
             self.ui.right_door_line.setText("Closed")
         #signals.train_model_update.emit()
@@ -297,9 +300,7 @@ class Train:
     @pyqtSlot(int, int)
     def train_model_update_authority(self, trainnum, new_auth):
         if(self.id == trainnum):
-            if(self.signal_pickup_failure):
-                self.authority = 0
-            else:    
+            if(not(self.signal_pickup_failure)):
                 self.authority = new_auth
 
             self.ui.authority_line.setText(str(self.authority))
@@ -365,6 +366,9 @@ class Train:
     #murphy sets failure
     def train_model_transfer_brake_failure(self):
         self.brake_failure = True
+        self.sbrake = False
+        self.ebrake = False
+        self.passenger_ebrake = False
         self.ui.brake_button.setStyleSheet("background-color: red")
         #signals.train_model_update.emit()
 
@@ -503,12 +507,16 @@ class Train:
                 temp_acceleration = self.force/mass
                 if(temp_acceleration > self.ACCELERATION_LIMIT):
                     temp_acceleration = self.ACCELERATION_LIMIT
-                elif(self.brake_failure):
-                    temp_acceleration = temp_acceleration
                 elif(self.sbrake and not(self.ebrake or self.passenger_ebrake)):
-                    temp_acceleration = self.DECELERATION_SERVICE
+                    if(self.actual_speed > 0):
+                        temp_acceleration = self.DECELERATION_SERVICE
+                    else:
+                        temp_acceleration = 0
                 elif(self.ebrake or self.passenger_ebrake):
-                    temp_acceleration = self.DECELERATION_EMERGENCY
+                    if(self.actual_speed > 0):
+                        temp_acceleration = self.DECELERATION_EMERGENCY
+                    else:
+                        temp_acceleration = 0
                 
                 
                 #pprint(temp_acceleration)
