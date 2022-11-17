@@ -1,7 +1,6 @@
 #from signals import signals
 
 #TODO: GET BLOCK SWITCH POSITIONS FROM TRACK CONTROLLER TO SWITCH THEM AT THAT POSITION IN SET MAINTENANCE
-from numpy import block
 
 
 class Block_Table: 

@@ -1,15 +1,15 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTime, Qt, QEvent, QTimer
-from PyQt5.QtGui import QStandardItem
-from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtWidgets import * 
-from PyQt5.QtGui import * 
-from PyQt5.QtCore import *
-from PyQt5 import *
+from PyQt5 import QtCore, QtWidgets
+#from PyQt5.QtCore import QTime, Qt, QEvent, QTimer
+#from PyQt5.QtGui import QStandardItem
+#from PyQt5.QtGui import QStandardItemModel
+#from PyQt5.QtWidgets import * 
+#from PyQt5.QtGui import * 
+#from PyQt5.QtCore import *
+#from PyQt5 import *
 from CTC.Block_Table import Block_Table
 
 #MAINTENANCE_SCREEN
-class maintenance_screen(QWidget):
+class maintenance_screen(QtWidgets.QWidget):
     def __init__(self):
         super(maintenance_screen,self).__init__()
         self.setupUi()

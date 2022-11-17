@@ -1,16 +1,14 @@
 
-import enum
-import sched
-import sys
-import time
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTime, Qt, QEvent, QTimer
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import * 
-from PyQt5.QtCore import *
+#import enum
+#import sched
+#import sys
+#import time
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QTimer
+#from PyQt5.QtWidgets import *
+#from PyQt5.QtGui import * 
+#from PyQt5.QtCore import *
 #from PyQt5 import *
-
-from PyQt5.QtWidgets import QWidget 
 
 #from CTC.CTC_Scheduler import CTC_Scheduler
 #from CTC.CTC_Clock import CTC_Clock
@@ -20,7 +18,7 @@ from PyQt5.QtWidgets import QWidget
 from Signals import signals
 
 #TRAIN SCREEN WINDOW 
-class train_screen(QWidget):
+class train_screen(QtWidgets.QWidget):
     def __init__(self,ctc):
         super(train_screen,self).__init__()
         self.ctc = ctc
@@ -172,7 +170,7 @@ class train_screen(QWidget):
         self.throughput_output.setText(str(throughput))
     
     def add_schedule(self):
-        file = QFileDialog.getOpenFileName(self,"Open File", "", "All Files (*);;Xlsx Files(*.xlsx)")
+        file = QtWidgets.QFileDialog.getOpenFileName(self,"Open File", "", "All Files (*);;Xlsx Files(*.xlsx)")
         self.ctc.schedule.upload_schedule(file)
     
     def update_current_time(self):

@@ -7,11 +7,9 @@ from PyQt5.QtGui import QFont
 
 import Scheduler
 from TrackController.TrackController import TrackController
-#import Train_Controller
-#import TrainModel.Train
-#import TrackModel
-#import CTC.CTC
+#from TrackModel.trackmodel import TrackModel
 from CTC.CTC import CTC
+from Signals import signals
 
 
 class NSE_Simulation(QMainWindow):
@@ -211,6 +209,10 @@ class NSE_Simulation(QMainWindow):
 
             #check num is in valid range
             #open corresponding train model
+            if num > -1 and num < len(self.track_model.trains):
+                signals.open_tm_gui.emit(num)
+            else:
+                print("Error: Selection does not exist.")
         except:
             print("Error: Selection is not a number.")
 
@@ -221,6 +223,11 @@ class NSE_Simulation(QMainWindow):
 
             #check num is in valid range
             #open corresponding train controller
+            if num > -1 and num < len(self.track_model.trains):
+                signals.open_tc_gui.emit(num)
+            else:
+                print("Error: Selection does not exist.")
+
         except:
             print("Error: Selection is not a number.")
 

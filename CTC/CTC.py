@@ -4,7 +4,7 @@ from CTC.CTC_GUI import Ui_MainWindow
 from CTC.CTC_Clock import CTC_Clock
 from CTC.CTC_GUI import Ui_MainWindow
 
-import sys
+#import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget
 
