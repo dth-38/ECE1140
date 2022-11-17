@@ -24,7 +24,7 @@ class App(QMainWindow):
         self.main_widget = MyWidget(self)
         self.setCentralWidget(self.main_widget)
         
-        self.show()
+        #self.show()
     
 class MyWidget(QWidget):
     
