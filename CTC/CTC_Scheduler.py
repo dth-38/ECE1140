@@ -15,7 +15,7 @@ class CTC_Scheduler:
         self.position = 0
         self.red_throughput = 0
         self.green_throughput = 0
-        self.time = CTC_Clock()
+        #self.time = CTC_Clock()
         #TODO: ASK HOW DISPATCH QUEUE WORKS
         self.dispatch_queue = []
         self.train_table = Train_Table()
@@ -47,8 +47,8 @@ class CTC_Scheduler:
         self.block_failures = []
         self.train_states = []
         self.train_position = 0
-        self.red_speed = 70
-        self.green_speed = 70
+        self.red_speed = 44
+        self.green_speed = 44
         self.destination_index = 0
         self.red_stations = []
         self.green_stations = [[0,"Yard"],[2,"Pioneer"],[9,"Edgebrook"],[16,"Station"],[

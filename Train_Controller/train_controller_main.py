@@ -395,6 +395,9 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.emergency_slow()
             self.failure_frame.setStyleSheet("background-color: red")
             self.failure_output.append("Exists!")
+        else:
+            self.failure_frame.setStyleSheet("background-color: white")
+            self.failure_output.append("Exists!")
 
         #if train came to stop (fully) in auto mode
         if self.real_train.get_power() == 0 and self.auto_f == True:
@@ -413,8 +416,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.set_norm_brake_flag(False)
 
         #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
-        if self.norm_brake_flag == True or self.emer_brake_flag == True:
-            self.real_train.set_power(0)
+        #if self.norm_brake_flag == True or self.emer_brake_flag == True:
+        #    self.real_train.set_power(0)
 
         #update to screen
         self.update_train_display()
