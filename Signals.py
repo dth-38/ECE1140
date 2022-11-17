@@ -9,7 +9,6 @@ class Signals(QObject):
     # Track Controller Signals
     #-----------------------------------------
 
-    #(int id)
     tc_update = pyqtSignal()
 
     #(str line, int block_num, int True/False)

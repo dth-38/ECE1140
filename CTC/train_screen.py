@@ -25,7 +25,7 @@ class train_screen(QtWidgets.QWidget):
         self.setupUi()
         self.show()
     def setupUi(self):
-        print("SETUP UI")
+        #print("SETUP UI")
         self.train_selection = QtWidgets.QSpinBox(self)
         self.train_selection.setGeometry(QtCore.QRect(70, 620, 48, 24))
         self.train_selection.setSpecialValueText("")
@@ -140,7 +140,7 @@ class train_screen(QtWidgets.QWidget):
 
     def dispatch_pressed(self):
         arrival_time = (self.hour_selection.value(),self.minute_selection.value(),self.second_selection.value())
-        print(arrival_time)
+        #print(arrival_time)
         destinations = self.destination_selection.toPlainText()
         self.train_entries, travel_time = self.ctc.schedule.manual_dispatch_train(arrival_time,self.train_selection.value(),self.line_train_selection.currentText(),destinations)
 
