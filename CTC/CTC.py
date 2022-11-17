@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QWidget
 from Signals import signals
 from TrackController.TCTools import convert_to_block
 
+
 class CTC(QWidget): 
     def __init__(self):
         super().__init__()
@@ -23,8 +24,8 @@ class CTC(QWidget):
     def add_ui(self):
         #app = QtWidgets.QApplication(sys.argv)
         self.MainWindow = QtWidgets.QMainWindow()
-        ui = Ui_MainWindow(self)
-        ui.setupUi(self.MainWindow)
+        self.ui = Ui_MainWindow(self)
+        self.ui.setupUi(self.MainWindow)
         #self.MainWindow.show()
         #sys.exit(app.exec_())
     def setup_signals(self):
@@ -63,15 +64,19 @@ class CTC(QWidget):
     def update_ticket_sales(self,line,ticket_sales):
         self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
     def tick(self):
+        self.ui.train.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
             #THIS SHOULD NOT BE HERE
             #signals.send_tm_dispatch.emit(1)
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
-            signals.send_tc_authority.emit(tc_block,self.train_table.get_authority())
+            signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(0))
             if self.schedule.train_table.get_line(i) == "Red":
+                print("red speed")
                 signals.send_tc_speed.emit(tc_block,self.schedule.red_speed)
             elif self.schedule.train_table.get_line(i) == "Green":
+                print("green speed")
                 signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
+            
 
             #THIS SHOULD NOT BE HERE
             #signals.send_tc_maintenance.emit(tc_block,0)

@@ -5,6 +5,7 @@ from PyQt5.QtGui import *
 from trackmodel import *
 import pandas as pd
 import sys
+import pathlib
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True) #enable highdpi scaling
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True) #use highdpi icons
@@ -95,9 +96,19 @@ class MyWidget(QWidget):
         # Create first tab
         self.home.layout = QHBoxLayout(self)
 
+
+        #walks up the file tree until ECE1140 directory is found
+        destination = str(pathlib.Path().absolute())
+        i = 0
+        while destination[len(destination)-7:] != "ECE1140":
+            i += 1
+            destination = str(pathlib.Path(__file__).parents[i])
+        #creates the expected text file based on the controller id
+        destination += ("/TrackModel/tracklayout.png")
+
         # Create track layout .png
         self.track_png = QLabel(self)
-        pixmap = QPixmap('C:/Users/rachs/OneDrive/Documents/ECE1140/ECE1140/TrackModel/tracklayout.png')
+        pixmap = QPixmap(destination)
         self.track_png.setPixmap(pixmap)
         self.resize(pixmap.width(), pixmap.height())
 

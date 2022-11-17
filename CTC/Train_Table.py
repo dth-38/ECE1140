@@ -16,8 +16,12 @@ class Train_Table:
         return self.table[position][3]
     def get_train_id(self,position):
         return self.table[position][0]
-    def get_train_position(self,position):
+    def get_position(self,position):
         return self.table[position][1]
+    def get_line(self,position):
+        return self.table[position][5]
+    def get_authority(self,position):
+        return self.table[position][4]
     def get_train_states(self,position):
         return self.table[position][2]
     def get_entry(self,position):
