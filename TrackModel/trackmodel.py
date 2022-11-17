@@ -2,6 +2,8 @@ from TrackModel.line import *
 from TrackModel.heater import *
 from TrackModel.trainloc import *
 from TrackModel.track_info import *
+from TrainModel.Train import Train
+from Signals import signals
 
 import pathlib
 
@@ -449,6 +451,47 @@ class TrackModel:
         # Iterate through current[] values list, print to GUI table
         for i in range(len(self.current)):
             table.setItem(0, i, self.current[i])
+
+
+
+    @pyqtSlot()
+    def setup_signals(self):
+        signals.tm_update.connect(self.tick)
+        signals.send_track_authority.connect(self.handle_authority)
+        signals.send_track_speed.connect(self.handle_speed)
+        signals.broadcast_switch.connect(self.handle_switch)
+        signals.broadcast_light.connect(self.handle_light)
+        signals.broadcast_gate.connect(self.handle_gate)
+        signals.send_tm_distance.connect(self.handle_distance)
+
+    @pyqtSlot(str, int, int)
+    def handle_speed(self, line, block_num, speed):
+        pass   
+
+    @pyqtSlot(str, int, int)
+    def handle_switch(self, line, block_num, next_block_num):
+        pass
+
+    @pyqtSlot(str, int, str)
+    def handle_light(self, line, block_num, color):
+        pass
+
+    @pyqtSlot(str, int, str)
+    def handle_gate(self, line, block_num, position):
+        pass
+
+    @pyqtSlot(int, float)
+    def handle_distance(self, train_id, distance):
+        pass
+
+    #update for the whole track model
+    @pyqtSlot()
+    def tick(self):
+        pass
+
+    @pyqtSlot(str, int, int)
+    def handle_authority(self, line, block_num, authority):
+        pass
 
     # ## Return which line the block is on
     # def get_line(self, block):
