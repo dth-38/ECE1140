@@ -2,7 +2,7 @@ from TrackModel.line import *
 from TrackModel.heater import *
 from TrackModel.trainloc import *
 from TrackModel.track_info import *
-from TrainModel.Train import Train
+#from TrainModel.Train import Train
 from Signals import signals
 
 import pathlib
@@ -19,8 +19,17 @@ class TrackModel:
         self.heaters = []
         self.current = []
 
+        #walks up the file tree until ECE1140 directory is found
+        destination = str(pathlib.Path().absolute())
+        i = 0
+        while destination[len(destination)-7:] != "ECE1140":
+            i += 1
+            destination = str(pathlib.Path(__file__).parents[i])
+        #creates the expected text file based on the controller id
+        destination += ("/TrackModel/track_layout_2.0.xlsx")
+
         # Track layout file
-        self.file = TrackInfo(fp = "C:/Users/rachs/OneDrive/Documents/ECE1140/ECE1140/TrackModel/track_layout_2.0.xlsx") 
+        self.file = TrackInfo(fp = destination) 
 
         # Used to show the train moving correctly for Iteration #3 only
         self.prev_block = None
@@ -117,7 +126,7 @@ class TrackModel:
             i += 1
             destination = str(pathlib.Path(__file__).parents[i])
         #creates the expected text file based on the controller id
-        destination += ("/TrackModel/track_layout.xlsx")
+        destination += ("/TrackModel/track_layout_2.0.xlsx")
 
         ## Load the excel file, take in data
         file = TrackInfo(fp = destination)
