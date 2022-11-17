@@ -213,7 +213,7 @@ class CTC_Scheduler:
                             self.train_table.change_position(0,new_position)
                             break
                 elif line == "Green":
-                    print("GREEN LINE!!!!")
+                    #print("GREEN LINE!!!!")
                     for j in range(len(self.green_route_blocks) - 1):
                         if table_entry[1] == self.green_route_blocks[j]:
                             new_position = self.green_route_blocks[j + 1]

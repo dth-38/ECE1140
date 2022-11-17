@@ -62,16 +62,19 @@ class CTC(QWidget):
         self.schedule.block_table.add_gate(line,block_num,status)
     def update_ticket_sales(self,line,ticket_sales):
         self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
-    def tick(self): 
-        if self.schedule.train_table.get_table_length() > 0:
-            signals.send_tm_dispatch.emit(1)
-            tc_block = convert_to_block(self.schedule.train_table.get_line(0),self.schedule.train_table.get_position(0))
+    def tick(self):
+        for i in range(self.schedule.train_table.get_table_length()): 
+            #THIS SHOULD NOT BE HERE
+            #signals.send_tm_dispatch.emit(1)
+            tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
             signals.send_tc_authority.emit(tc_block,self.train_table.get_authority())
-            if self.schedule.train_table.get_line(0) == "Red":
+            if self.schedule.train_table.get_line(i) == "Red":
                 signals.send_tc_speed.emit(tc_block,self.schedule.red_speed)
-            elif self.schedule.train_table.get_line(0) == "Green":
+            elif self.schedule.train_table.get_line(i) == "Green":
                 signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
-            signals.send_tc_maintenance.emit(tc_block,0)
+
+            #THIS SHOULD NOT BE HERE
+            #signals.send_tc_maintenance.emit(tc_block,0)
     """""
     def add_schedule(self):
         print("ADD SCHEDULE!!!!!")

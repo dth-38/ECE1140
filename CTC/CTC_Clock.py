@@ -5,7 +5,7 @@ class CTC_Clock:
         self.minute = min
         self.second = sec 
     def update_time(self,timeStep=10):
-        print("TIME UPDATE")
+        #print("TIME UPDATE")
         #TODO: FIND A WAY TO CALL THIS EVERY SECOND DURING SIMULATION
         temp_time = self.second + timeStep
         if temp_time < 60:
