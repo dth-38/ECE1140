@@ -14,3 +14,7 @@ class Scheduler(QRunnable):
         signals.ctc_update.emit()
         
         signals.tc_update.emit()
+
+        signals.tm_update.emit()
+
+        signals.train_update.emit()

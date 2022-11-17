@@ -5,7 +5,7 @@ from PyQt5 import uic
 from Train_Controller.errorWindow import warningWindow
 from Train_Controller.testWindow import testWindow
 
-form_mainWindow = uic.loadUiType("Train_Controller/TrainController.ui")[0]
+form_mainWindow = uic.loadUiType("Train_Controller/temp_ui/TrainController_1.ui")[0]
 
 #for keeping values of train
 class train_status:
@@ -15,8 +15,8 @@ class train_status:
         self.commanded_speed = 0  #commended speed (from manual mode) OR desired speed, 100 by default
         self.speed = 0            #actual speed of train
         self.authority = 0
-        self.door_left = "On"
-        self.door_right = "On"
+        self.door_left = "Opened"
+        self.door_right = "Opened"
         self.internal_light = "On"
         self.external_light = "Off"
         self.annun = "On"
@@ -109,8 +109,8 @@ class train_status:
         self.authority = 0
         self.commanded_speed = 100
         self.speed = 0
-        self.door_left = "On"
-        self.door_right = "On"
+        self.door_left = "Opened"
+        self.door_right = "Opened"
         self.internal_light = "On"
         self.external_light = "On"
         self.ad = "On"
@@ -126,8 +126,8 @@ class train_status:
         self.power = 0.0
 
     def train_running(self):
-        self.door_left = "Off"
-        self.door_right = "Off"
+        self.door_left = "Closed"
+        self.door_right = "Closed"
         self.internal_light = "On"
         self.external_light = "On"
         self.ad = "Off"
@@ -156,7 +156,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     def __init__(self) :
         super().__init__()
         self.init_ui()
-        self.show()
+        #self.show()
 
     def init_ui(self):
         self.setupUi(self)
@@ -395,6 +395,9 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.emergency_slow()
             self.failure_frame.setStyleSheet("background-color: red")
             self.failure_output.append("Exists!")
+        else:
+            self.failure_frame.setStyleSheet("background-color: white")
+            self.failure_output.append("Exists!")
 
         #if train came to stop (fully) in auto mode
         if self.real_train.get_power() == 0 and self.auto_f == True:
@@ -405,19 +408,24 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         #if train reaches the end of track (authority = 0), set power = 0
         # if self.real_train.get_authority() == 0:
-        #     self.real_train.set_power(0)            
+        #     self.real_train.set_power(0)
+        # 
+        if self.real_train.get_authority() == 0:
+            self.set_norm_brake_flag(True)
+        else:
+            self.set_norm_brake_flag(False)
 
         #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
-        if self.norm_brake_flag == True or self.emer_brake_flag == True:
-            self.real_train.set_power(0)
+        #if self.norm_brake_flag == True or self.emer_brake_flag == True:
+        #    self.real_train.set_power(0)
 
         #update to screen
         self.update_train_display()
 
     #if train is at stop, status changes accordingly
     def auto_train_stopped(self):
-        self.real_train.set_door_left("On")
-        self.real_train.set_door_right("On")
+        self.real_train.set_door_left("Opened")
+        self.real_train.set_door_right("Opened")
         self.real_train.set_external_light("On")
         self.real_train.set_annun("On")
         self.real_train.set_horn("On")

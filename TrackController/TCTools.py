@@ -4,13 +4,15 @@
 
 #since the CTC and track controllers store block id differently
 def convert_to_block(line, num):
-    line.upper()
+    line = line.upper()
     tc_block = ""
 
     if line == "RED":
         pass
     elif line == "GREEN":
-        if num < 4:
+        if num == 0:
+            tc_block = "green___0"
+        elif num < 4:
             tc_block = "green_A_" + str(num)
         elif num < 7:
             tc_block = "green_B_" + str(num)

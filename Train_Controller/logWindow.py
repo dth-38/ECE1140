@@ -2,7 +2,7 @@ import sys
 from PyQt5 import QtWidgets, QtCore
 from PyQt5 import uic
 
-form_class = uic.loadUiType("log.ui")[0]
+form_class = uic.loadUiType("Train_Controller/log.ui")[0]
 
 class logWindow(QtWidgets.QMainWindow, form_class) :
     def __init__(self) :

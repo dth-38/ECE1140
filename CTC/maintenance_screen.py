@@ -1,19 +1,19 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QTime, Qt, QEvent, QTimer
-from PyQt5.QtGui import QStandardItem
-from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtWidgets import * 
-from PyQt5.QtGui import * 
-from PyQt5.QtCore import *
-from PyQt5 import *
+from PyQt5 import QtCore, QtWidgets
+#from PyQt5.QtCore import QTime, Qt, QEvent, QTimer
+#from PyQt5.QtGui import QStandardItem
+#from PyQt5.QtGui import QStandardItemModel
+#from PyQt5.QtWidgets import * 
+#from PyQt5.QtGui import * 
+#from PyQt5.QtCore import *
+#from PyQt5 import *
 from CTC.Block_Table import Block_Table
 
 #MAINTENANCE_SCREEN
-class maintenance_screen(QWidget):
+class maintenance_screen(QtWidgets.QWidget):
     def __init__(self):
         super(maintenance_screen,self).__init__()
         self.setupUi()
-        self.show()
+        #self.show()
     def setupUi(self):
         self.main_button = QtWidgets.QPushButton(self)
         self.main_button.setGeometry(QtCore.QRect(1260, 560, 161, 221))
@@ -45,7 +45,7 @@ class maintenance_screen(QWidget):
         self.retranslateUi(self)
         #QtCore.QMetaObject.connectSlotsByName()
         self.maintenance()
-        self.maintenance_button.clicked.connect(lambda:self.pressed())
+        self.maintenance_button.clicked.connect(lambda:self.maintenance_pressed())
         self.main_button.clicked.connect(lambda:self.closescr())
     
     def closescr(self):
@@ -64,7 +64,7 @@ class maintenance_screen(QWidget):
             self.maintenance_output.setText("True")
             maintenance_track = Track(id_n=self.block_selection.value(),sec=self.section_selection.currentText(),main_signal="True")
     """
-    def pressed(self):
+    def maintenance_pressed(self):
         if self.status_selection.currentText() == "Open":
             self.maintenance_output.setText("False")
         else:

@@ -9,7 +9,6 @@ class Signals(QObject):
     # Track Controller Signals
     #-----------------------------------------
 
-    #(int id)
     tc_update = pyqtSignal()
 
     #(str line, int block_num, int True/False)
@@ -61,30 +60,36 @@ class Signals(QObject):
 
     #(str line, int ticket_sales)
     send_ctc_ticket_sales = pyqtSignal(str, int)
-    
+
     #(str block, int True/False)
     send_tc_occupancy = pyqtSignal(str, int)
     #(str block, int True/False)
     send_tc_failure = pyqtSignal(str, int)
 
-    #(str block, int authority)
-    send_train_authority = pyqtSignal(str, int)
-    #(str block, int grade)
-    send_train_grade = pyqtSignal(str, int)
-    #(str block, int True/False)
-    send_train_failure = pyqtSignal(str, int)
+    #(int id, int commanded speed)
+    send_tm_commanded_speed = pyqtSignal(int, int)
+    #(int id, int authority)
+    send_tm_authority = pyqtSignal(int, int)
+    #(int id, float grade)
+    send_tm_grade = pyqtSignal(int, float)
+    #(int id, int True/False)
+    send_tm_failure = pyqtSignal(int, int)
     #(str block, str station1, str station2, str side)
-    send_train_beacon = pyqtSignal(str, str, str, str)
-    #(str station, int passenger_count)
-    send_train_passenger_count = pyqtSignal(str, int)
+    send_tm_beacon = pyqtSignal(str, str, str, str)
+    #(int id, int passenger_count)
+    send_tm_passenger_count = pyqtSignal(int, int)
 
     #-----------------------------------------
     # Train Model Signals
     #-----------------------------------------
 
+    train_update = pyqtSignal()
+
+    #(int id, float distance)
+    send_tm_distance = pyqtSignal(int, float)
 
     #-----------------------------------------
-    # Signals to open train/track model gui
+    # Signals to open train controller/track model gui
     #-----------------------------------------
 
     #(int id)

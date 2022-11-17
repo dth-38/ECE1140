@@ -1,8 +1,9 @@
-from line import *
-from heater import *
-from trainloc import *
-from track_info import *
-from linked_list import Node
+from TrackModel.line import *
+from TrackModel.heater import *
+from TrackModel.trainloc import *
+from TrackModel.track_info import *
+
+import pathlib
 
 from PyQt5.QtCore import pyqtSlot
 ##from TrainModel import Train
@@ -107,9 +108,19 @@ class TrackModel:
 
 
     def load_model(self, red_table, green_table):
+        #walks up the file tree until ECE1140 directory is found
+        destination = str(pathlib.Path().absolute())
+        i = 0
+        while destination[len(destination)-7:] != "ECE1140":
+            i += 1
+            destination = str(pathlib.Path(__file__).parents[i])
+        #creates the expected text file based on the controller id
+        destination += ("/TrackModel/track_layout.xlsx")
+
         ## Load the excel file, take in data
-        self.file.load_excel_data(self.file.get_sheet(1), red_table)
-        self.file.load_excel_data(self.file.get_sheet(2), green_table)
+        file = TrackInfo(fp = destination)
+        file.load_excel_data(file.get_sheet(0), red_table)
+        file.load_excel_data(file.get_sheet(1), green_table)
 
         ## Clean up track file
         self.file.set_dimensions()

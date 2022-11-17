@@ -15,7 +15,7 @@ class CTC_Scheduler:
         self.position = 0
         self.red_throughput = 0
         self.green_throughput = 0
-        self.time = CTC_Clock()
+        #self.time = CTC_Clock()
         #TODO: ASK HOW DISPATCH QUEUE WORKS
         self.dispatch_queue = []
         self.train_table = Train_Table()
@@ -47,8 +47,8 @@ class CTC_Scheduler:
         self.block_failures = []
         self.train_states = []
         self.train_position = 0
-        self.red_speed = 70
-        self.green_speed = 70
+        self.red_speed = 44
+        self.green_speed = 44
         self.destination_index = 0
         self.red_stations = []
         self.green_stations = [[0,"Yard"],[2,"Pioneer"],[9,"Edgebrook"],[16,"Station"],[
@@ -95,7 +95,7 @@ class CTC_Scheduler:
                 self.green_track.append(row["Line"],row["Block Length(m)"],row["Infrastructure"])
     """
     def manual_dispatch_train(self,departure_time,train_id,line,destinations):
-        print("MANUAL DISPATCH!!!!")
+        #print("MANUAL DISPATCH!!!!")
         self.destination_index = 0
         #Dispatch queue only for scheduled dispatches? 
         #self.dispatch_queue.append([arrival_time,train_id])
@@ -111,10 +111,10 @@ class CTC_Scheduler:
         travel_minutes = (travel_time*60) % 60
         travel_seconds = (travel_time*3600) % 60
         travel_time = (travel_hours,travel_minutes,travel_seconds)
-        print("travel_time: " + str(travel_time))
+        #print("travel_time: " + str(travel_time))
         arrival_time = [int(travel_time[0] + departure_time[0]), int(travel_time[1] + departure_time[1]), int(travel_time[2] + departure_time[2])]
-        print("ADD TRAIN ENTRY")
-        self.train_table.add_entry(id=self.train_id,position=self.train_position,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
+        #print("ADD TRAIN ENTRY")
+        self.train_table.add_entry(id=self.train_id,position=0,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
         self.train_id += 1
         #add it to the yard
         #return the new entry added for each train dispatched

@@ -9,7 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from train_model_signals import signals
+from train_model_signals import *
 
 class TrainData_Ui(object):
     def setupUi(self, train_model):
@@ -274,19 +274,19 @@ class TrainData_Ui(object):
         
 
     def toggle_engine_failure(self):
-        signals.train_model_transfer_engine_falure.emit()
+        ui_sig.train_model_transfer_engine_falure.emit()
 
     def toggle_sp_failure(self):
-        signals.train_model_transfer_signal_pickup_failure.emit()
+        ui_sig.train_model_transfer_signal_pickup_failure.emit()
 
     def toggle_brake_failure(self):
-        signals.train_model_transfer_brake_failure.emit()
+        ui_sig.train_model_transfer_brake_failure.emit()
 
     def toggle_fix_failure(self):
-        signals.train_model_fix_failure.emit()
+        ui_sig.train_model_fix_failure.emit()
         
     def toggle_pbrake(self):
-        signals.train_model_transfer_passenger_ebrake.emit()
+        ui_sig.train_model_transfer_passenger_ebrake.emit()
     def retranslateUi(self, train_model):
         _translate = QtCore.QCoreApplication.translate
         train_model.setWindowTitle(_translate("MainWindow", "MainWindow"))

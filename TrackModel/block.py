@@ -1,8 +1,8 @@
-from beacon import *
-from station import *
-from railwaycrossing import *
-from failure import *
-from light import *
+from TrackModel.beacon import *
+from TrackModel.station import *
+from TrackModel.railwaycrossing import *
+from TrackModel.failure import *
+from TrackModel.light import *
 
 class Block:
     def __init__(self, section, number):

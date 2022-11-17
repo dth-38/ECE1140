@@ -7,11 +7,9 @@ from PyQt5.QtGui import QFont
 
 import Scheduler
 from TrackController.TrackController import TrackController
-#import Train_Controller
-#import TrainModel.Train
-#import TrackModel
-#import CTC.CTC
+from TrackModel.track_model_main import App
 from CTC.CTC import CTC
+from Signals import signals
 
 
 class NSE_Simulation(QMainWindow):
@@ -33,7 +31,7 @@ class NSE_Simulation(QMainWindow):
 
         self.track_controllers = []
         self.ctc = CTC()
-        #self.track = TrackModel.main.main()
+        self.track = App()
     
 
         super().__init__()
@@ -91,7 +89,7 @@ class NSE_Simulation(QMainWindow):
         widget_font = QFont('Times', 16)
 
         min_width = (self.WIDTH // 2) - 20
-        min_height = (self.HEIGHT // 4) - 20
+        min_height = (self.HEIGHT // 6) - 20
 
         self.ctc_button = QPushButton("CTC Office", self)
         self.ctc_button.clicked.connect(self.open_ctc)
@@ -202,8 +200,7 @@ class NSE_Simulation(QMainWindow):
             print("Error: Selection is not a number.")
 
     def open_track_model(self):
-        #self.track_model.show()
-        pass
+        self.track.show()
 
     def open_train_model(self):
         try:
@@ -211,6 +208,10 @@ class NSE_Simulation(QMainWindow):
 
             #check num is in valid range
             #open corresponding train model
+            if num > -1 and num < len(self.track_model.trains):
+                signals.open_tm_gui.emit(num)
+            else:
+                print("Error: Selection does not exist.")
         except:
             print("Error: Selection is not a number.")
 
@@ -221,6 +222,11 @@ class NSE_Simulation(QMainWindow):
 
             #check num is in valid range
             #open corresponding train controller
+            if num > -1 and num < len(self.track_model.trains):
+                signals.open_tc_gui.emit(num)
+            else:
+                print("Error: Selection does not exist.")
+
         except:
             print("Error: Selection is not a number.")
 

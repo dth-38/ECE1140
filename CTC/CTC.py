@@ -4,12 +4,13 @@ from CTC.CTC_GUI import Ui_MainWindow
 from CTC.CTC_Clock import CTC_Clock
 from CTC.CTC_GUI import Ui_MainWindow
 
-import sys
+#import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget
 
 from Signals import signals
 from TrackController.TCTools import convert_to_block
+
 
 class CTC(QWidget): 
     def __init__(self):
@@ -23,8 +24,8 @@ class CTC(QWidget):
     def add_ui(self):
         #app = QtWidgets.QApplication(sys.argv)
         self.MainWindow = QtWidgets.QMainWindow()
-        ui = Ui_MainWindow(self)
-        ui.setupUi(self.MainWindow)
+        self.ui = Ui_MainWindow(self)
+        self.ui.setupUi(self.MainWindow)
         #self.MainWindow.show()
         #sys.exit(app.exec_())
     def setup_signals(self):
@@ -36,20 +37,27 @@ class CTC(QWidget):
         signals.broadcast_light.connect(self.update_light)
         signals.broadcast_gate.connect(self.update_gate)
     def update_occupancy(self,line,block_num,occ):
+        print("updating occupancy")
+        print("occ: " + str(occ))
         num_trains = self.schedule.train_table.get_table_length()
         if occ == 0:
             for i in range(num_trains):
                 train = self.schedule.train_table.get_entry(i)
-                if train[5] == line and train[1] == block_num:
+                temp = train[5].upper()
+                if temp == line and train[1] == block_num:
                     #waiting state
+                    print("Waiting State")
                     train[1] = -1
         else:
+            print("Occupied")
             for i in range(num_trains):
                 train = self.schedule.train_table.get_entry(i)
-                if train[5] == line and train[1] == -1:
+                temp = train[5].upper()
+                if temp == line and train[1] == -1:
                     #change block position
                     train[1] = block_num
                     #decrement authority
+                    print("authority decremented")
                     train[4] -= 1
         self.schedule.block_table.add_occupancy(line,block_num,occ)
     def update_failure(self,line,block_num,failure):
@@ -63,15 +71,19 @@ class CTC(QWidget):
     def update_ticket_sales(self,line,ticket_sales):
         self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
     def tick(self):
+        self.ui.train.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
             #THIS SHOULD NOT BE HERE
             #signals.send_tm_dispatch.emit(1)
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
-            signals.send_tc_authority.emit(tc_block,self.train_table.get_authority())
+            signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(0))
             if self.schedule.train_table.get_line(i) == "Red":
+                print("red speed")
                 signals.send_tc_speed.emit(tc_block,self.schedule.red_speed)
             elif self.schedule.train_table.get_line(i) == "Green":
+                print("green speed")
                 signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
+            
 
             #THIS SHOULD NOT BE HERE
             #signals.send_tc_maintenance.emit(tc_block,0)
