@@ -444,6 +444,9 @@ class TrackController(QMainWindow):
     #this is due for a refactor
     #updates a value in current_Track_State
     def set_Track(self, block, var, val):
+
+        d_block = decompose_block(block)
+
         match var:
             case "spd":
                 self.current_Track_State[block].suggested_Speed = copy.copy(int(val))
@@ -455,6 +458,7 @@ class TrackController(QMainWindow):
                 elif val == 'N':
                     val = False
                 self.current_Track_State[block].occupied = copy.copy(val)
+                signals.send_ctc_occupancy.emit(d_block[0], d_block[1], val)
             case "cls":
                 if val == 'Y':
                     val = True
@@ -467,6 +471,7 @@ class TrackController(QMainWindow):
                 elif val == 'N':
                     val = False
                 self.current_Track_State[block].failed = copy.copy(val)
+                signals.send_ctc_failure.emit(d_block[0], d_block[1], val)
             case _:
                 pass
 
@@ -765,7 +770,10 @@ class TrackController(QMainWindow):
     def handle_occupancy(self, block, occ):
         for bl in self.current_Track_State:
             if block == bl:
+                d_block = decompose_block(bl)
+
                 self.current_Track_State[bl].occupied = occ
+                signals.send_ctc_occupancy.emit(d_block[0], d_block[1], occ)
                 break
 
     @pyqtSlot(str, int)
