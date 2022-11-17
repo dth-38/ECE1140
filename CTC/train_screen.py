@@ -23,7 +23,7 @@ class train_screen(QtWidgets.QWidget):
         super(train_screen,self).__init__()
         self.ctc = ctc
         self.setupUi()
-        self.show()
+        #self.show()
     def setupUi(self):
         #print("SETUP UI")
         self.train_selection = QtWidgets.QSpinBox(self)
@@ -196,15 +196,15 @@ class train_screen(QtWidgets.QWidget):
             self.train_table_display.insertItem(2,"Position: " + str(self.ctc.schedule.train_table.get_position(0)))
             self.train_table_display.takeItem(5)
             self.train_table_display.insertItem(5,"Authority: " + str(self.ctc.schedule.train_table.get_authority(0)))
-        length = self.ctc.block_table.get_table_length()
+        length = self.ctc.schedule.block_table.get_table_length()
         if length > 0:
-            self.block_table_display.addItem(self.ctc.block_table.get_last_entry())
-
+            self.block_table_display.addItem(str(self.ctc.schedule.block_table.get_last_entry()))
+    """""
     def output_block_table(self):
         length = self.ctc.block_table.get_table_length()
         for i in range(length):
             self.block_table_display.addItem(self.ctc.block_table.get_entry(i))
-
+    """
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))

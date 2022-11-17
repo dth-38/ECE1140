@@ -69,7 +69,6 @@ class CTC(QWidget):
         for i in range(self.schedule.train_table.get_table_length()): 
             #THIS SHOULD NOT BE HERE
             #signals.send_tm_dispatch.emit(1)
-
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
             signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(0))
             if self.schedule.train_table.get_line(i) == "Red":

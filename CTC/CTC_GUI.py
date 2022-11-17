@@ -22,6 +22,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self,ctc):
         super(Ui_MainWindow,self).__init__()
         self.ctc = ctc
+        self.train = train_screen(self.ctc)
+        self.maintenance = maintenance_screen()
+        self.test = test_screen()
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1440, 875)
@@ -60,17 +63,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     
     def train_screen(self):
         self.hide()
-        self.train = train_screen(self.ctc)
+        self.train.show()
+        
 
 
     def maintenance_screen(self):
         self.hide()
-        self.maintenance = maintenance_screen()
+        self.maintenance.show()
        
         
     def test_screen(self):
         self.hide()
-        self.test = test_screen()
+        self.test.show()
 
 
     def retranslateUi(self, MainWindow):
