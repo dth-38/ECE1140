@@ -64,7 +64,7 @@ class CTC_Scheduler:
         signals.update_train_position(self.get_train_position)
         """
     def upload_schedule(self,schedule):
-        schedule = pd.read_excel(schedule)
+        schedule = pd.read_excel(schedule,sheet_name=6)
         print(schedule)
         for index, row in schedule.iterrows():
             if str(row[0]) == "nan" or str(row["Infrastructure"]) == "nan" or str(row["total time to station w/dwell (min)"]) == "nan":

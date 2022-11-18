@@ -7,6 +7,13 @@ from PyQt5 import QtCore, QtWidgets
 #from PyQt5.QtCore import *
 #from PyQt5 import *
 from CTC.Block_Table import Block_Table
+from TrackController.TCTools import convert_to_block
+
+from Signals import signals 
+
+
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True) #enable highdpi scaling
+QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True) #use highdpi icons
 
 #MAINTENANCE_SCREEN
 class maintenance_screen(QtWidgets.QWidget):
@@ -36,9 +43,9 @@ class maintenance_screen(QtWidgets.QWidget):
         self.block_selection = QtWidgets.QSpinBox(self)
         self.block_selection.setGeometry(QtCore.QRect(570, 310, 48, 31))
         self.block_selection.setObjectName("block_selection")
-        self.maintenance_output = QtWidgets.QLineEdit(self)
-        self.maintenance_output.setGeometry(QtCore.QRect(610, 370, 113, 21))
-        self.maintenance_output.setObjectName("maintenance_output")
+        self.next_block = QtWidgets.QSpinBox(self)
+        self.next_block.setGeometry(QtCore.QRect(610, 370, 113, 21))
+        self.next_block.setObjectName("next_block")
 
         self.block_table = Block_Table()
 
@@ -70,7 +77,9 @@ class maintenance_screen(QtWidgets.QWidget):
         else:
             self.maintenance_output.setText("True")
         self.block_table.set_maintenance(self.block_selection.value(),self.section_selection.currentText(),self.line_selection.currentText())
-    
+        tc_block = convert_to_block(self.line_selection.currentText(),self.block_selection.value())
+        tc_next_block = convert_to_block(self.line_selection.currentText(),self.next_block.value())
+        signals.set_tc_switch(tc_block,tc_next_block)
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
@@ -88,5 +97,5 @@ class maintenance_screen(QtWidgets.QWidget):
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:24pt;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:24pt;\">-Block Number:</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:24pt;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:24pt;\">Maintenance Signal: </span></p></body></html>"))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:24pt;\">Next Block: </span></p></body></html>"))
 

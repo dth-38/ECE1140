@@ -178,8 +178,8 @@ class train_screen(QtWidgets.QWidget):
         self.throughput_output.setText(str(throughput))
     
     def add_schedule(self):
-        file = QtWidgets.QFileDialog.getOpenFileName(self,"Open File", "", "All Files (*);;Xlsx Files(*.xlsx)")
-        self.ctc.schedule.upload_schedule(file)
+        file_name = QtWidgets.QFileDialog.getOpenFileName(self,"Open File", "", "All Files (*);;Xlsx Files(*.xlsx)")
+        self.ctc.schedule.upload_schedule(file_name)
     
     def update_current_time(self):
         #print("Update Time")
