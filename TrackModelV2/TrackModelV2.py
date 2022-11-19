@@ -17,6 +17,8 @@ YARD = 0
 TRAIN_ID = 0
 DELX = 1
 
+#conversion factor since train length is in feet
+FEET_TO_METERS = 0.3408
 
 class TrackModelV2(QObject):
     def __init__(self):
@@ -31,6 +33,7 @@ class TrackModelV2(QObject):
         self.parser = TrackParser()
 
         self.next_train_id = 0
+        self.train_list_offset = 0
 
 
         super().__init__()
@@ -129,7 +132,7 @@ class TrackModelV2(QObject):
 
                 self.lines[line][YARD].occupied = new_train.id
 
-                self.trains[new_train.id] = new_train
+                self.trains.append(new_train)
             else:
                 print("Cannot dispatch train, yard is occupied.")
         except:
@@ -144,19 +147,54 @@ class TrackModelV2(QObject):
 
     #not handling errors here since something is fundamentally wrong if it errors
     def update_train_position(self, train_id, delta_x):
+        list_id = train_id + self.train_list_offset
+
         #begins by adding the change in position to the current position
-        self.trains[train_id].position_in_block += delta_x
+        self.trains[list_id].position_in_block += delta_x
 
         #loops while the train is past the length of the current block
-        while self.trains[train_id].position_in_block > self.lines[self.trains[train_id].line][self.trains[train_id].block].LENGTH:
+        while self.trains[list_id].position_in_block > self.lines[self.trains[list_id].line][self.trains[list_id].block].LENGTH:
+
+            #REMOVES TRAIN UPON REACHING YARD
+            if self.lines[self.trains[list_id].line][self.trains[list_id].block].get_next(self.trains[list_id].movement_direction) == YARD:
+                #unoccupies block
+                self.lines[self.trains[list_id].line][self.trains[list_id].block].occupied = -1
+
+                #checks if previous block will become unoccupied as well
+                if -1 * (self.trains[list_id].position_in_block - (self.trains[list_id].length * FEET_TO_METERS)) > self.lines[self.trains[list_id].line][self.trains[list_id].block].LENGTH:
+                    prev_block = self.lines[self.trains[list_id].line][self.trains[list_id].block].get_previous(self.trains[list_id].movement_direction)
+                    self.lines[self.trains[list_id].line][prev_block].occupied = -1
+
+                #remove train from list, decrement train_list_offset since the size of the list has been reduced
+                self.trains.pop(list_id)
+                self.train_list_offset -= 1
+                break
+
+
             #gets the position in the next block by subtracting the length of the current block
-            self.trains[train_id].position_in_block -= self.lines[self.trains[train_id].line][self.trains[train_id].block].LENGTH
+            self.trains[list_id].position_in_block -= self.lines[self.trains[list_id].line][self.trains[list_id].block].LENGTH
 
             #remove train from previous block
-            self.lines[self.trains[train_id].line][self.trains[train_id].block].occupied = -1
+            self.lines[self.trains[list_id].line][self.trains[list_id].block].occupied = -1
+
+            #TODO: check and remove trains from last block if necessary
+
+            #check validity of move
+            next_block = self.lines[self.trains[list_id].line][self.trains[list_id].block].get_next(self.trains[list_id].movement_direction)
+            new_dir = self.lines[self.trains[list_id].line][self.trains[list_id].block].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK]
+            if self.lines[self.trains[list_id].line][next_block].get_previous(new_dir) == self.trains[list_id].block:
+                #TODO: valid move do stuff
+                pass
+            else:
+                #train has derailed
+                print("UH OH: TRAIN DERAILED ENTERING LINE: " + self.trains[list_id].line + ", BLOCK: " + str(next_block))
 
             #TODO: finish this
 
-
-
+    #restarts the train indexing once the track has been fully cleared
+    #since technically
+    def cleanup_trains(self):
+        if len(self.trains):
+            self.next_train_id = 0
+            self.train_list_offset = 0
 
