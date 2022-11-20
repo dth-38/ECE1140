@@ -33,7 +33,6 @@ class TrackModelV2(QObject):
         self.parser = TrackParser()
 
         self.next_train_id = 0
-        self.train_list_offset = 0
 
 
         super().__init__()
@@ -48,6 +47,8 @@ class TrackModelV2(QObject):
         signals.broadcast_gate.connect(self.handle_gate)
         signals.send_tm_dispatch.connect(self.dispatch)
         signals.send_tm_distance.connect(self.handle_train_update)
+
+        #TODO: add signals for updating gui
 
 
     @pyqtSlot()
@@ -128,11 +129,11 @@ class TrackModelV2(QObject):
                 new_train = FancyTrain.FancyTrain(self.next_train_id)
                 new_train.line = copy.copy(line)
 
-                self.next_train_id += 1
-
                 self.lines[line][YARD].occupied = new_train.id
 
-                self.trains.append(new_train)
+                self.trains[self.next_train_id] = new_train
+
+                self.next_train_id += 1
             else:
                 print("Cannot dispatch train, yard is occupied.")
         except:
@@ -147,54 +148,71 @@ class TrackModelV2(QObject):
 
     #not handling errors here since something is fundamentally wrong if it errors
     def update_train_position(self, train_id, delta_x):
-        list_id = train_id + self.train_list_offset
-
         #begins by adding the change in position to the current position
-        self.trains[list_id].position_in_block += delta_x
+        self.trains[train_id].position_in_block += delta_x
+
+        line = self.trains[train_id].line
+
+        #checks if the previous block will no longer be occupied
+        if -1 * (self.trains[train_id].position_in_block - (self.trains[train_id].length * FEET_TO_METERS)) > self.lines[line][self.trains[train_id].block].LENGTH:
+            prev_block = self.lines[line][self.trains[train_id].block].get_previous(self.trains[train_id].movement_direction)
+            self.lines[line][prev_block].occupied = -1
+            #TODO: signal for gui update
 
         #loops while the train is past the length of the current block
-        while self.trains[list_id].position_in_block > self.lines[self.trains[list_id].line][self.trains[list_id].block].LENGTH:
+        while self.trains[train_id].position_in_block > self.lines[line][self.trains[train_id].block].LENGTH:
 
             #REMOVES TRAIN UPON REACHING YARD
-            if self.lines[self.trains[list_id].line][self.trains[list_id].block].get_next(self.trains[list_id].movement_direction) == YARD:
+            if self.lines[line][self.trains[train_id].block].get_next(self.trains[train_id].movement_direction) == YARD:
                 #unoccupies block
-                self.lines[self.trains[list_id].line][self.trains[list_id].block].occupied = -1
+                self.lines[line][self.trains[train_id].block].occupied = -1
 
-                #checks if previous block will become unoccupied as well
-                if -1 * (self.trains[list_id].position_in_block - (self.trains[list_id].length * FEET_TO_METERS)) > self.lines[self.trains[list_id].line][self.trains[list_id].block].LENGTH:
-                    prev_block = self.lines[self.trains[list_id].line][self.trains[list_id].block].get_previous(self.trains[list_id].movement_direction)
-                    self.lines[self.trains[list_id].line][prev_block].occupied = -1
+                #remove train from dictionary
+                self.trains.pop(train_id)
 
-                #remove train from list, decrement train_list_offset since the size of the list has been reduced
-                self.trains.pop(list_id)
-                self.train_list_offset -= 1
+                print("TRAIN " + str(train_id) + " HAS BEEN REMOVED FROM THE TRACK.")
+
+                #TODO: signal for gui update
                 break
 
 
             #gets the position in the next block by subtracting the length of the current block
-            self.trains[list_id].position_in_block -= self.lines[self.trains[list_id].line][self.trains[list_id].block].LENGTH
+            self.trains[train_id].position_in_block -= self.lines[line][self.trains[train_id].block].LENGTH
 
             #remove train from previous block
-            self.lines[self.trains[list_id].line][self.trains[list_id].block].occupied = -1
-
-            #TODO: check and remove trains from last block if necessary
+            self.lines[line][self.trains[train_id].block].occupied = -1
+            #TODO: signal for gui update
 
             #check validity of move
-            next_block = self.lines[self.trains[list_id].line][self.trains[list_id].block].get_next(self.trains[list_id].movement_direction)
-            new_dir = self.lines[self.trains[list_id].line][self.trains[list_id].block].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK]
-            if self.lines[self.trains[list_id].line][next_block].get_previous(new_dir) == self.trains[list_id].block:
-                #TODO: valid move do stuff
-                pass
+            next_block = self.lines[line][self.trains[train_id].block].get_next(self.trains[train_id].movement_direction)
+            next_dir = self.lines[line][self.trains[train_id].block].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK]
+            if self.lines[line][next_block].get_previous(next_dir) == self.trains[train_id].block:
+                #valid move
+
+                if not self.lines[line][next_block].get_occupancy():
+                    #no collision has occured
+
+                    #update movement direction through a block
+                    if self.trains[train_id].movement_direction == TrackBlock.FORWARD_DIR:
+                        self.trains[train_id].movement_direction = self.lines[line][next_block].MOVEMENT_DIRECTIONS[TrackBlock.NEXT_BLOCK]
+                    elif self.trains[train_id].movement_direction == TrackBlock.REVERSE_DIR:
+                        self.trains[train_id].movement_direction == self.lines[line][next_block].MOVEMENT_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK]
+                
+
+                    self.lines[line][next_block].occupied = train_id
+                    self.trains[train_id].block = next_block
+                    #TODO: signal for gui update
+                else:
+                    #collision has occurred
+                    print("UH OH: TRAIN " + str(train_id) + " HAS COLLIDED WITH TRAIN " + str(self.lines[line][next_block].get_occupancy_value()) + " AT " + line + ":" + str(next_block))
+                    self.trains.pop(train_id)
+                    self.trains.pop(self.lines[line][next_block].get_occupancy_value())
+                    self.lines[line][next_block].occupied = -1
+                    #TODO: signal for gui update
+
             else:
                 #train has derailed
-                print("UH OH: TRAIN DERAILED ENTERING LINE: " + self.trains[list_id].line + ", BLOCK: " + str(next_block))
-
-            #TODO: finish this
-
-    #restarts the train indexing once the track has been fully cleared
-    #since technically
-    def cleanup_trains(self):
-        if len(self.trains):
-            self.next_train_id = 0
-            self.train_list_offset = 0
+                print("UH OH: TRAIN " + str(train_id) + " DERAILED ENTERING LINE: " + self.trains[train_id].line + ", BLOCK: " + str(next_block))
+                self.trains.pop(train_id)
+                #TODO: signal for gui update
 
