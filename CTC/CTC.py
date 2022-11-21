@@ -71,10 +71,9 @@ class CTC(QWidget):
     def update_ticket_sales(self,line,ticket_sales):
         self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
     def tick(self):
+        self.schedule.check_schedule(self.clock.get_time())
         self.ui.train.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
-            #THIS SHOULD NOT BE HERE
-            #signals.send_tm_dispatch.emit(1)
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
             signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(0))
             if self.schedule.train_table.get_line(i) == "Red":
@@ -83,10 +82,7 @@ class CTC(QWidget):
             elif self.schedule.train_table.get_line(i) == "Green":
                 print("green speed")
                 signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
-            
 
-            #THIS SHOULD NOT BE HERE
-            #signals.send_tc_maintenance.emit(tc_block,0)
     """""
     def add_schedule(self):
         print("ADD SCHEDULE!!!!!")
