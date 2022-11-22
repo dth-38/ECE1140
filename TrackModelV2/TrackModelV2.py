@@ -1,12 +1,14 @@
 from collections import deque
 import copy
+import pandas
+import pathlib
+import os
 
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSlot
 
 from TrackModelV2 import TrackBlock
 from TrackModelV2 import FancyTrain
-from TrackModelV2.TrackParser import TrackParser
 from TrackModelV2.TrackModelGUI import TrackModelGUI
 from Signals import signals
 
@@ -30,12 +32,14 @@ class TrackModelV2(QObject):
         self.update_queue = deque()
 
         self.gui = TrackModelGUI()
-        self.parser = TrackParser()
 
         self.next_train_id = 0
 
 
         super().__init__()
+
+        self.setup_signals()
+        self.initialize_track()
 
 
     def setup_signals(self):
@@ -215,4 +219,89 @@ class TrackModelV2(QObject):
                 print("UH OH: TRAIN " + str(train_id) + " DERAILED ENTERING LINE: " + self.trains[train_id].line + ", BLOCK: " + str(next_block))
                 self.trains.pop(train_id)
                 #TODO: signal for gui update
+
+
+    def initialize_track(self, filename="track.xlsx"):
+        #looks for track file
+        if filename == "track.xlsx":
+            filename = str(pathlib.Path().absolute())
+            i = 0
+            while filename[len(filename)-7:] != "ECE1140":
+                i += 1
+                filename = str(pathlib.Path(__file__).parents[i])
+            #creates the expected text file based on the controller id
+            filename += ("/TrackModelV2/track.xlsx")
+
+        if os.path.isfile(filename):
+            #resets variables
+            self.lines.clear()
+            self.trains.clear()
+            self.next_train_id = 0
+            self.update_queue.clear()
+
+            #parsing done in two stages
+            #1 just creates the dictionary with all blocks
+            #2 fills in track equpment
+
+            #opens excel file and determines which workbooks are lines
+            trk_excel = pandas.ExcelFile(filename)
+            sheets = trk_excel.sheet_names
+            for sheet in sheets:
+                if sheet[len(sheet)-4:] != "Line":
+                    sheets.remove(sheet)
+
+            #im so tired of writing parsers
+            for l_sheet in sheets:
+                new_line = {}
+                l_name = l_sheet[:len(l_sheet)-5]
+                l_data = trk_excel.parse(l_sheet)
+
+                #for each row add basic info to block
+                for i in range(1,l_data.shape[0]):
+                    block_num = l_data.iloc[i,2]
+                    new_line[block_num] = TrackBlock()
+                    new_line[block_num].GRADE = l_data.iloc[i,4]
+                    new_line[block_num].LENGTH = l_data.iloc[i,3]
+                    new_line[block_num].SECTION = l_data.iloc[i,1]
+
+                #2nd parse for track infrastructure
+                #this is done to ensure all blocks exist before trying to connect with switches and add beacons
+                for i in range(1,l_data.shape[0]):
+                    block_num = l_data.iloc[i,2]
+                    equipment = l_data.iloc[i,6]
+
+                    equipment = self.remove_whitespace(equipment)
+
+                    val = ""
+                    for i in range(len(equipment)):
+                        if equipment[i] == ";":
+                            match val:
+                                case "SWITCH":
+                                    #do switch stuff
+                                    pass
+                                case "STATION":
+                                    #do station stuff
+                                    pass
+                                case "UNDERGROUND":
+                                    new_line[block_num].UNDERGROUND = True
+                                case "RAILWAYCROSSING":
+                                    new_line[block_num].gate.append(TrackBlock.OPEN)
+                            val = ""
+                        else:
+                            val += equipment[i]
+
+
+        
+        else:
+            print("Track layout file does not exist.")
+
+        
+    def remove_whitespace(self, s):
+        new_s = ""
+        for i in range(len(s)):
+            if s[i] != " " and s[i] != "\n":
+                new_s += s[i]
+
+        return new_s
+        
 

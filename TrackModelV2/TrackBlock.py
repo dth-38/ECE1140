@@ -38,6 +38,7 @@ class TrackBlock:
         self.CONNECTED_BLOCKS = 0
         self.TRANSITION_DIRECTIONS = 0
         self.LENGTH = 0
+        self.UNDERGROUND = False
 
         #might be useful for displaying stuff so im putting this here
         self.SECTION = ""
