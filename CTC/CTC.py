@@ -75,7 +75,7 @@ class CTC(QWidget):
         self.ui.train.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
-            signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(0))
+            signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(i))
             if self.schedule.train_table.get_line(i) == "Red":
                 print("red speed")
                 signals.send_tc_speed.emit(tc_block,self.schedule.red_speed)

@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from datetime import datetime
 from CTC.CTC_Clock import CTC_Clock
 #TODO: GROUP SIGNALS FILE
 
@@ -50,7 +51,9 @@ class CTC_Scheduler:
         self.red_speed = 44
         self.green_speed = 44
         self.destination_index = 0
-        self.red_stations = []
+        self.red_stations = [[7,"Shadyside"],[16,"Herron_Ave"],
+        [21,"Swissville"],[25,"Penn_Station"],[35,"Steel_Plaza"],[45,"First_Ave"],
+        [48,"Station_Square"],[60,"South_Hills_Junction"]]
         self.green_stations = [[0,"Yard"],[2,"Pioneer"],[9,"Edgebrook"],[16,"Station"],[
             19,"Railway_Crossing"],[22,"Whited"],[31,"South_Bank"],[39,"Central"],
             [48,"Inglewood"],[57,"Overbrook"],[65,"Glenbury"],[73,"Dormont"],
@@ -59,7 +62,7 @@ class CTC_Scheduler:
         print("schedule: " + str(schedule))
         schedule = pd.read_excel(schedule)
         for index, row in schedule.iterrows():
-            print("LOOPING")
+            #print("LOOPING")
             if str(row[0]) == "nan" or str(row["Infrastructure"]) == "nan" or str(row["total time to station w/dwell (min)"]) == "nan":
                 continue
             else: 
@@ -120,12 +123,20 @@ class CTC_Scheduler:
     def check_schedule(self,current_time):
         print("current_time: " + str(current_time))
         for i in range(len(self.red_schedule)):
-            schedule_time = self.red_schedule[i][3] - self.red_schedule[i][2]
-            if schedule_time == current_time:
+            travel_time = self.red_schedule[i][2]
+            travel_minutes = int(travel_time)
+            travel_seconds = (travel_time*60) % 60
+            arrival_time = self.red_schedule[i][3]
+            arrival_time = str(arrival_time)
+            hr, min, sec = arrival_time.split(':')
+            arrival_time = (int(hr),int(min),int(sec))
+            #print("schedule arrival_time: " + str(arrival_time))
+            schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
+            #print("schedule_time: " + str(schedule_time))
+            if schedule_time == arrival_time:
                 self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.red_schedule[i][0],destinations=self.red_schedule[i][1])
         for i in range(len(self.green_schedule)):
-            schedule_time = self.green_schedule[i][3] - self.green_schedule[i][2]
-            if schedule_time == current_time:
+            if schedule_time == arrival_time:
                 self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=self.red_schedule[i][1])
 
     def calc_throughput(self,line,ticket_sales,hours):

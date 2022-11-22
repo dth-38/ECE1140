@@ -139,7 +139,6 @@ class train_screen(QtWidgets.QWidget):
     
     
     def setup_inputs(self):
-        print("DISPATCH")
         lines = ["Red","Green"]
         #stations = ["Yard","Shadyside", "Herron Ave", "Swissville", "Penn Station", "Steel Plaza", "First Ave", "Station Square", "South Hills Junction"]
         self.line_train_selection.addItems(lines)
@@ -174,6 +173,7 @@ class train_screen(QtWidgets.QWidget):
     #TODO GET TICKET SALES FROM TRACKMODEL
     def output_throughput(self):
         line = self.line_throughput_selection.currentText()
+        #TODO: GET TICKET SALES FROM THE TRACKMODEL
         throughput = self.ctc.schedule.calc_throughput(line=line,ticket_sales=10,hours=self.current_hour.value())
         self.throughput_output.setText(str(throughput))
     
@@ -183,29 +183,28 @@ class train_screen(QtWidgets.QWidget):
         self.ctc.schedule.upload_schedule(file_name[0])
     
     def update_current_time(self):
-        #print("Update Time")
         self.ctc.clock.update_time()
-        #authority, position = self.ctc.schedule.update_trains()
-        #print("authority: " + str(authority))
-        #print("position: " + str(position))
         self.current_hour.setValue(self.ctc.clock.get_hours())
         self.current_minute.setValue(self.ctc.clock.get_minutes())
         self.current_second.setValue(self.ctc.clock.get_seconds())
-        #Only one train working currently 
-        if self.train_table_display.count() > 0:
-            self.train_table_display.takeItem(2)
-            self.train_table_display.insertItem(2,"Position: " + str(self.ctc.schedule.train_table.get_position(0)))
-            self.train_table_display.takeItem(5)
-            self.train_table_display.insertItem(5,"Authority: " + str(self.ctc.schedule.train_table.get_authority(0)))
-        length = self.ctc.schedule.block_table.get_table_length()
-        if length > 0:
-            self.block_table_display.addItem(str(self.ctc.schedule.block_table.get_last_entry()))
-    """""
-    def output_block_table(self):
-        length = self.ctc.block_table.get_table_length()
-        for i in range(length):
-            self.block_table_display.addItem(self.ctc.block_table.get_entry(i))
-    """
+        for i in range(self.ctc.schedule.train_table.get_table_length()):
+            self.train_table_display.takeItem((i*6) + (i + 2))
+            self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.ctc.schedule.train_table.get_position(i)))
+            self.train_table_display.takeItem((i*6) + (i + 4))
+            self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.ctc.schedule.train_table.get_authority(i)))
+        """"
+        for i in range(self.ctc.schedule.block_table.get_table_length()):
+            if self.block_table_display.count() == 0:
+                self.block_table_display.addItem(str(self.ctc.schedule.block_table.get_entry(i)))
+            else:
+                string = str(self.ctc.schedule.block_table.get_entry(i))
+                for j in range(self.block_table_display.count()):
+                    if string == self.block_table_display.item(j).text():
+                        continue
+                    else:
+                        self.block_table_display.addItem(str(self.ctc.schedule.block_table.get_entry(i)))
+        """
+        
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
