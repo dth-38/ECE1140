@@ -205,6 +205,11 @@ class TrackModelV2(QObject):
 
                     self.lines[line][next_block].occupied = train_id
                     self.trains[train_id].block = next_block
+
+                    #send beacon signal to train if necessary
+                    if self.lines[line][next_block].BEACON != "":
+                        station = self.lines[line][next_block].get_next(self.trains[train_id].movement_direction)
+                        signals.send_tm_beacon.emit(station, self.lines[line][next_block].BEACON)
                     #TODO: signal for gui update
                 else:
                     #collision has occurred
@@ -241,7 +246,7 @@ class TrackModelV2(QObject):
 
             #parsing done in two stages
             #1 just creates the dictionary with all blocks
-            #2 fills in track equpment
+            #2 fills in track infrastructure
 
             #opens excel file and determines which workbooks are lines
             trk_excel = pandas.ExcelFile(filename)
@@ -273,22 +278,22 @@ class TrackModelV2(QObject):
                     equipment = self.remove_whitespace(equipment)
 
                     val = ""
-                    for i in range(len(equipment)):
-                        if equipment[i] == ";":
+                    for j in range(len(equipment)):
+                        if equipment[j] == ";":
                             match val:
                                 case "SWITCH":
                                     #do switch stuff
-                                    i += 1
+                                    j += 1
                                     path1 = ""
                                     path2 = ""
-                                    while equipment[i] != ";":
-                                        path1 += equipment[i]
-                                        i += 1
+                                    while equipment[j] != ";":
+                                        path1 += equipment[j]
+                                        j += 1
                                     
-                                    i += 1
-                                    while equipment[i] != ")":
-                                        path2 += equipment[i]
-                                        i += 1
+                                    j += 1
+                                    while equipment[j] != ")":
+                                        path2 += equipment[j]
+                                        j += 1
 
                                     p1_divider = path1.find("-")
                                     p2_divider = path2.find("-")
@@ -356,20 +361,55 @@ class TrackModelV2(QObject):
                                     
                                 case "STATION":
                                     #do station stuff
-                                    pass
+                                    j += 1
+                                    station = ""
+                                    for k in range(j, len(equipment)):
+                                        if equipment[k] != ";":
+                                            station += equipment[k]
+                                        else:
+                                            j = k
+                                            break
+                                    
+                                    if station == "":
+                                        new_line[block_num].STATION = "?"
+                                    else:
+                                        new_line[block_num].STATION = station
+
+                                    station_side = l_data.iloc[i,7]
+                                    if station_side == "Left":
+                                        new_line[block_num-1].STATION = TrackBlock.STATION_LEFT
+                                    elif station_side == "Right":
+                                        new_line[block_num-1].STATION = TrackBlock.STATION_RIGHT
+                                    else:
+                                        for block in new_line[block_num].CONNECTED_BLOCKS:
+                                            if block == "SWITCH":
+                                                conn1 = new_line[block_num].switch[TrackBlock.SW_OFF_BLOCK]
+                                                conn2 = new_line[block_num].switch[TrackBlock.SW_ON_BLOCK]
+                                                new_line[conn1].BEACON = TrackBlock.STATION_BOTH
+                                                new_line[conn2].BEACON = TrackBlock.STATION_BOTH
+                                            else:
+                                                new_line[block].BEACON = TrackBlock.STATION_BOTH
+
                                 case "UNDERGROUND":
                                     new_line[block_num].UNDERGROUND = True
                                 case "RAILWAYCROSSING":
                                     new_line[block_num].gate.append(TrackBlock.OPEN)
                                 case "SWITCHTOYARD":
-                                    #i hate life
-                                    pass
+                                    new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = "SWITCH"
+                                    new_line[block_num].switch.append(0)
+                                    new_line[block_num].switch.append(0)
+                                    new_line[block_num].switch.append(block_num+1)
+
                                 case "SWITCHFROMYARD":
-                                    #why does profeta have to format every switch differently
-                                    pass
+                                    new_line[block_num].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = "SWITCH"
+                                    new_line[block_num].switch.append(0)
+                                    new_line[block_num].switch.append(block_num-1)
+                                    new_line[block_num].switch.append(0)
                                 case "SWITCHTO/FROMYARD":
-                                    #yay more cases
-                                    pass
+                                    new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = "SWITCH"
+                                    new_line[block_num].switch.append(0)
+                                    new_line[block_num].switch.append(0)
+                                    new_line[block_num].switch.append(block_num+1)
                                 case _:
                                     pass
                             val = ""
