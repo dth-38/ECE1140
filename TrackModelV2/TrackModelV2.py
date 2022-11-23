@@ -278,7 +278,82 @@ class TrackModelV2(QObject):
                             match val:
                                 case "SWITCH":
                                     #do switch stuff
-                                    pass
+                                    i += 1
+                                    path1 = ""
+                                    path2 = ""
+                                    while equipment[i] != ";":
+                                        path1 += equipment[i]
+                                        i += 1
+                                    
+                                    i += 1
+                                    while equipment[i] != ")":
+                                        path2 += equipment[i]
+                                        i += 1
+
+                                    p1_divider = path1.find("-")
+                                    p2_divider = path2.find("-")
+
+                                    path1_1 = int(path1[1:p1_divider])
+                                    path1_2 = int(path1[p1_divider+1:])
+                                    path2_1 = int(path2[:p2_divider])
+                                    path2_2 = int(path2[p1_divider+1:])
+
+                                    #this is so wack
+                                    if path1_1 == block_num:
+                                        #switch goes to next blocks
+                                        new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = "SWITCH"
+                                        new_line[block_num].switch.append(0)
+                                        new_line[block_num].switch.append(path1_2)
+                                        new_line[block_num].switch.append(path2_2)
+
+                                        if path1_2 == block_num + 1:
+                                            #path1_2 is the next block numerically 
+                                            new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK] = TrackBlock.FORWARD_DIR
+                                            new_line[block_num].SWITCH_TRANSITIONS[0] = TrackBlock.FORWARD_DIR
+                                            new_line[block_num].SWITCH_TRANSITIONS[1] = TrackBlock.REVERSE_DIR
+                                            new_line[path2_2].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK] = TrackBlock.REVERSE_DIR
+                                            new_line[path2_2].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = block_num
+                                        else:
+                                            #path2_2 is the next block numerically
+                                            new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK] = TrackBlock.REVERSE_DIR
+                                            new_line[block_num].SWITCH_DIRECTIONS[0] = TrackBlock.REVERSE_DIR
+                                            new_line[block_num].SWITCH_DIRECTIONS[1] = TrackBlock.FORWARD_DIR
+                                            new_line[path1_2].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK] = TrackBlock.REVERSE_DIR
+                                            new_line[path1_2].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = block_num
+
+                                    else:
+                                        #switch goes to previous blocks
+                                        new_line[block_num].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = "SWITCH"
+                                        new_line[block_num].switch.append(0)
+                                        new_line[block_num].switch.append(path1_1)
+                                        new_line[block_num].switch.append(path2_1)
+
+                                        if path1_1 == block_num - 1:
+                                            #path1_1 is the previous block numerically
+                                            new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = TrackBlock.REVERSE_DIR
+                                            new_line[block_num].SWITCH_TRANSITIONS[0] = TrackBlock.REVERSE_DIR
+                                            #to check for override
+                                            if not l_data.iloc[i,10].isnull():
+                                                t_o = l_data.iloc[i,10]
+                                                new_line[block_num].SWITCH_TRANSITIONS[1] = t_o
+                                            else:
+                                                new_line[block_num].SWITCH_TRANSITIONS[1] = TrackBlock.FORWARD_DIR
+                                            new_line[path2_1].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = TrackBlock.FORWARD_DIR
+                                            new_line[path2_1].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = block_num
+                                        else:
+                                            #path2_1 is the previous block numerically
+                                            new_line[block_num].SWITCH_TRANSITIONS[1] = TrackBlock.REVERSE_DIR
+                                            if not l_data.iloc[i,10].isnull():
+                                                t_o = l_data.iloc[i,10]
+                                                new_line[block_num].SWITCH_TRANSITIONS[0] = t_o
+                                                new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = t_o
+                                            else:
+                                                new_line[block_num].SWITCH_TRANSITIONS[0] = TrackBlock.FORWARD_DIR
+                                                new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = TrackBlock.FORWARD_DIR
+                                            new_line[path1_1].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = TrackBlock.FORWARD_DIR
+                                            new_line[path1_1].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = block_num
+
+                                    
                                 case "STATION":
                                     #do station stuff
                                     pass
@@ -286,10 +361,27 @@ class TrackModelV2(QObject):
                                     new_line[block_num].UNDERGROUND = True
                                 case "RAILWAYCROSSING":
                                     new_line[block_num].gate.append(TrackBlock.OPEN)
+                                case "SWITCHTOYARD":
+                                    #i hate life
+                                    pass
+                                case "SWITCHFROMYARD":
+                                    #why does profeta have to format every switch differently
+                                    pass
+                                case "SWITCHTO/FROMYARD":
+                                    #yay more cases
+                                    pass
+                                case _:
+                                    pass
                             val = ""
                         else:
                             val += equipment[i]
 
+                    #connects block to previous/next if a switch was not added
+                    if new_line[block_num].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] == -1:
+                        new_line[block_num].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = block_num-1
+
+                    if new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] == -1:
+                        new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = block_num+1
 
         
         else:

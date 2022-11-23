@@ -35,8 +35,9 @@ class TrackBlock:
         self.light = []
         self.gate = []
         self.failed = False
-        self.CONNECTED_BLOCKS = 0
-        self.TRANSITION_DIRECTIONS = 0
+        self.CONNECTED_BLOCKS = [-1, -1]
+        self.TRANSITION_DIRECTIONS = [0, 0]
+        self.SWITCH_TRANSITIONS = [0, 0]
         self.LENGTH = 0
         self.UNDERGROUND = False
 
@@ -47,8 +48,18 @@ class TrackBlock:
     def set_switch(self, to_block):
         if to_block == self.switch[SW_ON_BLOCK]:
             self.switch[SWITCH_STATE] = True
+            if self.CONNECTED_BLOCKS[PREVIOUS_BLOCK] == "SWITCH":
+                self.TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = self.SWITCH_TRANSITIONS[1]
+            else:
+                self.TRANSITION_DIRECTIONS[NEXT_BLOCK] = self.SWITCH_TRANSITIONS[1]
         elif to_block == self.switch[SW_OFF_BLOCK]:
             self.switch[SWITCH_STATE] = False
+            if self.CONNECTED_BLOCKS[PREVIOUS_BLOCK] == "SWITCH":
+                self.TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = self.SWITCH_TRANSITIONS[0]
+            else:
+                self.TRANSITION_DIRECTIONS[NEXT_BLOCK] = self.SWITCH_TRANSITIONS[0]
+
+
 
     def set_light(self, color):
         if self.light != []:
