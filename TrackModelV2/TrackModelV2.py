@@ -6,9 +6,10 @@ import os
 
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QApplication
 
-from TrackModelV2 import TrackBlock
-from TrackModelV2 import FancyTrain
+from TrackModelV2.TrackBlock import TrackBlock
+from TrackModelV2.FancyTrain import FancyTrain
 from TrackModelV2.TrackModelGUI import TrackModelGUI
 from Signals import signals
 
@@ -31,7 +32,7 @@ class TrackModelV2(QObject):
         #since update function is slightly slower and should be run on tick
         self.update_queue = deque()
 
-        self.gui = TrackModelGUI()
+        self.gui = TrackModelGUI(self.get_track)
 
         self.next_train_id = 0
 
@@ -130,7 +131,7 @@ class TrackModelV2(QObject):
             #cant dispatch a train if one is in the yard (starting block)
             if self.lines[line][YARD].occupied == False:
                 #setup initial train state
-                new_train = FancyTrain.FancyTrain(self.next_train_id)
+                new_train = FancyTrain(self.next_train_id)
                 new_train.line = copy.copy(line)
 
                 self.lines[line][YARD].occupied = new_train.id
@@ -410,6 +411,8 @@ class TrackModelV2(QObject):
                                     new_line[block_num].switch.append(0)
                                     new_line[block_num].switch.append(0)
                                     new_line[block_num].switch.append(block_num+1)
+                                case "RAILWAYCROSSING":
+                                    new_line[block_num].gate.append(TrackBlock.OPEN)
                                 case _:
                                     pass
                             val = ""
@@ -423,6 +426,7 @@ class TrackModelV2(QObject):
                     if new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] == -1:
                         new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = block_num+1
 
+            self.gui.initialize_lines()
         
         else:
             print("Track layout file does not exist.")
@@ -435,5 +439,15 @@ class TrackModelV2(QObject):
                 new_s += s[i]
 
         return new_s
+
+    def get_track(self):
+        return self.lines
         
+    
+if __name__ == "__main__":
+    track_app = QApplication()
+
+    t_model = TrackModelV2()
+
+    track_app.exec()
 

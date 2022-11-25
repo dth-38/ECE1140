@@ -59,6 +59,17 @@ class TrackBlock:
             else:
                 self.TRANSITION_DIRECTIONS[NEXT_BLOCK] = self.SWITCH_TRANSITIONS[0]
 
+    def get_switch_to(self):
+        if self.switch != []:
+            if self.switch[SWITCH_STATE] == 0:
+                to = self.switch[SW_OFF_BLOCK]
+            else:
+                to = self.switch[SW_ON_BLOCK]
+        else:
+            to = -1
+
+        return to
+
 
 
     def set_light(self, color):
