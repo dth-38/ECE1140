@@ -198,10 +198,19 @@ class train_screen(QtWidgets.QWidget):
         self.current_minute.setValue(self.ctc.clock.get_minutes())
         self.current_second.setValue(self.ctc.clock.get_seconds())
         for i in range(self.manual_trains):
-            self.train_table_display.takeItem((i*6) + (i + 2))
-            self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.ctc.schedule.train_table.get_position(i)))
-            self.train_table_display.takeItem((i*6) + (i + 4))
-            self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.ctc.schedule.train_table.get_authority(i)))
+            #TODO: FIX FOR READING IN ALL DESTINATIONS
+            if self.ctc.schedule.train_table.get_authority(i) == 0:
+                authority = self.ctc.schedule.calc_authority(self.ctc.schedule.train_table.get_train_id(i),self.ctc.schedule.train_table.get_line(i),self.ctc.schedule.train_table.get_next_destination(i))
+                self.ctc.schedule.train_table.change_authority(i,authority)
+                self.train_table_display.takeItem((i*6) + (i + 2))
+                self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.ctc.schedule.train_table.get_position(i)))
+                self.train_table_display.takeItem((i*6) + (i + 4))
+                self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.ctc.schedule.train_table.get_authority(i)))
+            else:
+                self.train_table_display.takeItem((i*6) + (i + 2))
+                self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.ctc.schedule.train_table.get_position(i)))
+                self.train_table_display.takeItem((i*6) + (i + 4))
+                self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.ctc.schedule.train_table.get_authority(i)))
 
         for i in range(self.schedule_trains):
             self.schedule_list.takeItem((i*6) + (i + 2))

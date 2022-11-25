@@ -91,8 +91,7 @@ class CTC_Scheduler:
         #self.sort_dispatch_queue()
         #TODO: Find out how to track authority to other stations, only working for authority to first station
         destinations = destinations.split()
-        self.authority = self.calc_authority(train_id,line,destinations[self.destination_index])
-        self.destination_index += 1
+        self.authority = self.calc_authority(train_id,line,destinations[0])
         travel_time = self.calc_travel_time(line)
         travel_hours = int(travel_time)
         travel_minutes = (travel_time*60) % 60
@@ -189,51 +188,6 @@ class CTC_Scheduler:
                     authority += 1
                 else:
                     return authority
-    """""
-    #only working for one train
-    def update_trains(self):
-        if self.train_table.get_table_length() > 0:
-            table_entry = self.train_table.get_entry(0)
-            if table_entry[4] > 0:
-                new_authority = table_entry[4] - 1
-                self.authority = new_authority
-                self.train_table.change_authority(0,self.authority)
-                line = table_entry[5]
-                if line == "Red":
-                    for j in range(len(self.red_route_blocks) - 1):
-                        if table_entry[1] == self.red_route_blocks[j]:
-                            new_position = self.red_route_blocks[j + 1]
-                            self.position = new_position
-                            self.train_table.change_position(0,new_position)
-                            break
-                elif line == "Green":
-                    #print("GREEN LINE!!!!")
-                    for j in range(len(self.green_route_blocks) - 1):
-                        if table_entry[1] == self.green_route_blocks[j]:
-                            new_position = self.green_route_blocks[j + 1]
-                            self.position = new_position
-                            self.train_table.change_position(0,new_position)
-                            break
-            else:
-                if self.destination_index < len(table_entry[3]):
-                    self.authority = self.calc_authority(train_id=table_entry[0],line=table_entry[5],destination=table_entry[3][self.destination_index])
-                    self.destination_index += 1
-                    self.train_table.change_authority(0,self.authority)
-        return self.authority, self.position
-    """
-    """"
-    def update_authority(self,current_train,line,block_occ,block_failure):
-        #TODO: CHECK EDGE CASES     
-        location = current_train.get_position()
-        if line.get_name() == "Red":
-            next_block_index = self.red_route_blocks[location + 1]
-            if block_occ[next_block_index + 1] == 0 and block_failure[next_block_index + 1] == 0:
-                self.authority += 1
-        elif line.get_name() == "Green":
-            next_block_index = self.green_route_blocks[location + 1]
-            if block_occ[next_block_index + 1] == 0 and block_failure[next_block_index + 1] == 0:
-                self.authority += 1
-    """
     """""
     def sort_dispatch_queue(self):
         dtype = [int,Train]
