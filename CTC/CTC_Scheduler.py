@@ -147,8 +147,10 @@ class CTC_Scheduler:
             hr, min, sec = arrival_time.split(':')
             arrival_time = (int(hr),int(min),int(sec))
             schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
-            #print("schedule arrival_time: " + str(arrival_time))
-            #print("schedule_time: " + str(schedule_time))
+            print("schedule arrival_time: " + str(arrival_time))
+            print("schedule_time: " + str(schedule_time))
+            #TODO: FIX SCHEDULE SO ARRIVAL TIME AND SCHEDULE TIME ARE EQUAL AT SOME POINT, TEMP FIX
+            arrival_time = (0,2,18)
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
                 print("Green schedule train")
                 train, travel_time = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=self.green_schedule[i][1])

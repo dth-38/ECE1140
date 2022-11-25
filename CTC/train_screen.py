@@ -193,7 +193,8 @@ class train_screen(QtWidgets.QWidget):
         self.ctc.schedule.upload_schedule(file_name[0])
     
     def update_current_time(self):
-        self.ctc.clock.update_time()
+        #self.ctc.clock.update_time()
+        self.ctc.clock.get_time()
         self.current_hour.setValue(self.ctc.clock.get_hours())
         self.current_minute.setValue(self.ctc.clock.get_minutes())
         self.current_second.setValue(self.ctc.clock.get_seconds())
