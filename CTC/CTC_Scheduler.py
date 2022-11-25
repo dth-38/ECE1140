@@ -1,3 +1,4 @@
+import sched
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -21,7 +22,7 @@ class CTC_Scheduler:
         self.dispatch_queue = []
         self.train_table = Train_Table()
         self.block_table = Block_Table()
-        self.train_id = 1
+        self.train_id = 0
         #TODO: CREATE OBJECT OF TRACKMODEL
         #self.track_model = TrackModel()
         #route for trains, 0 = yard
@@ -102,7 +103,8 @@ class CTC_Scheduler:
         self.train_id += 1
         #add it to the yard
         #return the new entry added for each train dispatched
-        return self.train_table.get_entry(self.train_id - 2), travel_time
+        print("train id: " + str(self.train_id))
+        return self.train_table.get_entry(self.train_id - 1), travel_time
     """""
     #TODO: FIND WAY TO CALL THIS FUNCTION CONTINUOUSLY?
     def schedule_dispatch(self,schedule_arrival,schedule_id,schedule_line,schedule_destinations):
@@ -121,7 +123,8 @@ class CTC_Scheduler:
             self.calc_authority()
     """
     def check_schedule(self,current_time):
-        print("current_time: " + str(current_time))
+        #print("current_time: " + str(current_time))
+        train = []
         for i in range(len(self.red_schedule)):
             travel_time = self.red_schedule[i][2]
             travel_minutes = int(travel_time)
@@ -133,11 +136,24 @@ class CTC_Scheduler:
             #print("schedule arrival_time: " + str(arrival_time))
             schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
             #print("schedule_time: " + str(schedule_time))
-            if schedule_time == arrival_time:
-                self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.red_schedule[i][0],destinations=self.red_schedule[i][1])
+            if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
+                print("Red schedule train")
+                train, travel_time = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.red_schedule[i][0],destinations=self.red_schedule[i][1])
         for i in range(len(self.green_schedule)):
-            if schedule_time == arrival_time:
-                self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=self.red_schedule[i][1])
+            travel_time = self.green_schedule[i][2]
+            travel_minutes = int(travel_time)
+            travel_seconds = (travel_time*60) % 60
+            arrival_time = self.green_schedule[i][3]
+            arrival_time = str(arrival_time)
+            hr, min, sec = arrival_time.split(':')
+            arrival_time = (int(hr),int(min),int(sec))
+            schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
+            #print("schedule arrival_time: " + str(arrival_time))
+            #print("schedule_time: " + str(schedule_time))
+            if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
+                print("Green schedule train")
+                train, travel_time = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=self.green_schedule[i][1])
+        return train
 
     def calc_throughput(self,line,ticket_sales,hours):
         #TODO: GET TICKET SALES FROM TRACK MODEL

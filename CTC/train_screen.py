@@ -123,6 +123,9 @@ class train_screen(QtWidgets.QWidget):
         self.train_entries = []
         self.block_entries = []
 
+        self.schedule_trains = 0
+        self.manual_trains = 0
+
         self.retranslateUi(self)
         self.main_button.clicked.connect(lambda:self.closescr())
         self.setup_inputs()
@@ -146,6 +149,7 @@ class train_screen(QtWidgets.QWidget):
         self.line_throughput_selection.addItems(lines)
 
     def dispatch_pressed(self):
+        self.manual_trains += 1
         arrival_time = (self.hour_selection.value(),self.minute_selection.value(),self.second_selection.value())
         #print(arrival_time)
         destinations = self.destination_selection.toPlainText()
@@ -156,19 +160,25 @@ class train_screen(QtWidgets.QWidget):
         line.upper()
         signals.send_tm_dispatch.emit(line)
 
-        self.train_table_display.addItem("NEW TRAIN DISPATCHED!!!!!!!!!")
+        self.train_table_display.addItem("MANUAL TRAIN DISPATCHED!!!!!!!!!")
         self.train_table_display.addItem("Train #: " + str(self.train_entries[0]))
         self.train_table_display.addItem("Position: " + str(self.train_entries[1]))
-        #self.train_table_display.addItem("States: " + str(self.train_entries[2]))
         self.train_table_display.addItem("Destinations: " + str(self.train_entries[3]))
         self.train_table_display.addItem("Authority: " + str(self.train_entries[4]))
         self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
         self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
 
-
+    def schedule_output(self,train):
+        print("SCHEDULE TRAIN: " + str(train))
+        self.schedule_trains += 1
+        self.schedule_list.addItem("SCHEDULE TRAIN DISPATCHED!!!!!!!!!")
+        self.schedule_list.addItem("Train #: " + str(train[0]))
+        self.schedule_list.addItem("Position: " + str(train[1]))
+        self.schedule_list.addItem("Destinations: " + str(train[3]))
+        self.schedule_list.addItem("Authority: " + str(train[4]))
+        self.schedule_list.addItem("Line: " + str(train[5]))
+        self.schedule_list.addItem("Arrival Time: " + str(train[6]))
         
-    
-    #TODO: WHEN AND HOW TO DISPLAY BLOCK TABLE?
         
     #TODO GET TICKET SALES FROM TRACKMODEL
     def output_throughput(self):
@@ -187,11 +197,18 @@ class train_screen(QtWidgets.QWidget):
         self.current_hour.setValue(self.ctc.clock.get_hours())
         self.current_minute.setValue(self.ctc.clock.get_minutes())
         self.current_second.setValue(self.ctc.clock.get_seconds())
-        for i in range(self.ctc.schedule.train_table.get_table_length()):
+        for i in range(self.manual_trains):
             self.train_table_display.takeItem((i*6) + (i + 2))
             self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.ctc.schedule.train_table.get_position(i)))
             self.train_table_display.takeItem((i*6) + (i + 4))
             self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.ctc.schedule.train_table.get_authority(i)))
+
+        for i in range(self.schedule_trains):
+            self.schedule_list.takeItem((i*6) + (i + 2))
+            self.schedule_list.insertItem((i*6) + (i + 2),"Position: " + str(self.ctc.schedule.train_table.get_position(i)))
+            self.schedule_list.takeItem((i*6) + (i + 4))
+            self.schedule_list.insertItem((i*6) + (i + 4),"Authority: " + str(self.ctc.schedule.train_table.get_authority(i)))
+
 
         for i in range(self.ctc.schedule.block_table.get_table_length()):
             if self.block_table_display.count() == 0:
@@ -199,7 +216,7 @@ class train_screen(QtWidgets.QWidget):
             else:
                 contains = False
                 string = str(self.ctc.schedule.block_table.get_entry(i-1))
-                print("string: " + string)
+                #print("string: " + string)
                 for j in range(self.block_table_display.count()):
                     #print("entry: " + str(self.block_table_display.item(j).text()))
                     if string == self.block_table_display.item(j).text():
