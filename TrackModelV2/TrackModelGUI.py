@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QTableWidget, QTabWidget, QVBoxLayout, QTableWidgetItem
 from PyQt5.QtGui import QColor
+from Signals import signals
 
 HEIGHT = 1080
 WIDTH = 1080
@@ -19,6 +20,7 @@ class TrackModelGUI(QMainWindow):
         self.table_widgets = {}
         self.GREEN = QColor(0,128,0)
         self.RED = QColor(128,0,32)
+        self.WHITE = QColor(255,255,255)
 
 
         self.setGeometry(X_POS, Y_POS, WIDTH, HEIGHT)
@@ -54,7 +56,7 @@ class TrackModelGUI(QMainWindow):
 
                 #create occupancy item
                 occ = QTableWidgetItem(str(track[line][block].occupied))
-                if self.get_track[line][block].occupied != -1:
+                if self.get_track()[line][block].occupied != -1:
                     occ.setBackground(self.GREEN)
                 else:
                     occ.setBackground(self.RED)
@@ -71,7 +73,7 @@ class TrackModelGUI(QMainWindow):
                 new_line.setItem(block,4, QTableWidgetItem(track[line][block].STATION))
 
                 #create Beacon item
-                new_line.setItem(block,5, QTableWidgetItem(track[line][block].STATION + ":" + str(track[line][block].BEACON)))
+                new_line.setItem(block,5, QTableWidgetItem(str(track[line][block].STATION) + ":" + str(track[line][block].BEACON)))
 
                 #create switch item
                 sw_pos = track[line][block].get_switch_to()
@@ -113,7 +115,7 @@ class TrackModelGUI(QMainWindow):
         if occ != -1:
             self.table_widgets[line].item(block,1).setBackground(self.GREEN)
         else:
-            self.table_widgets[line].item(block,1).setBackground(self.RED)
+            self.table_widgets[line].item(block,1).setBackground(self.WHITE)
 
     def update_authority(self, line, block):
         self.table_widgets[line].item(block,2).setText(str(self.get_track()[line][block].authority))
@@ -127,15 +129,18 @@ class TrackModelGUI(QMainWindow):
 
     def update_light(self, line, block):
         if self.get_track()[line][block].light[0] == 1:
-            self.table_widget[line].item(block,7).setText("GREEN")
-            self.table_widget[line].item(block,7).setBackground(self.GREEN)
+            self.table_widgets[line].item(block,7).setText("GREEN")
+            self.table_widgets[line].item(block,7).setBackground(self.GREEN)
         else:
-            self.table_widget[line].item(block,7).setText("RED")
-            self.table_widget[line].item(block,7).setBackground(self.RED)
+            self.table_widgets[line].item(block,7).setText("RED")
+            self.table_widgets[line].item(block,7).setBackground(self.RED)
 
     def update_gate(self, line, block):
         if self.get_track()[line][block].gate[0] == 1:
             self.table_widgets[line].item(block,8).setText("CLOSED")
         else:
             self.table_widgets[line].item(block,8).setText("OPEN")
+
+    def show_incident(self, line, block):
+        self.table_widgets[line].item(block,1).setBackground(self.RED)
         

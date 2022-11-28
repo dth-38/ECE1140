@@ -1,6 +1,7 @@
 from collections import deque
 import copy
 import pandas
+import numpy
 import pathlib
 import os
 
@@ -9,6 +10,8 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QApplication
 
 from TrackModelV2.TrackBlock import TrackBlock
+from TrackModelV2.TrackBlock import STATION_BOTH, STATION_LEFT, STATION_RIGHT, SW_OFF_BLOCK, SW_ON_BLOCK
+from TrackModelV2.TrackBlock import OPEN, CLOSED, NEXT_BLOCK, PREVIOUS_BLOCK, FORWARD_DIR, REVERSE_DIR, GREEN, RED
 from TrackModelV2.FancyTrain import FancyTrain
 from TrackModelV2.TrackModelGUI import TrackModelGUI
 from Signals import signals
@@ -23,7 +26,7 @@ DELX = 1
 #conversion factor since train length is in feet
 FEET_TO_METERS = 0.3408
 
-class TrackModelV2(QObject):
+class TrackModel(QObject):
     def __init__(self):
         self.lines = {}
         self.trains = {}
@@ -53,7 +56,6 @@ class TrackModelV2(QObject):
         signals.send_tm_dispatch.connect(self.dispatch)
         signals.send_tm_distance.connect(self.handle_train_update)
 
-        #TODO: add signals for updating gui
 
 
     @pyqtSlot()
@@ -74,6 +76,8 @@ class TrackModelV2(QObject):
             print("Invalid track location in authority signal.")
             print("Line: " + line + ", Block: " + str(block_num))
 
+        self.gui.update_authority(line, block_num)
+
     @pyqtSlot(str, int, int)
     def handle_speed(self, line, block_num, speed):
         line = line.lower()
@@ -93,14 +97,16 @@ class TrackModelV2(QObject):
         except Exception as e:
             print(e)
 
+        self.gui.update_switch(line, sw_block)
+
     @pyqtSlot(str, int, str)
     def handle_light(self, line, block_num, color_str):
         line = line.lower()
 
         if color_str == "GREEN":
-            color = TrackBlock.GREEN
+            color = GREEN
         else:
-            color = TrackBlock.RED
+            color = RED
 
         try:
             self.lines[line][block_num].set_light(color)
@@ -108,20 +114,24 @@ class TrackModelV2(QObject):
             print("Invalid track location in light signal.")
             print("Line: " + line + ", Block: " + str(block_num))
 
+        self.gui.update_light(line, block_num)
+
     @pyqtSlot(str, int, str)
     def handle_gate(self, line, block_num, gate):
         line = line.lower()
 
         if gate == "OPEN":
-            gate_encoding = TrackBlock.OPEN
+            gate_encoding = OPEN
         else:
-            gate_encoding = TrackBlock.CLOSED
+            gate_encoding = CLOSED
 
         try:
             self.lines[line][block_num].set_gate(gate_encoding)
         except:
             print("Invalid track location in gate signal.")
             print("Line: " + line + ", Block: " + str(block_num))
+
+        self.gui.update_gate(line, block_num)
 
     @pyqtSlot(str)
     def dispatch(self, line):
@@ -145,6 +155,8 @@ class TrackModelV2(QObject):
             print("Invalid track location in dispatch signal.")
             print("Line :" + line)
 
+        self.gui.update_occupancy(line, YARD)
+
 
     @pyqtSlot(int, float)
     def handle_train_update(self, train_id, delta_x):
@@ -162,7 +174,8 @@ class TrackModelV2(QObject):
         if -1 * (self.trains[train_id].position_in_block - (self.trains[train_id].length * FEET_TO_METERS)) > self.lines[line][self.trains[train_id].block].LENGTH:
             prev_block = self.lines[line][self.trains[train_id].block].get_previous(self.trains[train_id].movement_direction)
             self.lines[line][prev_block].occupied = -1
-            #TODO: signal for gui update
+
+            self.gui.update_occupancy(line, prev_block)
 
         #loops while the train is past the length of the current block
         while self.trains[train_id].position_in_block > self.lines[line][self.trains[train_id].block].LENGTH:
@@ -172,12 +185,14 @@ class TrackModelV2(QObject):
                 #unoccupies block
                 self.lines[line][self.trains[train_id].block].occupied = -1
 
+                #updates gui before deleting train so the gui knows what block to check
+                self.gui.update_occupancy(line, self.trains[train_id].block)
+
                 #remove train from dictionary
                 self.trains.pop(train_id)
 
                 print("TRAIN " + str(train_id) + " HAS BEEN REMOVED FROM THE TRACK.")
 
-                #TODO: signal for gui update
                 break
 
 
@@ -186,11 +201,13 @@ class TrackModelV2(QObject):
 
             #remove train from previous block
             self.lines[line][self.trains[train_id].block].occupied = -1
-            #TODO: signal for gui update
+
+            #updates gui after removing train from previous block
+            self.gui.update_occupancy(line, self.trains[train_id].block)
 
             #check validity of move
             next_block = self.lines[line][self.trains[train_id].block].get_next(self.trains[train_id].movement_direction)
-            next_dir = self.lines[line][self.trains[train_id].block].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK]
+            next_dir = self.lines[line][self.trains[train_id].block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
             if self.lines[line][next_block].get_previous(next_dir) == self.trains[train_id].block:
                 #valid move
 
@@ -198,33 +215,38 @@ class TrackModelV2(QObject):
                     #no collision has occured
 
                     #update movement direction through a block
-                    if self.trains[train_id].movement_direction == TrackBlock.FORWARD_DIR:
-                        self.trains[train_id].movement_direction = self.lines[line][next_block].MOVEMENT_DIRECTIONS[TrackBlock.NEXT_BLOCK]
-                    elif self.trains[train_id].movement_direction == TrackBlock.REVERSE_DIR:
-                        self.trains[train_id].movement_direction == self.lines[line][next_block].MOVEMENT_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK]
+                    if self.trains[train_id].movement_direction == FORWARD_DIR:
+                        self.trains[train_id].movement_direction = self.lines[line][next_block].MOVEMENT_DIRECTIONS[NEXT_BLOCK]
+                    elif self.trains[train_id].movement_direction == REVERSE_DIR:
+                        self.trains[train_id].movement_direction == self.lines[line][next_block].MOVEMENT_DIRECTIONS[PREVIOUS_BLOCK]
                 
-
+                    #moves train
                     self.lines[line][next_block].occupied = train_id
                     self.trains[train_id].block = next_block
+
+                    #calls gui update function
+                    self.gui.update_occupancy(line, next_block)
 
                     #send beacon signal to train if necessary
                     if self.lines[line][next_block].BEACON != "":
                         station = self.lines[line][next_block].get_next(self.trains[train_id].movement_direction)
                         signals.send_tm_beacon.emit(station, self.lines[line][next_block].BEACON)
-                    #TODO: signal for gui update
                 else:
                     #collision has occurred
                     print("UH OH: TRAIN " + str(train_id) + " HAS COLLIDED WITH TRAIN " + str(self.lines[line][next_block].get_occupancy_value()) + " AT " + line + ":" + str(next_block))
                     self.trains.pop(train_id)
                     self.trains.pop(self.lines[line][next_block].get_occupancy_value())
                     self.lines[line][next_block].occupied = -1
-                    #TODO: signal for gui update
+
+                    
+                    self.gui.show_incident(line, next_block)
 
             else:
                 #train has derailed
                 print("UH OH: TRAIN " + str(train_id) + " DERAILED ENTERING LINE: " + self.trains[train_id].line + ", BLOCK: " + str(next_block))
                 self.trains.pop(train_id)
-                #TODO: signal for gui update
+
+                self.gui.show_incident(line, next_block)
 
 
     def initialize_track(self, filename="track.xlsx"):
@@ -262,9 +284,13 @@ class TrackModelV2(QObject):
                 l_name = l_sheet[:len(l_sheet)-5]
                 l_data = trk_excel.parse(l_sheet)
 
-                #for each row add basic info to block
-                for i in range(1,l_data.shape[0]):
+
+                #add yard since it isnt a block in the excel sheet
+                new_line[YARD] = TrackBlock()
+
+                for i in range(l_data.shape[0]):
                     block_num = l_data.iloc[i,2]
+                    block_num = int(block_num)
                     new_line[block_num] = TrackBlock()
                     new_line[block_num].GRADE = l_data.iloc[i,4]
                     new_line[block_num].LENGTH = l_data.iloc[i,3]
@@ -272,15 +298,21 @@ class TrackModelV2(QObject):
 
                 #2nd parse for track infrastructure
                 #this is done to ensure all blocks exist before trying to connect with switches and add beacons
-                for i in range(1,l_data.shape[0]):
+                for i in range(l_data.shape[0]):
                     block_num = l_data.iloc[i,2]
                     equipment = l_data.iloc[i,6]
+
+                    block_num = int(block_num)
+                    equipment = str(equipment)
 
                     equipment = self.remove_whitespace(equipment)
 
                     val = ""
-                    for j in range(len(equipment)):
-                        if equipment[j] == ";":
+                    j = 0
+                    length = len(equipment)
+                    fix_flag = False
+                    while j < length:
+                        if equipment[j] == ";" or fix_flag == True:
                             match val:
                                 case "SWITCH":
                                     #do switch stuff
@@ -302,62 +334,70 @@ class TrackModelV2(QObject):
                                     path1_1 = int(path1[1:p1_divider])
                                     path1_2 = int(path1[p1_divider+1:])
                                     path2_1 = int(path2[:p2_divider])
-                                    path2_2 = int(path2[p1_divider+1:])
+                                    path2_2 = int(path2[p2_divider+1:])
 
                                     #this is so wack
                                     if path1_1 == block_num:
                                         #switch goes to next blocks
-                                        new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = "SWITCH"
+                                        new_line[block_num].CONNECTED_BLOCKS[NEXT_BLOCK] = "SWITCH"
                                         new_line[block_num].switch.append(0)
                                         new_line[block_num].switch.append(path1_2)
                                         new_line[block_num].switch.append(path2_2)
 
+                                        #add lights to next blocks
+                                        new_line[path1_2].light.append(0)
+                                        new_line[path2_2].light.append(0)
+
                                         if path1_2 == block_num + 1:
                                             #path1_2 is the next block numerically 
-                                            new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK] = TrackBlock.FORWARD_DIR
-                                            new_line[block_num].SWITCH_TRANSITIONS[0] = TrackBlock.FORWARD_DIR
-                                            new_line[block_num].SWITCH_TRANSITIONS[1] = TrackBlock.REVERSE_DIR
-                                            new_line[path2_2].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK] = TrackBlock.REVERSE_DIR
-                                            new_line[path2_2].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = block_num
+                                            new_line[block_num].TRANSITION_DIRECTIONS[NEXT_BLOCK] = FORWARD_DIR
+                                            new_line[block_num].SWITCH_TRANSITIONS[0] = FORWARD_DIR
+                                            new_line[block_num].SWITCH_TRANSITIONS[1] = REVERSE_DIR
+                                            new_line[path2_2].TRANSITION_DIRECTIONS[NEXT_BLOCK] = REVERSE_DIR
+                                            new_line[path2_2].CONNECTED_BLOCKS[NEXT_BLOCK] = block_num
                                         else:
                                             #path2_2 is the next block numerically
-                                            new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK] = TrackBlock.REVERSE_DIR
-                                            new_line[block_num].SWITCH_DIRECTIONS[0] = TrackBlock.REVERSE_DIR
-                                            new_line[block_num].SWITCH_DIRECTIONS[1] = TrackBlock.FORWARD_DIR
-                                            new_line[path1_2].TRANSITION_DIRECTIONS[TrackBlock.NEXT_BLOCK] = TrackBlock.REVERSE_DIR
-                                            new_line[path1_2].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = block_num
+                                            new_line[block_num].TRANSITION_DIRECTIONS[NEXT_BLOCK] = REVERSE_DIR
+                                            new_line[block_num].SWITCH_DIRECTIONS[0] = REVERSE_DIR
+                                            new_line[block_num].SWITCH_DIRECTIONS[1] = FORWARD_DIR
+                                            new_line[path1_2].TRANSITION_DIRECTIONS[NEXT_BLOCK] = REVERSE_DIR
+                                            new_line[path1_2].CONNECTED_BLOCKS[NEXT_BLOCK] = block_num
 
                                     else:
                                         #switch goes to previous blocks
-                                        new_line[block_num].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = "SWITCH"
+                                        new_line[block_num].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = "SWITCH"
                                         new_line[block_num].switch.append(0)
                                         new_line[block_num].switch.append(path1_1)
                                         new_line[block_num].switch.append(path2_1)
 
+                                        #add lights to previous blocks
+                                        new_line[path1_1].light.append(0)
+                                        new_line[path2_1].light.append(0)
+
                                         if path1_1 == block_num - 1:
                                             #path1_1 is the previous block numerically
-                                            new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = TrackBlock.REVERSE_DIR
-                                            new_line[block_num].SWITCH_TRANSITIONS[0] = TrackBlock.REVERSE_DIR
+                                            new_line[block_num].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = REVERSE_DIR
+                                            new_line[block_num].SWITCH_TRANSITIONS[0] = REVERSE_DIR
                                             #to check for override
-                                            if not l_data.iloc[i,10].isnull():
+                                            if not numpy.isnan(l_data.iloc[i,10]):
                                                 t_o = l_data.iloc[i,10]
                                                 new_line[block_num].SWITCH_TRANSITIONS[1] = t_o
                                             else:
-                                                new_line[block_num].SWITCH_TRANSITIONS[1] = TrackBlock.FORWARD_DIR
-                                            new_line[path2_1].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = TrackBlock.FORWARD_DIR
-                                            new_line[path2_1].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = block_num
+                                                new_line[block_num].SWITCH_TRANSITIONS[1] = FORWARD_DIR
+                                            new_line[path2_1].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = FORWARD_DIR
+                                            new_line[path2_1].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = block_num
                                         else:
                                             #path2_1 is the previous block numerically
-                                            new_line[block_num].SWITCH_TRANSITIONS[1] = TrackBlock.REVERSE_DIR
-                                            if not l_data.iloc[i,10].isnull():
+                                            new_line[block_num].SWITCH_TRANSITIONS[1] = REVERSE_DIR
+                                            if not numpy.isnan(l_data.iloc[i,10]):
                                                 t_o = l_data.iloc[i,10]
                                                 new_line[block_num].SWITCH_TRANSITIONS[0] = t_o
-                                                new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = t_o
+                                                new_line[block_num].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = t_o
                                             else:
-                                                new_line[block_num].SWITCH_TRANSITIONS[0] = TrackBlock.FORWARD_DIR
-                                                new_line[block_num].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = TrackBlock.FORWARD_DIR
-                                            new_line[path1_1].TRANSITION_DIRECTIONS[TrackBlock.PREVIOUS_BLOCK] = TrackBlock.FORWARD_DIR
-                                            new_line[path1_1].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = block_num
+                                                new_line[block_num].SWITCH_TRANSITIONS[0] = FORWARD_DIR
+                                                new_line[block_num].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = FORWARD_DIR
+                                            new_line[path1_1].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = FORWARD_DIR
+                                            new_line[path1_1].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = block_num
 
                                     
                                 case "STATION":
@@ -371,60 +411,93 @@ class TrackModelV2(QObject):
                                             j = k
                                             break
                                     
+                                    #sets station name
                                     if station == "":
                                         new_line[block_num].STATION = "?"
                                     else:
                                         new_line[block_num].STATION = station
 
+                                    #sets beacon in next/previous blocks
                                     station_side = l_data.iloc[i,7]
                                     if station_side == "Left":
-                                        new_line[block_num-1].STATION = TrackBlock.STATION_LEFT
+                                        new_line[block_num-1].STATION = STATION_LEFT
                                     elif station_side == "Right":
-                                        new_line[block_num-1].STATION = TrackBlock.STATION_RIGHT
+                                        new_line[block_num-1].STATION = STATION_RIGHT
                                     else:
-                                        for block in new_line[block_num].CONNECTED_BLOCKS:
-                                            if block == "SWITCH":
-                                                conn1 = new_line[block_num].switch[TrackBlock.SW_OFF_BLOCK]
-                                                conn2 = new_line[block_num].switch[TrackBlock.SW_ON_BLOCK]
-                                                new_line[conn1].BEACON = TrackBlock.STATION_BOTH
-                                                new_line[conn2].BEACON = TrackBlock.STATION_BOTH
+                                        for b in range(len(new_line[block_num].CONNECTED_BLOCKS)):
+                                            if new_line[block_num].CONNECTED_BLOCKS[b] == "SWITCH":
+                                                conn1 = new_line[block_num].switch[SW_OFF_BLOCK]
+                                                conn2 = new_line[block_num].switch[SW_ON_BLOCK]
+                                                new_line[conn1].BEACON = STATION_BOTH
+                                                new_line[conn2].BEACON = STATION_BOTH
                                             else:
-                                                new_line[block].BEACON = TrackBlock.STATION_BOTH
+                                                if b == 0:
+                                                    new_line[block_num-1].BEACON = STATION_BOTH
+                                                else:
+                                                    new_line[block_num+1].BEACON = STATION_BOTH
+
+                                    #add station light
+                                    new_line[block_num].light.append(0)
+
 
                                 case "UNDERGROUND":
                                     new_line[block_num].UNDERGROUND = True
                                 case "RAILWAYCROSSING":
-                                    new_line[block_num].gate.append(TrackBlock.OPEN)
+                                    new_line[block_num].gate.append(OPEN)
                                 case "SWITCHTOYARD":
-                                    new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = "SWITCH"
+                                    new_line[block_num].CONNECTED_BLOCKS[NEXT_BLOCK] = "SWITCH"
                                     new_line[block_num].switch.append(0)
-                                    new_line[block_num].switch.append(0)
+                                    new_line[block_num].switch.append(YARD)
                                     new_line[block_num].switch.append(block_num+1)
 
+                                    #add lights
+                                    new_line[block_num+1].light.append(0)
+                                    if new_line[YARD].light != []:
+                                        new_line[YARD].light.append(0)
+
                                 case "SWITCHFROMYARD":
-                                    new_line[block_num].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = "SWITCH"
+                                    new_line[block_num].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = "SWITCH"
                                     new_line[block_num].switch.append(0)
                                     new_line[block_num].switch.append(block_num-1)
-                                    new_line[block_num].switch.append(0)
+                                    new_line[block_num].switch.append(YARD)
+
+                                    #add lights
+                                    new_line[block_num-1].light.append(0)
+                                    if new_line[YARD].light != []:
+                                        new_line[YARD].append(0)
+
                                 case "SWITCHTO/FROMYARD":
-                                    new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = "SWITCH"
+                                    new_line[block_num].CONNECTED_BLOCKS[NEXT_BLOCK] = "SWITCH"
                                     new_line[block_num].switch.append(0)
-                                    new_line[block_num].switch.append(0)
+                                    new_line[block_num].switch.append(YARD)
                                     new_line[block_num].switch.append(block_num+1)
-                                case "RAILWAYCROSSING":
-                                    new_line[block_num].gate.append(TrackBlock.OPEN)
+
+                                    new_line[YARD].light.append(0)
+                                    new_line[block_num+1].light.append(0)
+
                                 case _:
                                     pass
                             val = ""
                         else:
-                            val += equipment[i]
+                            val += equipment[j]
+
+                        j += 1
+
+                        if fix_flag == False and j == length:
+                            j -= 1
+                            fix_flag = True
+
 
                     #connects block to previous/next if a switch was not added
-                    if new_line[block_num].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] == -1:
-                        new_line[block_num].CONNECTED_BLOCKS[TrackBlock.PREVIOUS_BLOCK] = block_num-1
+                    if new_line[block_num].CONNECTED_BLOCKS[PREVIOUS_BLOCK] == -1:
+                        new_line[block_num].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = block_num-1
 
-                    if new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] == -1:
-                        new_line[block_num].CONNECTED_BLOCKS[TrackBlock.NEXT_BLOCK] = block_num+1
+                    if new_line[block_num].CONNECTED_BLOCKS[NEXT_BLOCK] == -1:
+                        new_line[block_num].CONNECTED_BLOCKS[NEXT_BLOCK] = block_num+1
+
+                #adds new line to lines dictionary
+                l_name = l_name.lower()
+                self.lines[l_name] = new_line
 
             self.gui.initialize_lines()
         
@@ -447,7 +520,7 @@ class TrackModelV2(QObject):
 if __name__ == "__main__":
     track_app = QApplication()
 
-    t_model = TrackModelV2()
+    t_model = TrackModel()
 
     track_app.exec()
 
