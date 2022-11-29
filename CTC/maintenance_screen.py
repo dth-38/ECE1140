@@ -72,13 +72,10 @@ class maintenance_screen(QtWidgets.QWidget):
             maintenance_track = Track(id_n=self.block_selection.value(),sec=self.section_selection.currentText(),main_signal="True")
     """
     def maintenance_pressed(self):
-        if self.status_selection.currentText() == "Open":
-            self.maintenance_output.setText("False")
-        else:
-            self.maintenance_output.setText("True")
         self.block_table.set_maintenance(self.block_selection.value(),self.section_selection.currentText(),self.line_selection.currentText())
         tc_block = convert_to_block(self.line_selection.currentText(),self.block_selection.value())
         tc_next_block = convert_to_block(self.line_selection.currentText(),self.next_block.value())
+        #TODO: FIX MAINTENANCE MODE
         signals.set_tc_switch(tc_block,tc_next_block)
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate

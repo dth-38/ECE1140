@@ -143,15 +143,12 @@ class train_screen(QtWidgets.QWidget):
     
     def setup_inputs(self):
         lines = ["Red","Green"]
-        #stations = ["Yard","Shadyside", "Herron Ave", "Swissville", "Penn Station", "Steel Plaza", "First Ave", "Station Square", "South Hills Junction"]
         self.line_train_selection.addItems(lines)
-        #self.starting_location_selection.addItems(stations)
         self.line_throughput_selection.addItems(lines)
 
     def dispatch_pressed(self):
         self.manual_trains += 1
         arrival_time = (self.hour_selection.value(),self.minute_selection.value(),self.second_selection.value())
-        #print(arrival_time)
         destinations = self.destination_selection.toPlainText()
         self.train_entries, travel_time = self.ctc.schedule.manual_dispatch_train(arrival_time,self.train_selection.value(),self.line_train_selection.currentText(),destinations)
 
@@ -201,7 +198,7 @@ class train_screen(QtWidgets.QWidget):
         for i in range(self.manual_trains):
             #TODO: FIX FOR READING IN ALL DESTINATIONS
             if self.ctc.schedule.train_table.get_authority(i) == 0:
-                authority = self.ctc.schedule.calc_authority(self.ctc.schedule.train_table.get_train_id(i),self.ctc.schedule.train_table.get_line(i),self.ctc.schedule.train_table.get_next_destination(i))
+                authority = self.ctc.schedule.calc_authority(self.ctc.schedule.train_table.get_train_id(i),self.ctc.schedule.train_table.get_line(i),self.ctc.schedule.train_table.get_next_destination(i),self.ctc.schedule.train_table.get_position(i))
                 self.ctc.schedule.train_table.change_authority(i,authority)
                 self.train_table_display.takeItem((i*6) + (i + 2))
                 self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.ctc.schedule.train_table.get_position(i)))
