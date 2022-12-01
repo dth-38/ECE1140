@@ -139,7 +139,7 @@ class TrackModel(QObject):
 
         try:
             #cant dispatch a train if one is in the yard (starting block)
-            if self.lines[line][YARD].occupied == False:
+            if self.lines[line][YARD].occupied == -1:
                 #setup initial train state
                 new_train = FancyTrain(self.next_train_id)
                 new_train.line = copy.copy(line)
@@ -149,6 +149,8 @@ class TrackModel(QObject):
                 self.trains[self.next_train_id] = new_train
 
                 self.next_train_id += 1
+
+                signals.send_tc_occupancy(line+"___0", True)
             else:
                 print("Cannot dispatch train, yard is occupied.")
         except:
@@ -171,11 +173,13 @@ class TrackModel(QObject):
         line = self.trains[train_id].line
 
         #checks if the previous block will no longer be occupied
-        if -1 * (self.trains[train_id].position_in_block - (self.trains[train_id].length * FEET_TO_METERS)) > self.lines[line][self.trains[train_id].block].LENGTH:
+        if -1 * (self.trains[train_id].position_in_block - (self.trains[train_id].train_length * FEET_TO_METERS)) > self.lines[line][self.trains[train_id].block].LENGTH:
             prev_block = self.lines[line][self.trains[train_id].block].get_previous(self.trains[train_id].movement_direction)
             self.lines[line][prev_block].occupied = -1
 
             self.gui.update_occupancy(line, prev_block)
+            tc_block = line + "_" + self.lines[line][prev_block].SECTION + "_" + str(prev_block)
+            signals.send_tc_occupancy(tc_block, False)
 
         #loops while the train is past the length of the current block
         while self.trains[train_id].position_in_block > self.lines[line][self.trains[train_id].block].LENGTH:
@@ -187,6 +191,8 @@ class TrackModel(QObject):
 
                 #updates gui before deleting train so the gui knows what block to check
                 self.gui.update_occupancy(line, self.trains[train_id].block)
+                tc_block = line + "_" + self.lines[line][self.trains[train_id].block].SECTION + "_" + str(self.trains[train_id].block)
+                signals.send_tc_occupancy(tc_block, False)
 
                 #remove train from dictionary
                 self.trains.pop(train_id)
@@ -204,6 +210,8 @@ class TrackModel(QObject):
 
             #updates gui after removing train from previous block
             self.gui.update_occupancy(line, self.trains[train_id].block)
+            tc_block = line + "_" + self.lines[line][self.trains[train_id].block].SECTION + "_" + str(self.trains[train_id].block)
+            signals.send_tc_occupancy(tc_block, False)
 
             #check validity of move
             next_block = self.lines[line][self.trains[train_id].block].get_next(self.trains[train_id].movement_direction)
@@ -226,6 +234,8 @@ class TrackModel(QObject):
 
                     #calls gui update function
                     self.gui.update_occupancy(line, next_block)
+                    tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
+                    signals.send_tc_occupancy(tc_block, True)
 
                     #send beacon signal to train if necessary
                     if self.lines[line][next_block].BEACON != "":
@@ -238,7 +248,8 @@ class TrackModel(QObject):
                     self.trains.pop(self.lines[line][next_block].get_occupancy_value())
                     self.lines[line][next_block].occupied = -1
 
-                    
+                    tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
+                    signals.send_tc_occupancy(tc_block, False)
                     self.gui.show_incident(line, next_block)
 
             else:
@@ -247,6 +258,7 @@ class TrackModel(QObject):
                 self.trains.pop(train_id)
 
                 self.gui.show_incident(line, next_block)
+                tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
 
 
     def initialize_track(self, filename="track.xlsx"):
@@ -274,14 +286,16 @@ class TrackModel(QObject):
             #opens excel file and determines which workbooks are lines
             trk_excel = pandas.ExcelFile(filename)
             sheets = trk_excel.sheet_names
+            r_sheets = []
             for sheet in sheets:
-                if sheet[len(sheet)-4:] != "Line":
-                    sheets.remove(sheet)
+                if sheet[len(sheet)-1] == "!":
+                    r_sheets.append(sheet)
+            
 
             #im so tired of writing parsers
-            for l_sheet in sheets:
+            for l_sheet in r_sheets:
                 new_line = {}
-                l_name = l_sheet[:len(l_sheet)-5]
+                l_name = l_sheet[:len(l_sheet)-6]
                 l_data = trk_excel.parse(l_sheet)
 
 
@@ -335,6 +349,7 @@ class TrackModel(QObject):
                                     path1_2 = int(path1[p1_divider+1:])
                                     path2_1 = int(path2[:p2_divider])
                                     path2_2 = int(path2[p2_divider+1:])
+
 
                                     #this is so wack
                                     if path1_1 == block_num:
@@ -456,6 +471,8 @@ class TrackModel(QObject):
                                     new_line[block_num].switch.append(YARD)
                                     new_line[block_num].switch.append(block_num+1)
 
+                                    new_line[YARD].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = block_num
+
                                     #add lights
                                     new_line[block_num+1].light.append(0)
                                     if new_line[YARD].light != []:
@@ -467,6 +484,8 @@ class TrackModel(QObject):
                                     new_line[block_num].switch.append(block_num-1)
                                     new_line[block_num].switch.append(YARD)
 
+                                    new_line[YARD].CONNECTED_BLOCKS[NEXT_BLOCK] = block_num
+
                                     #add lights
                                     new_line[block_num-1].light.append(0)
                                     if new_line[YARD].light != []:
@@ -477,6 +496,9 @@ class TrackModel(QObject):
                                     new_line[block_num].switch.append(0)
                                     new_line[block_num].switch.append(YARD)
                                     new_line[block_num].switch.append(block_num+1)
+
+                                    new_line[YARD].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = block_num
+                                    new_line[YARD].CONNECTED_BLOCKS[NEXT_BLOCK] = block_num
 
                                     new_line[YARD].light.append(0)
                                     new_line[block_num+1].light.append(0)

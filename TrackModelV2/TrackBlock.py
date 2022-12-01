@@ -42,7 +42,7 @@ class TrackBlock:
         self.UNDERGROUND = False
 
         #might be useful for displaying stuff so im putting this here
-        self.SECTION = ""
+        self.SECTION = "_"
 
     #to_block is the block the switch is connecting to as an int
     def set_switch(self, to_block):
