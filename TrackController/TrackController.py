@@ -485,12 +485,12 @@ class TrackController(QMainWindow):
         if self.run_Vitals == True:
 
             #copies track state inputs to next state
-            for block in self.current_Track_State:
-                self.next_Track_State[block].suggested_Speed = copy.copy(self.current_Track_State[block].suggested_Speed)
-                self.next_Track_State[block].authority = copy.copy(self.current_Track_State[block].authority)
-                self.next_Track_State[block].occupied = copy.copy(self.current_Track_State[block].occupied)
-                self.next_Track_State[block].failed = copy.copy(self.current_Track_State[block].failed)
-                self.next_Track_State[block].closed = copy.copy(self.current_Track_State[block].closed)
+            #for block in self.current_Track_State:
+            #    self.next_Track_State[block].suggested_Speed = copy.copy(self.current_Track_State[block].suggested_Speed)
+            #    self.next_Track_State[block].authority = copy.copy(self.current_Track_State[block].authority)
+            #    self.next_Track_State[block].occupied = copy.copy(self.current_Track_State[block].occupied)
+            #    self.next_Track_State[block].failed = copy.copy(self.current_Track_State[block].failed)
+            #    self.next_Track_State[block].closed = copy.copy(self.current_Track_State[block].closed)
             
             #runs logic
             if self.run_PLC == True:
@@ -514,7 +514,7 @@ class TrackController(QMainWindow):
 
                 #speed safety check: commanded speed cannot exceed block maximum
                 self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
-                if self.next_Track_State[block].commanded_Speed > self.next_Track_State[block].max_Speed:
+                if self.next_Track_State[block].commanded_Speed > self.next_Track_State[block].max_Speed and self.next_Track_State[block].max_Speed != 0:
                     self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].max_Speed)
 
                 #track failure check
@@ -728,40 +728,42 @@ class TrackController(QMainWindow):
     def handle_authority(self, block, auth):
         for bl in self.current_Track_State:
             if block == bl:
-                self.current_Track_State[bl].authority = auth
+                self.next_Track_State[bl].authority = auth
                 break
 
     @pyqtSlot(str, int)
     def handle_suggested_speed(self, block, s_speed):
         for bl in self.current_Track_State:
             if block == bl:
-                self.current_Track_State[bl].suggested_speed = s_speed
+                print("got speed: " + str(s_speed))
+                print("current speed: " + str(self.current_Track_State[bl].commanded_Speed))
+                self.next_Track_State[bl].suggested_Speed = s_speed
                 break
 
     @pyqtSlot(str, int)
     def handle_maintenance(self, block, maintenance):
         for bl in self.current_Track_State:
             if block == bl:
-                self.current_Track_State[bl].closed = maintenance
+                self.next_Track_State[bl].closed = maintenance
                 break
 
     @pyqtSlot(str, str)
     def handle_manual_switch(self, block, next_block):
         for bl in self.current_Track_State:
             if block == bl:
-                if self.current_Track_State[bl].closed == True and self.current_Track_State[bl].switches != []:
-                    if self.current_Track_State[bl].switch_to == TO_NEXT:
-                        if self.current_Track_State[bl].next_blocks[0] == next_block:
-                            self.current_Track_State[bl].switch[0] = False
-                        elif self.current_Track_State[bl].next_blocks[1] == next_block:
-                            self.current_Track_State[bl].switch[0] = True
+                if self.next_Track_State[bl].closed == True and self.next_Track_State[bl].switches != []:
+                    if self.next_Track_State[bl].switch_to == TO_NEXT:
+                        if self.next_Track_State[bl].next_blocks[0] == next_block:
+                            self.next_Track_State[bl].switch[0] = False
+                        elif self.next_Track_State[bl].next_blocks[1] == next_block:
+                            self.next_Track_State[bl].switch[0] = True
                         else:
                             pass
-                    elif self.current_Track_State[bl].switch_to == TO_PREV:
-                        if self.current_Track_State[bl].next_blocks[0] == next_block:
-                            self.current_Track_State[bl].switch[0] = False
-                        elif self.current_Track_State[bl].next_blocks[1] == next_block:
-                            self.current_Track_State[bl].switch[0] = True
+                    elif self.next_Track_State[bl].switch_to == TO_PREV:
+                        if self.next_Track_State[bl].next_blocks[0] == next_block:
+                            self.next_Track_State[bl].switch[0] = False
+                        elif self.next_Track_State[bl].next_blocks[1] == next_block:
+                            self.next_Track_State[bl].switch[0] = True
                         else:
                             pass
             break
@@ -770,17 +772,17 @@ class TrackController(QMainWindow):
     def handle_occupancy(self, block, occ):
         for bl in self.current_Track_State:
             if block == bl:
-                d_block = decompose_block(bl)
+                #d_block = decompose_block(bl)
 
-                self.current_Track_State[bl].occupied = occ
-                signals.send_ctc_occupancy.emit(d_block[0], d_block[1], occ)
+                self.next_Track_State[bl].occupied = occ
+                #signals.send_ctc_occupancy.emit(d_block[0], d_block[1], occ)
                 break
 
     @pyqtSlot(str, int)
     def handle_failure(self, block, fail):
         for bl in self.current_Track_State:
             if block == bl:
-                self.current_Track_State[bl].failed = fail
+                self.next_Track_State[bl].failed = fail
                 break
 
 

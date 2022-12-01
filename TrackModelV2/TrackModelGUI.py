@@ -82,7 +82,10 @@ class TrackModelGUI(QMainWindow):
                 #create switch item
                 sw_pos = track[line][block].get_switch_to()
                 if sw_pos != -1:
-                    sw = QTableWidgetItem(str(sw_pos))
+                    if sw_pos == 0:
+                        sw = QTableWidgetItem("YARD")
+                    else:
+                        sw = QTableWidgetItem(str(sw_pos))
                 else:
                     sw = QTableWidgetItem()
                 new_line.setItem(block,6, sw)
@@ -128,7 +131,12 @@ class TrackModelGUI(QMainWindow):
         self.table_widgets[line].item(block,3).setText(str(self.get_track()[line][block].commanded_speed))
 
     def update_switch(self, line, block):
-        self.table_widgets[line].item(block,6).setText(str(self.get_track()[line][block].get_switch_to()))
+        sw = self.get_track()[line][block].get_switch_to()
+        if sw == 0:
+            sw_str = "YARD"
+        else:
+            sw_str = str(sw)
+        self.table_widgets[line].item(block,6).setText(sw_str)
 
 
     def update_light(self, line, block):

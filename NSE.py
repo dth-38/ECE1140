@@ -206,10 +206,9 @@ class NSE_Simulation(QMainWindow):
     def open_train_model(self):
         try:
             num = int(self.num_select_textbox.text())
-
             #check num is in valid range
             #open corresponding train model
-            if num > -1 and num < len(self.track_model.trains):
+            if num > -1 and num < len(self.track.trains):
                 signals.open_tm_gui.emit(num)
             else:
                 print("Error: Selection does not exist.")
@@ -223,7 +222,7 @@ class NSE_Simulation(QMainWindow):
 
             #check num is in valid range
             #open corresponding train controller
-            if num > -1 and num < len(self.track_model.trains):
+            if num > -1 and num < len(self.track.trains):
                 signals.open_tc_gui.emit(num)
             else:
                 print("Error: Selection does not exist.")

@@ -77,6 +77,8 @@ class TrackModel(QObject):
             print("Line: " + line + ", Block: " + str(block_num))
 
         self.gui.update_authority(line, block_num)
+        train_id = self.lines[line][block_num].occupied
+        signals.send_tm_authority.emit(train_id, copy.copy(auth))
 
     @pyqtSlot(str, int, int)
     def handle_speed(self, line, block_num, speed):
@@ -87,6 +89,10 @@ class TrackModel(QObject):
         except:
             print("Invalid track location in speed signal.")
             print("Line: " + line + ", Block: " + str(block_num))
+
+        self.gui.update_spd(line, block_num)
+        train_id = self.lines[line][block_num].occupied
+        signals.send_tm_commanded_speed.emit(train_id, copy.copy(speed))
 
     @pyqtSlot(str, int, int)
     def handle_switch(self, line, sw_block, to_block):
@@ -150,7 +156,7 @@ class TrackModel(QObject):
 
                 self.next_train_id += 1
 
-                signals.send_tc_occupancy(line+"___0", True)
+                signals.send_tc_occupancy.emit(line+"___0", True)
             else:
                 print("Cannot dispatch train, yard is occupied.")
         except:
@@ -179,7 +185,7 @@ class TrackModel(QObject):
 
             self.gui.update_occupancy(line, prev_block)
             tc_block = line + "_" + self.lines[line][prev_block].SECTION + "_" + str(prev_block)
-            signals.send_tc_occupancy(tc_block, False)
+            signals.send_tc_occupancy.emit(tc_block, False)
 
         #loops while the train is past the length of the current block
         while self.trains[train_id].position_in_block > self.lines[line][self.trains[train_id].block].LENGTH:
@@ -192,7 +198,7 @@ class TrackModel(QObject):
                 #updates gui before deleting train so the gui knows what block to check
                 self.gui.update_occupancy(line, self.trains[train_id].block)
                 tc_block = line + "_" + self.lines[line][self.trains[train_id].block].SECTION + "_" + str(self.trains[train_id].block)
-                signals.send_tc_occupancy(tc_block, False)
+                signals.send_tc_occupancy.emit(tc_block, False)
 
                 #remove train from dictionary
                 self.trains.pop(train_id)
@@ -211,7 +217,7 @@ class TrackModel(QObject):
             #updates gui after removing train from previous block
             self.gui.update_occupancy(line, self.trains[train_id].block)
             tc_block = line + "_" + self.lines[line][self.trains[train_id].block].SECTION + "_" + str(self.trains[train_id].block)
-            signals.send_tc_occupancy(tc_block, False)
+            signals.send_tc_occupancy.emit(tc_block, False)
 
             #check validity of move
             next_block = self.lines[line][self.trains[train_id].block].get_next(self.trains[train_id].movement_direction)
@@ -235,12 +241,17 @@ class TrackModel(QObject):
                     #calls gui update function
                     self.gui.update_occupancy(line, next_block)
                     tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
-                    signals.send_tc_occupancy(tc_block, True)
+                    signals.send_tc_occupancy.emit(tc_block, True)
 
                     #send beacon signal to train if necessary
                     if self.lines[line][next_block].BEACON != "":
                         station = self.lines[line][next_block].get_next(self.trains[train_id].movement_direction)
                         signals.send_tm_beacon.emit(station, self.lines[line][next_block].BEACON)
+
+                    #send grade
+                    signals.send_tm_grade.emit(train_id, self.lines[line][next_block].GRADE)
+                    #send failure
+                    
                 else:
                     #collision has occurred
                     print("UH OH: TRAIN " + str(train_id) + " HAS COLLIDED WITH TRAIN " + str(self.lines[line][next_block].get_occupancy_value()) + " AT " + line + ":" + str(next_block))
@@ -249,7 +260,7 @@ class TrackModel(QObject):
                     self.lines[line][next_block].occupied = -1
 
                     tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
-                    signals.send_tc_occupancy(tc_block, False)
+                    signals.send_tc_occupancy.emit(tc_block, False)
                     self.gui.show_incident(line, next_block)
 
             else:
@@ -258,7 +269,6 @@ class TrackModel(QObject):
                 self.trains.pop(train_id)
 
                 self.gui.show_incident(line, next_block)
-                tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
 
 
     def initialize_track(self, filename="track.xlsx"):
@@ -475,7 +485,7 @@ class TrackModel(QObject):
 
                                     #add lights
                                     new_line[block_num+1].light.append(0)
-                                    if new_line[YARD].light != []:
+                                    if new_line[YARD].light == []:
                                         new_line[YARD].light.append(0)
 
                                 case "SWITCHFROMYARD":
@@ -488,7 +498,7 @@ class TrackModel(QObject):
 
                                     #add lights
                                     new_line[block_num-1].light.append(0)
-                                    if new_line[YARD].light != []:
+                                    if new_line[YARD].light == []:
                                         new_line[YARD].append(0)
 
                                 case "SWITCHTO/FROMYARD":
