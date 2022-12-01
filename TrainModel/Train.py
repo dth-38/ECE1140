@@ -1,9 +1,9 @@
 import math
-from train_ui import TrainData_Ui
+from TrainModel.train_ui import TrainData_Ui
 from PyQt5 import QtCore, QtWidgets
 import sys
 sys.path.append(".")
-from train_model_signals import *
+from TrainModel.train_model_signals import *
 from Train_Controller.train_controller_main import WindowClass
 from Signals import signals
 from PyQt5.QtCore import pyqtSlot
