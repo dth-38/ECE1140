@@ -30,7 +30,7 @@ class TrackBlock:
         self.commanded_speed = 0
         self.GRADE = 0
         self.STATION = ""
-        self.BEACON = 0
+        self.BEACON = ["",""]
         self.switch = []
         self.light = []
         self.gate = []

@@ -420,21 +420,27 @@ class TrackModel(QObject):
                                     #sets beacon in next/previous blocks
                                     station_side = l_data.iloc[i,7]
                                     if station_side == "Left":
-                                        new_line[block_num-1].STATION = STATION_LEFT
+                                        new_line[block_num-1].BEACON[0] = station
+                                        new_line[block_num-1].BEACON[1] = "LEFT"
                                     elif station_side == "Right":
-                                        new_line[block_num-1].STATION = STATION_RIGHT
+                                        new_line[block_num-1].BEACON[0] = station
+                                        new_line[block_num-1].BEACON[1] = "RIGHT"
                                     else:
                                         for b in range(len(new_line[block_num].CONNECTED_BLOCKS)):
                                             if new_line[block_num].CONNECTED_BLOCKS[b] == "SWITCH":
                                                 conn1 = new_line[block_num].switch[SW_OFF_BLOCK]
                                                 conn2 = new_line[block_num].switch[SW_ON_BLOCK]
-                                                new_line[conn1].BEACON = STATION_BOTH
-                                                new_line[conn2].BEACON = STATION_BOTH
+                                                new_line[conn1].BEACON[0] = station
+                                                new_line[conn1].BEACON[1] = "BOTH"
+                                                new_line[conn2].BEACON[0] = station
+                                                new_line[conn2].BEACON[1] = "BOTH"
                                             else:
                                                 if b == 0:
-                                                    new_line[block_num-1].BEACON = STATION_BOTH
+                                                    new_line[block_num-1].BEACON[0] = station
+                                                    new_line[block_num-1].BEACON[1] = "BOTH"
                                                 else:
-                                                    new_line[block_num+1].BEACON = STATION_BOTH
+                                                    new_line[block_num+1].BEACON[0] = station
+                                                    new_line[block_num+1].BEACON[1] = "BOTH"
 
                                     #add station light
                                     new_line[block_num].light.append(0)

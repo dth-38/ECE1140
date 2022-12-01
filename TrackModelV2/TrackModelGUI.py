@@ -15,7 +15,7 @@ class TrackModelGUI(QMainWindow):
         self.setup_gui()
 
     def setup_gui(self):
-        self.main_layout = QVBoxLayout()
+        #self.main_layout = QVBoxLayout()
         self.tabs = QTabWidget()
         self.table_widgets = {}
         self.GREEN = QColor(0,128,0)
@@ -26,6 +26,9 @@ class TrackModelGUI(QMainWindow):
         self.setGeometry(X_POS, Y_POS, WIDTH, HEIGHT)
         self.setWindowTitle("Track Model")
         self.setMinimumSize(WIDTH, HEIGHT)
+
+        #self.main_layout.addWidget(self.tabs)
+        self.setCentralWidget(self.tabs)
 
 
     def initialize_lines(self):
@@ -58,8 +61,6 @@ class TrackModelGUI(QMainWindow):
                 occ = QTableWidgetItem(str(track[line][block].occupied))
                 if self.get_track()[line][block].occupied != -1:
                     occ.setBackground(self.GREEN)
-                else:
-                    occ.setBackground(self.RED)
 
                 new_line.setItem(block,1, occ)
 
@@ -73,14 +74,17 @@ class TrackModelGUI(QMainWindow):
                 new_line.setItem(block,4, QTableWidgetItem(track[line][block].STATION))
 
                 #create Beacon item
-                new_line.setItem(block,5, QTableWidgetItem(str(track[line][block].STATION) + ":" + str(track[line][block].BEACON)))
+                if track[line][block].BEACON[0] != "":
+                    new_line.setItem(block,5, QTableWidgetItem(track[line][block].BEACON[0] + ":" + track[line][block].BEACON[1]))
+                else:
+                    new_line.setItem(block,5,QTableWidgetItem())
 
                 #create switch item
                 sw_pos = track[line][block].get_switch_to()
                 if sw_pos != -1:
                     sw = QTableWidgetItem(str(sw_pos))
                 else:
-                    sw = QTableWidgetItem("NONE")
+                    sw = QTableWidgetItem()
                 new_line.setItem(block,6, sw)
 
                 #create light item
@@ -92,14 +96,14 @@ class TrackModelGUI(QMainWindow):
                         l = QTableWidgetItem("RED")
                         l.setBackground(self.RED)
                 else:
-                    l = QTableWidgetItem("NONE")
+                    l = QTableWidgetItem()
                 new_line.setItem(block,7, l)
 
                 #create gate item
                 if track[line][block].gate != []:
                     g = QTableWidgetItem(track[line][block].gate[0])
                 else:
-                    g = QTableWidgetItem("NONE")
+                    g = QTableWidgetItem()
                 new_line.setItem(block,8, g)
 
             #set newly generated headers
