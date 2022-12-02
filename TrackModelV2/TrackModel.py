@@ -97,6 +97,7 @@ class TrackModel(QObject):
     @pyqtSlot(str, int, int)
     def handle_switch(self, line, sw_block, to_block):
         line = line.lower()
+        print("switching switch in block " + str(sw_block) + " to " + str(to_block))
 
         try:
             self.lines[line][sw_block].set_switch(to_block)
@@ -173,14 +174,19 @@ class TrackModel(QObject):
 
     #not handling errors here since something is fundamentally wrong if it errors
     def update_train_position(self, train_id, delta_x):
+        #TODO: DEBUGGING
+        print("train is moving in " + str(self.trains[train_id].movement_direction))
         #begins by adding the change in position to the current position
         self.trains[train_id].position_in_block += delta_x
 
         line = self.trains[train_id].line
 
         #checks if the previous block will no longer be occupied
-        if -1 * (self.trains[train_id].position_in_block - (self.trains[train_id].train_length * FEET_TO_METERS)) > self.lines[line][self.trains[train_id].block].LENGTH:
-            prev_block = self.lines[line][self.trains[train_id].block].get_previous(self.trains[train_id].movement_direction)
+        pos = self.trains[train_id].position_in_block
+        length = self.trains[train_id].train_length
+        blk = self.trains[train_id].block
+        if -1 * (pos - (length * FEET_TO_METERS)) > self.lines[line][blk].LENGTH and blk != YARD:
+            prev_block = self.lines[line][blk].get_previous(self.trains[train_id].movement_direction, 0)
             self.lines[line][prev_block].occupied = -1
 
             self.gui.update_occupancy(line, prev_block)
@@ -189,54 +195,58 @@ class TrackModel(QObject):
 
         #loops while the train is past the length of the current block
         while self.trains[train_id].position_in_block > self.lines[line][self.trains[train_id].block].LENGTH:
-
-            #REMOVES TRAIN UPON REACHING YARD
-            if self.lines[line][self.trains[train_id].block].get_next(self.trains[train_id].movement_direction) == YARD:
-                #unoccupies block
-                self.lines[line][self.trains[train_id].block].occupied = -1
-
-                #updates gui before deleting train so the gui knows what block to check
-                self.gui.update_occupancy(line, self.trains[train_id].block)
-                tc_block = line + "_" + self.lines[line][self.trains[train_id].block].SECTION + "_" + str(self.trains[train_id].block)
-                signals.send_tc_occupancy.emit(tc_block, False)
-
-                #remove train from dictionary
-                self.trains.pop(train_id)
-
-                print("TRAIN " + str(train_id) + " HAS BEEN REMOVED FROM THE TRACK.")
-
-                break
-
+            current_block = copy.copy(self.trains[train_id].block)
 
             #gets the position in the next block by subtracting the length of the current block
-            self.trains[train_id].position_in_block -= self.lines[line][self.trains[train_id].block].LENGTH
+            self.trains[train_id].position_in_block -= self.lines[line][current_block].LENGTH
 
             #remove train from previous block
-            self.lines[line][self.trains[train_id].block].occupied = -1
+            self.lines[line][current_block].occupied = -1
 
             #updates gui after removing train from previous block
-            self.gui.update_occupancy(line, self.trains[train_id].block)
-            tc_block = line + "_" + self.lines[line][self.trains[train_id].block].SECTION + "_" + str(self.trains[train_id].block)
+            self.gui.update_occupancy(line, current_block)
+            tc_block = line + "_" + self.lines[line][current_block].SECTION + "_" + str(current_block)
             signals.send_tc_occupancy.emit(tc_block, False)
 
             #check validity of move
-            next_block = self.lines[line][self.trains[train_id].block].get_next(self.trains[train_id].movement_direction)
-            next_dir = self.lines[line][self.trains[train_id].block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
-            if self.lines[line][next_block].get_previous(next_dir) == self.trains[train_id].block:
+            next_block = self.lines[line][current_block].get_next(self.trains[train_id].movement_direction, 0)
+            next_dir = self.lines[line][current_block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
+
+
+            if self.lines[line][next_block].get_previous(self.trains[train_id].movement_direction, next_dir) == current_block:
                 #valid move
 
                 if not self.lines[line][next_block].get_occupancy():
                     #no collision has occured
 
+                    #REMOVES TRAIN UPON REACHING YARD
+                    if self.lines[line][current_block].get_next(self.trains[train_id].movement_direction, 0) == YARD:
+                        #unoccupies block
+                        self.lines[line][current_block].occupied = -1
+
+                        #updates gui before deleting train so the gui knows what block to check
+                        self.gui.update_occupancy(line, current_block)
+                        tc_block = line + "_" + self.lines[line][current_block].SECTION + "_" + str(current_block)
+                        signals.send_tc_occupancy.emit(tc_block, False)
+
+                        #remove train from dictionary
+                        self.trains.pop(train_id)
+
+                        print("TRAIN " + str(train_id) + " HAS BEEN REMOVED FROM THE TRACK.")
+
+                        return 0
+
                     #update movement direction through a block
-                    if self.trains[train_id].movement_direction == FORWARD_DIR:
-                        self.trains[train_id].movement_direction = self.lines[line][next_block].MOVEMENT_DIRECTIONS[NEXT_BLOCK]
-                    elif self.trains[train_id].movement_direction == REVERSE_DIR:
-                        self.trains[train_id].movement_direction == self.lines[line][next_block].MOVEMENT_DIRECTIONS[PREVIOUS_BLOCK]
+                    if self.trains[train_id].movement_direction == FORWARD_DIR and self.lines[line][next_block].TRANSITION_DIRECTIONS[NEXT_BLOCK] != 0:
+                        self.trains[train_id].movement_direction = self.lines[line][next_block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
+                    elif self.trains[train_id].movement_direction == REVERSE_DIR and self.lines[line][next_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] != 0:
+                        self.trains[train_id].movement_direction == self.lines[line][next_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK]
                 
                     #moves train
                     self.lines[line][next_block].occupied = train_id
                     self.trains[train_id].block = next_block
+
+                    print("moving into block " + str(next_block))
 
                     #calls gui update function
                     self.gui.update_occupancy(line, next_block)
@@ -244,13 +254,16 @@ class TrackModel(QObject):
                     signals.send_tc_occupancy.emit(tc_block, True)
 
                     #send beacon signal to train if necessary
+                    #TODO: fix this with new beacon format
                     if self.lines[line][next_block].BEACON != "":
-                        station = self.lines[line][next_block].get_next(self.trains[train_id].movement_direction)
-                        signals.send_tm_beacon.emit(station, self.lines[line][next_block].BEACON)
+                        #station = self.lines[line][next_block].get_next(self.trains[train_id].movement_direction)
+                        #signals.send_tm_beacon.emit(station, self.lines[line][next_block].BEACON)
+                        pass
 
                     #send grade
                     signals.send_tm_grade.emit(train_id, self.lines[line][next_block].GRADE)
                     #send failure
+
                     
                 else:
                     #collision has occurred
@@ -262,6 +275,7 @@ class TrackModel(QObject):
                     tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
                     signals.send_tc_occupancy.emit(tc_block, False)
                     self.gui.show_incident(line, next_block)
+                    return 0
 
             else:
                 #train has derailed
@@ -269,6 +283,20 @@ class TrackModel(QObject):
                 self.trains.pop(train_id)
 
                 self.gui.show_incident(line, next_block)
+                return 0
+
+            #checks if train is in two blocks at once
+            pos = self.trains[train_id].position_in_block
+            length = self.trains[train_id].train_length
+            blk = self.trains[train_id].block
+            if -1 * (pos - (length * FEET_TO_METERS)) > self.lines[line][blk].LENGTH and blk != YARD:
+                prev_block = self.lines[line][self.trains[train_id].block].get_previous(self.trains[train_id].movement_direction, 0)
+                self.lines[line][prev_block].occupied = train_id
+
+                print("displaying dual occupancy?")
+                self.gui.update_occupancy(line, prev_block)
+                tc_block = line + "_" + self.lines[line][prev_block].SECTION + "_" + str(prev_block)
+                signals.send_tc_occupancy.emit(tc_block, True)
 
 
     def initialize_track(self, filename="track.xlsx"):

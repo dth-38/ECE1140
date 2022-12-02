@@ -625,7 +625,8 @@ class TrackController(QMainWindow):
                 if self.current_Track_State[block].closed == False:
                     if self.current_Track_State[block].switches != []:
                         if self.current_Track_State[block].switches[0] != self.next_Track_State[block].switches[0]:
-                            signals.broadcast_switch.emit(d_block[0], d_block[1], self.next_Track_State[block].get_switched_to())
+                            block_num = decompose_block(self.next_Track_State[block].get_switched_to())
+                            signals.broadcast_switch.emit(d_block[0], d_block[1], block_num[1])
                             self.current_Track_State[block].switches[0] = copy.copy(self.next_Track_State[block].switches[0])
 
                 if self.current_Track_State[block].lights != []:
@@ -735,8 +736,6 @@ class TrackController(QMainWindow):
     def handle_suggested_speed(self, block, s_speed):
         for bl in self.current_Track_State:
             if block == bl:
-                print("got speed: " + str(s_speed))
-                print("current speed: " + str(self.current_Track_State[bl].commanded_Speed))
                 self.next_Track_State[bl].suggested_Speed = s_speed
                 break
 

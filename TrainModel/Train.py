@@ -534,10 +534,12 @@ class Train:
                 #pprint(temp_velocity)
 
                 #DISTANCE CALCULATION
-                temp_distance = prev_distance + (temp_velocity * sample_period)
+                #TODO: I think this is scuffed
+                distance_moved = temp_velocity * sample_period
+                #temp_distance = prev_distance + (temp_velocity * sample_period)
                 #temp_distance = prev_distance + (self.actual_speed + temp_velocity)/2 * sample_period
-                self.distance = temp_distance
-                signals.send_tm_distance.emit(self.id, self.distance)
+                #self.distance = temp_distance
+                signals.send_tm_distance.emit(self.id, distance_moved)
                 
                 # #if position length is greater than block length, move to next block
                 # if (temp_position > current_block_length):
