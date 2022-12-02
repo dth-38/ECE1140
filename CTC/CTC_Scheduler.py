@@ -91,7 +91,7 @@ class CTC_Scheduler:
         #self.sort_dispatch_queue()
         #TODO: Find out how to track authority to other stations, only working for authority to first station
         destinations = destinations.split()
-        self.authority = self.calc_authority(train_id,line,destinations[0])
+        self.authority = self.calc_authority(train_id,line,destinations[0],0)
         travel_time = self.calc_travel_time(line)
         travel_hours = int(travel_time)
         travel_minutes = (travel_time*60) % 60
@@ -167,7 +167,7 @@ class CTC_Scheduler:
                 return self.green_throughput
         else:
             return 0
-    def calc_authority(self,train_id,line,destination):
+    def calc_authority(self,train_id,line,destination,position):
         print("DESTINATION: " + str(destination))
         authority = 0
         destination_block = 0
@@ -175,7 +175,8 @@ class CTC_Scheduler:
             for i in range(len(self.red_stations)):
                 if self.red_stations[i][1] == destination:
                     destination_block = self.red_stations[i][0]
-            for i in range(len(self.red_route_blocks)):
+            start_block = self.red_route_blocks.index(position)
+            for i in range(start_block,len(self.red_route_blocks)):
                 if self.red_route_blocks[i] != destination_block:
                     authority += 1
                 else:
@@ -184,8 +185,8 @@ class CTC_Scheduler:
             for i in range(len(self.green_stations)):
                 if self.green_stations[i][1] == destination:
                     destination_block = self.green_stations[i][0]
-                    print("Destination Block: " + str(destination_block))
-            for i in range(len(self.green_route_blocks)):
+            start_block = self.red_route_blocks.index(position)
+            for i in range(start_block,len(self.green_route_blocks)):
                 if self.green_route_blocks[i] != destination_block:
                     authority += 1
                 else:
