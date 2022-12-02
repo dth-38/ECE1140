@@ -535,7 +535,7 @@ class Train:
 
                 #DISTANCE CALCULATION
                 #TODO: I think this is scuffed
-                distance_moved = temp_velocity * sample_period
+                distance_moved = (1/2) * temp_acceleration * sample_period + temp_velocity * sample_period
                 #temp_distance = prev_distance + (temp_velocity * sample_period)
                 #temp_distance = prev_distance + (self.actual_speed + temp_velocity)/2 * sample_period
                 #self.distance = temp_distance
