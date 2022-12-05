@@ -98,6 +98,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             departure_time = (int(self.hour_selection.toPlainText()),int(self.minute_selection.toPlainText()),int(self.second_selection.toPlainText()))
             self.train_entries, travel_time = self.schedule.manual_dispatch_train(departure_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations)
             #sends dispatch signal
+            print("manual train entry: " + str(self.schedule.train_table.get_entry(0)))
             line = str(self.train_entries[5])
             line.upper()
             signals.send_tm_dispatch.emit(line)
@@ -111,7 +112,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
             
             self.manual_trains += 1
-            self.destinations.clear()
+            #self.destinations.clear()
     
     def schedule_output(self,train):
         self.schedule_trains += 1
@@ -146,8 +147,10 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.current_minute.setText(str(self.clock.get_minutes()))
         self.current_second.setText(str(self.clock.get_seconds()))
         for i in range(self.manual_trains):
+            print("train: " + str(self.schedule.train_table.get_entry(i)))
             if self.schedule.train_table.get_authority(i) == 0:
                 authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),self.schedule.train_table.get_next_destination(i),self.schedule.train_table.get_position(i))
+                print("next authority: " + str(authority))
                 self.schedule.train_table.change_authority(i,authority)
                 self.train_table_display.takeItem((i*6) + (i + 2))
                 self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))

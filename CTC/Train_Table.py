@@ -9,6 +9,8 @@ class Train_Table:
         #create instance of the train
         #a_train = new trainmodel()
         self.table.append([id,position,states,destinations,authority,line,arrival_time])
+    def get_entry(self,position):
+        return self.table[position]
     def remove_entry(self):
         print("REMOVE TRAIN ENTRY!!!!")
         #Remove first entry from table

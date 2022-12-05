@@ -171,7 +171,8 @@ class CTC_Scheduler:
         else:
             return 0
     def calc_authority(self,train_id,line,destination,position):
-        print("DESTINATION: " + str(destination))
+        # print("DESTINATION: " + str(destination))
+        # print("POSITION: " + str(position))
         authority = 0
         destination_block = 0
         if line == "Red":
@@ -179,6 +180,7 @@ class CTC_Scheduler:
                 if self.red_stations[i][1] == destination:
                     destination_block = self.red_stations[i][0]
             start_block = self.red_route_blocks.index(position)
+            # print("START BLOCK: " + str(start_block))
             for i in range(start_block,len(self.red_route_blocks)):
                 if self.red_route_blocks[i] != destination_block:
                     authority += 1
@@ -188,11 +190,14 @@ class CTC_Scheduler:
             for i in range(len(self.green_stations)):
                 if self.green_stations[i][1] == destination:
                     destination_block = self.green_stations[i][0]
-            start_block = self.red_route_blocks.index(position)
+            start_block = self.green_route_blocks.index(position)
+            # print("START BLOCK: " + str(start_block))
+            # print("DESTINATION BLOCK: " + str(destination_block))
             for i in range(start_block,len(self.green_route_blocks)):
                 if self.green_route_blocks[i] != destination_block:
                     authority += 1
                 else:
+                    # print("OUTPUT AUTHORITY: " + str(authority))
                     return authority
     """""
     def sort_dispatch_queue(self):
