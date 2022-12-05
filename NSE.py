@@ -7,7 +7,7 @@ from PyQt5.QtGui import QFont
 
 import Scheduler
 from TrackController.TrackController import TrackController
-from CTC.CTC import CTC
+from CTC.CTC_main import CTCWindowClass
 from TrackModelV2.TrackModel import TrackModel
 from Signals import signals
 
@@ -31,7 +31,7 @@ class NSE_Simulation(QMainWindow):
 
 
         self.track_controllers = []
-        self.ctc = CTC()
+        self.ctc = CTCWindowClass()
         self.track = TrackModel()
     
 
@@ -186,7 +186,7 @@ class NSE_Simulation(QMainWindow):
         self.stop_sim()
 
     def open_ctc(self):
-        self.ctc.MainWindow.show()
+        self.ctc.show()
 
 
     def open_track_controller(self):

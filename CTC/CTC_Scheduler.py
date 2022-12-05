@@ -10,7 +10,7 @@ from CTC.CTC_Clock import CTC_Clock
 from CTC.Train_Table import Train_Table
 from CTC.Block_Table import Block_Table
 from CTC.CTC_Clock import  CTC_Clock
-from TrackModel.trackmodel import TrackModel
+from TrackModel.block import Block
 
 class CTC_Scheduler: 
     def __init__(self):
@@ -45,6 +45,9 @@ class CTC_Scheduler:
                                  47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32,
                                  31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,
                                  1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+        self.red_block_dist = [0,50,50,50,50,50,50,75,75,75,75,75,75,68.4,60,60,50,200,400,400,200,100,100,50,50,50,50,60,60,50,50,50,50,50,50,50,50,50,60,60,50,50,50,50,75,75,75,50,50,50,43.2,50,50,75,75,75,75,75,75,75,75,75,75,75,75,50,50,50,50,50,50,50,50,50,50,50]
+        print("red blocks: " + str(len(self.red_block_dist)))
+        self.green_block_dist = []
         self.red_schedule = []
         self.green_schedule = []
         self.train_states = []
@@ -53,12 +56,12 @@ class CTC_Scheduler:
         self.green_speed = 44
         self.destination_index = 0
         self.red_stations = [[7,"Shadyside"],[16,"Herron_Ave"],
-        [21,"Swissville"],[25,"Penn_Station"],[35,"Steel_Plaza"],[45,"First_Ave"],
-        [48,"Station_Square"],[60,"South_Hills_Junction"]]
+        [21,"Swissville"],[25,"Penn Station"],[35,"Steel Plaza"],[45,"First Ave"],
+        [48,"Station Square"],[60,"South Hills Junction"]]
         self.green_stations = [[0,"Yard"],[2,"Pioneer"],[9,"Edgebrook"],[16,"Station"],[
-            19,"Railway_Crossing"],[22,"Whited"],[31,"South_Bank"],[39,"Central"],
+            19,"Railway Crossing"],[22,"Whited"],[31,"South Bank"],[39,"Central"],
             [48,"Inglewood"],[57,"Overbrook"],[65,"Glenbury"],[73,"Dormont"],
-            [77,"Mt_Lebanon"],[88,"Poplar"],[96,"Castle_Shannon"]]
+            [77,"Mt Lebanon"],[88,"Poplar"],[96,"Castle Shannon"]]
     def upload_schedule(self,schedule):
         print("schedule: " + str(schedule))
         schedule = pd.read_excel(schedule)
@@ -90,7 +93,7 @@ class CTC_Scheduler:
         #TODO: CALL SORT DISPATCH QUEUE
         #self.sort_dispatch_queue()
         #TODO: Find out how to track authority to other stations, only working for authority to first station
-        destinations = destinations.split()
+        print("destinations: " + str(destinations))
         self.authority = self.calc_authority(train_id,line,destinations[0],0)
         travel_time = self.calc_travel_time(line)
         travel_hours = int(travel_time)
@@ -197,12 +200,17 @@ class CTC_Scheduler:
         self.dispatch_queue = np.array(self.dispatch_queue,dtype=dtype)
         self.dispatch_queue = np.sort(self.dispatch_queue,order=Train)
     """
-    #TODO: GET ACTUAL DISTANCE OF EACH BLOCK FROM TRACKMODEL? Yes
+    #TODO: GET ACTUAL DISTANCE OF EACH BLOCK FROM TRACKMODEL
     def calc_travel_time(self,line):
         dist = 0
         if line == "Red":
             for i in range(len(self.red_route_blocks)):
-                dist += self.red_route_blocks[i]
+                idx = self.red_route_blocks[i]
+                print("idx: " + str(idx))
+                if idx == 0: 
+                    dist += 0
+                else:
+                    dist += self.red_block_dist[idx - 1]
             travel_time = dist/(self.red_speed*1000)
         elif line == "Green":
             for i in range(len(self.green_route_blocks)):
