@@ -70,10 +70,10 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         signals.set_tc_switch(tc_block,tc_next_block)
 
     def destination_select(self):
-        red_stations = ["Yard", "Shadyside","Herron_Ave",
+        red_stations = ["Shadyside","Herron_Ave",
         "Swissville","Penn Station","Steel Plaza","First Ave",
         "Station Square","South Hills Junction"]
-        green_stations = ["Yard","Pioneer","Edgebrook","Station",
+        green_stations = ["Pioneer","Edgebrook","Station",
             "Railway Crossing","Whited","South Bank","Central",
             "Inglewood","Overbrook","Glenbury","Dormont",
             "Mt Lebanon","Poplar","Castle Shannon"]
@@ -92,11 +92,11 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.destination_output.clear()
 
     def dispatch(self):
-        if self.hour_selection.toPlainText() == "" or self.minute_selection.toPlainText() == "" or self.second_selection.toPlainText() == "" or len(self.destinations) == 0:
+        if self.hour_selection.toPlainText() == "" or self.minute_selection.toPlainText() == "" or self.second_selection.toPlainText() == "" or len(self.destinations) == 0 or self.starting_block_selection.toPlainText() == "":
             pass
         else:
             departure_time = (int(self.hour_selection.toPlainText()),int(self.minute_selection.toPlainText()),int(self.second_selection.toPlainText()))
-            self.train_entries, travel_time = self.schedule.manual_dispatch_train(departure_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations)
+            self.train_entries, travel_time = self.schedule.manual_dispatch_train(departure_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations,int(self.starting_block_selection.toPlainText()))
             #sends dispatch signal
             print("manual train entry: " + str(self.schedule.train_table.get_entry(0)))
             line = str(self.train_entries[5])
@@ -129,7 +129,8 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
     def output_throughput(self):
         line = self.line_throughput_selection.currentText()
         #TODO: GET TICKET SALES FROM THE TRACKMODEL
-        if int(self.current_hour.toPlainText()) > 0:
+        print("hour: " + self.current_hour.toPlainText())
+        if self.current_hour.toPlainText() != "":
             throughput = self.schedule.calc_throughput(line=line,ticket_sales=10,hours=int(self.current_hour.toPlainText()))
             self.throughput_output.setText(str(throughput))
     
@@ -149,13 +150,19 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         for i in range(self.manual_trains):
             print("train: " + str(self.schedule.train_table.get_entry(i)))
             if self.schedule.train_table.get_authority(i) == 0:
-                authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),self.schedule.train_table.get_next_destination(i),self.schedule.train_table.get_position(i))
+                next_destination = self.schedule.train_table.get_next_destination(i)
+                authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),next_destination,self.schedule.train_table.get_position(i))
                 print("next authority: " + str(authority))
+                travel_time = self.schedule.calc_travel_time(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i),next_destination)
+                print("travel_time: " + str(travel_time))
+                arrival_time = [int(travel_time[0] + int(self.current_hour.toPlainText())), int(travel_time[1] + int(self.current_minute.toPlainText())), int(travel_time[2] + int(self.current_second.toPlainText()))]
                 self.schedule.train_table.change_authority(i,authority)
                 self.train_table_display.takeItem((i*6) + (i + 2))
                 self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
                 self.train_table_display.takeItem((i*6) + (i + 4))
                 self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
+                self.train_table_display.takeItem((i*6) + (i + 6))
+                self.train_table_display.insertItem((i*6) + (i + 6),"Arrival Time: " + str(arrival_time))
             else:
                 self.train_table_display.takeItem((i*6) + (i + 2))
                 self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
@@ -246,7 +253,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             elif self.schedule.train_table.get_line(i) == "Green":
                 signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
         self.clock.update_time()
-        
+    
 
     
 

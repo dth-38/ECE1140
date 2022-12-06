@@ -47,7 +47,7 @@ class CTC_Scheduler:
                                  1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
         self.red_block_dist = [0,50,50,50,50,50,50,75,75,75,75,75,75,68.4,60,60,50,200,400,400,200,100,100,50,50,50,50,60,60,50,50,50,50,50,50,50,50,50,60,60,50,50,50,50,75,75,75,50,50,50,43.2,50,50,75,75,75,75,75,75,75,75,75,75,75,75,50,50,50,50,50,50,50,50,50,50,50]
         print("red blocks: " + str(len(self.red_block_dist)))
-        self.green_block_dist = []
+        self.green_block_dist = [0,100,100,100,100,100,100,100,100,100,100,100,100,150,150,150,150,150,150,150,150,300,300,300,300,200,100,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,100,100,200,200,100,100,100,100,100,100,100,100,100,100,300,300,300,300,300,300,300,300,300,100,86.6,100,75,75,75,75,75,75,75,75,75,75,75,75,35,100,100,80,100,100,90,100,100,100,100,100,100,162,100,100,50,50,40,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,184,40,35]
         self.red_schedule = []
         self.green_schedule = []
         self.train_states = []
@@ -86,7 +86,7 @@ class CTC_Scheduler:
                     self.red_schedule.append([line,station,time_to_station,arrival_time])
                 elif line == "Green":
                     self.green_schedule.append([line,station,time_to_station,arrival_time])
-    def manual_dispatch_train(self,departure_time,train_id,line,destinations):
+    def manual_dispatch_train(self,departure_time,train_id,line,destinations,starting_block):
         self.destination_index = 0
         #Dispatch queue only for scheduled dispatches? 
         #self.dispatch_queue.append([arrival_time,train_id])
@@ -94,14 +94,10 @@ class CTC_Scheduler:
         #self.sort_dispatch_queue()
         #TODO: Find out how to track authority to other stations, only working for authority to first station
         print("destinations: " + str(destinations))
-        self.authority = self.calc_authority(train_id,line,destinations[0],0)
-        travel_time = self.calc_travel_time(line)
-        travel_hours = int(travel_time)
-        travel_minutes = (travel_time*60) % 60
-        travel_seconds = (travel_time*3600) % 60
-        travel_time = (travel_hours,travel_minutes,travel_seconds)
+        self.authority = self.calc_authority(train_id,line,destinations[0],starting_block)
+        travel_time = self.calc_travel_time(line,starting_block,destinations[0])
         arrival_time = [int(travel_time[0] + departure_time[0]), int(travel_time[1] + departure_time[1]), int(travel_time[2] + departure_time[2])]
-        self.train_table.add_entry(id=self.train_id,position=0,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
+        self.train_table.add_entry(id=self.train_id,position=starting_block,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
         self.train_id += 1
         #add it to the yard
         #return the new entry added for each train dispatched
@@ -140,7 +136,7 @@ class CTC_Scheduler:
             #print("schedule_time: " + str(schedule_time))
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
                 print("Red schedule train")
-                train, travel_time = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.red_schedule[i][0],destinations=self.red_schedule[i][1])
+                train, travel_time = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.red_schedule[i][0],destinations=self.red_schedule[i][1],starting_block=0)
         for i in range(len(self.green_schedule)):
             travel_time = self.green_schedule[i][2]
             travel_minutes = int(travel_time)
@@ -206,20 +202,41 @@ class CTC_Scheduler:
         self.dispatch_queue = np.sort(self.dispatch_queue,order=Train)
     """
     #TODO: GET ACTUAL DISTANCE OF EACH BLOCK FROM TRACKMODEL
-    def calc_travel_time(self,line):
+    def calc_travel_time(self,line,start_block,destination):
         dist = 0
         if line == "Red":
-            for i in range(len(self.red_route_blocks)):
+            for i in range(len(self.red_stations)):
+                if self.red_stations[i][1] == destination:
+                    destination_block = self.red_stations[i][0]
+            start_block = self.red_route_blocks.index(start_block)
+            for i in range(start_block, len(self.red_route_blocks)):
                 idx = self.red_route_blocks[i]
                 print("idx: " + str(idx))
                 if idx == 0: 
                     dist += 0
                 else:
                     dist += self.red_block_dist[idx - 1]
-            travel_time = dist/(self.red_speed*1000)
+            #convert time to seconds
+            travel_time = dist/(self.red_speed*.44704)
+            print("travel_time: " + str(travel_time))
         elif line == "Green":
-            for i in range(len(self.green_route_blocks)):
-                dist += self.green_route_blocks[i]
-            travel_time = dist/(self.green_speed*1000)
+            for i in range(len(self.green_stations)):
+                if self.green_stations[i][1] == destination:
+                    destination_block = self.green_stations[i][0]
+            start_block = self.green_route_blocks.index(start_block)
+            for i in range(start_block, len(self.green_route_blocks)):
+                idx = self.green_route_blocks[i]
+                print("idx: " + str(idx))
+                if idx == 0: 
+                    dist += 0
+                else:
+                    dist += self.green_block_dist[idx - 1]
+            #convert time to seconds
+            travel_time = dist/(self.green_speed*.44704)
+            print("travel_time: " + str(travel_time))
+        travel_hours = (travel_time//3600)
+        travel_minutes = (travel_time%3600)//6060
+        travel_seconds = (travel_time%3600)%60
+        travel_time = (travel_hours,travel_minutes,travel_seconds)
         return travel_time
 
