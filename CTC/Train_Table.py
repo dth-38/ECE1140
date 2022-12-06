@@ -3,7 +3,7 @@
 class Train_Table:
     def __init__(self):
         self.table = []
-        self.destinations_count = 1
+        self.destinations_count = 0
     def add_entry(self,id,position,states,destinations,authority,line,arrival_time):
         print("ADD TRAIN ENTRY!!!!!")
         #create instance of the train
@@ -18,7 +18,10 @@ class Train_Table:
     def get_next_destination(self,position):
         destinations = self.table[position][3]
         self.destinations_count += 1
-        return destinations[self.destinations_count - 1]
+        if len(destinations) <= self.destinations_count - 1:
+            return destinations[self.destinations_count - 1]
+        else:
+            return "0"
     def get_train_destinations(self,position):
         return self.table[position][3]
     def get_train_id(self,position):

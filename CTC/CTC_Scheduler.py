@@ -86,7 +86,7 @@ class CTC_Scheduler:
                     self.red_schedule.append([line,station,time_to_station,arrival_time])
                 elif line == "Green":
                     self.green_schedule.append([line,station,time_to_station,arrival_time])
-    def manual_dispatch_train(self,departure_time,train_id,line,destinations,starting_block):
+    def manual_dispatch_train(self,departure_time,train_id,line,destinations):
         self.destination_index = 0
         #Dispatch queue only for scheduled dispatches? 
         #self.dispatch_queue.append([arrival_time,train_id])
@@ -94,10 +94,10 @@ class CTC_Scheduler:
         #self.sort_dispatch_queue()
         #TODO: Find out how to track authority to other stations, only working for authority to first station
         print("destinations: " + str(destinations))
-        self.authority = self.calc_authority(train_id,line,destinations[0],starting_block)
-        travel_time = self.calc_travel_time(line,starting_block,destinations[0])
+        self.authority = self.calc_authority(train_id,line,destinations[0],0)
+        travel_time = self.calc_travel_time(line,0,destinations[0])
         arrival_time = [int(travel_time[0] + departure_time[0]), int(travel_time[1] + departure_time[1]), int(travel_time[2] + departure_time[2])]
-        self.train_table.add_entry(id=self.train_id,position=starting_block,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
+        self.train_table.add_entry(id=self.train_id,position=0,states=self.train_states,destinations=destinations,authority=self.authority,line=line,arrival_time=arrival_time)
         self.train_id += 1
         #add it to the yard
         #return the new entry added for each train dispatched
@@ -136,7 +136,7 @@ class CTC_Scheduler:
             #print("schedule_time: " + str(schedule_time))
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
                 print("Red schedule train")
-                train, travel_time = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.red_schedule[i][0],destinations=self.red_schedule[i][1],starting_block=0)
+                train, travel_time = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.red_schedule[i][0],destinations=self.red_schedule[i][1])
         for i in range(len(self.green_schedule)):
             travel_time = self.green_schedule[i][2]
             travel_minutes = int(travel_time)
@@ -155,26 +155,38 @@ class CTC_Scheduler:
                 train, travel_time = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=self.green_schedule[i][1])
         return train
 
-    def calc_throughput(self,line,ticket_sales,hours):
+    def calc_throughput(self,station,ticket_sales,hours):
         #TODO: GET TICKET SALES FROM TRACK MODEL
+        red_sales = 0
+        green_sales = 0
         if hours > 0:
-            if line == "Red":
-                self.red_throughput = ticket_sales/hours
-                return self.red_throughput
-            elif line == "Green":
-                self.green_throughput = ticket_sales/hours
-                return self.green_throughput
+            for i in range(len(self.red_stations)):
+                if station == self.red_stations[i][1]:
+                    red_sales += ticket_sales
+            self.red_throughput = red_sales/hours
+            for i in range(len(self.green_stations)):
+                if station == self.green_stations[i][1]:
+                    green_sales += ticket_sales
+            self.green_throughput = green_sales/hours
         else:
-            return 0
+            pass
+    def get_throughput(self,line): 
+        if line == "Red":
+            return self.red_throughput
+        elif line == "Green":
+            return self.green_throughput
     def calc_authority(self,train_id,line,destination,position):
         # print("DESTINATION: " + str(destination))
         # print("POSITION: " + str(position))
         authority = 0
         destination_block = 0
         if line == "Red":
-            for i in range(len(self.red_stations)):
-                if self.red_stations[i][1] == destination:
-                    destination_block = self.red_stations[i][0]
+            if destination.isnumeric() == True:
+                destination_block = int(destination)
+            else:
+                for i in range(len(self.red_stations)):
+                    if self.red_stations[i][1] == destination:
+                        destination_block = self.red_stations[i][0]
             start_block = self.red_route_blocks.index(position)
             # print("START BLOCK: " + str(start_block))
             for i in range(start_block,len(self.red_route_blocks)):
@@ -183,9 +195,12 @@ class CTC_Scheduler:
                 else:
                     return authority
         elif line == "Green":
-            for i in range(len(self.green_stations)):
-                if self.green_stations[i][1] == destination:
-                    destination_block = self.green_stations[i][0]
+            if destination.isnumeric() == True:
+                destination_block = int(destination)
+            else:
+                for i in range(len(self.green_stations)):
+                    if self.green_stations[i][1] == destination:
+                        destination_block = self.green_stations[i][0]
             start_block = self.green_route_blocks.index(position)
             # print("START BLOCK: " + str(start_block))
             # print("DESTINATION BLOCK: " + str(destination_block))

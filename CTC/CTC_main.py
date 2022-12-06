@@ -47,6 +47,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.destination_add_button.clicked.connect(lambda: self.add_destination())
         self.clear_destination.clicked.connect(lambda: self.destination_clear())
         self.set_maintenance_button.clicked.connect(lambda: self.maintenance_pressed())
+        self.destination_block_add_button.clicked.connect(lambda: self.add_dispatch_block())
     
     def manual_mode(self):
         self.maintenance_frame.hide()
@@ -87,16 +88,21 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.destination_output.append(self.destination_selection.currentText())
         self.destinations.append(self.destination_selection.currentText())
 
+    def add_dispatch_block(self):
+        self.destination_output.append(self.starting_block_selection.toPlainText())
+        self.destinations.append(self.starting_block_selection.toPlainText())
 
     def destination_clear(self):
         self.destination_output.clear()
+        if len(self.destinations) > 0:
+            self.destinations.clear()
 
     def dispatch(self):
-        if self.hour_selection.toPlainText() == "" or self.minute_selection.toPlainText() == "" or self.second_selection.toPlainText() == "" or len(self.destinations) == 0 or self.starting_block_selection.toPlainText() == "":
+        if self.hour_selection.toPlainText() == "" or self.minute_selection.toPlainText() == "" or self.second_selection.toPlainText() == "" or len(self.destinations) == 0:
             pass
         else:
             departure_time = (int(self.hour_selection.toPlainText()),int(self.minute_selection.toPlainText()),int(self.second_selection.toPlainText()))
-            self.train_entries, travel_time = self.schedule.manual_dispatch_train(departure_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations,int(self.starting_block_selection.toPlainText()))
+            self.train_entries, travel_time = self.schedule.manual_dispatch_train(departure_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations)
             #sends dispatch signal
             print("manual train entry: " + str(self.schedule.train_table.get_entry(0)))
             line = str(self.train_entries[5])
@@ -112,7 +118,6 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
             
             self.manual_trains += 1
-            #self.destinations.clear()
     
     def schedule_output(self,train):
         self.schedule_trains += 1
@@ -129,9 +134,8 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
     def output_throughput(self):
         line = self.line_throughput_selection.currentText()
         #TODO: GET TICKET SALES FROM THE TRACKMODEL
-        print("hour: " + self.current_hour.toPlainText())
         if self.current_hour.toPlainText() != "":
-            throughput = self.schedule.calc_throughput(line=line,ticket_sales=10,hours=int(self.current_hour.toPlainText()))
+            throughput = self.schedule.get_throughput(line)
             self.throughput_output.setText(str(throughput))
     
     def add_schedule(self):
@@ -151,6 +155,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             print("train: " + str(self.schedule.train_table.get_entry(i)))
             if self.schedule.train_table.get_authority(i) == 0:
                 next_destination = self.schedule.train_table.get_next_destination(i)
+                print("next destination: " + str(next_destination))
                 authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),next_destination,self.schedule.train_table.get_position(i))
                 print("next authority: " + str(authority))
                 travel_time = self.schedule.calc_travel_time(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i),next_destination)
@@ -238,8 +243,8 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.schedule.block_table.add_light(line,block,color)
     def update_gate(self,line,block_num,status):
         self.schedule.block_table.add_gate(line,block_num,status)
-    def update_ticket_sales(self,line,ticket_sales):
-        self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
+    def update_ticket_sales(self,station,ticket_sales):
+        self.schedule.calc_throughput(station,ticket_sales,self.clock.get_hours())
     def tick(self):
         schedule_train = self.schedule.check_schedule(self.clock.get_time())
         if len(schedule_train) > 0:
