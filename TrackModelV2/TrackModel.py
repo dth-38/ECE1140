@@ -236,17 +236,18 @@ class TrackModel(QObject):
 
                         return 0
 
+                    #moves train
+                    self.lines[line][next_block].occupied = train_id
+                    self.trains[train_id].block = next_block
+
+                    print("moving into block " + str(next_block))
+
                     #update movement direction through a block
                     if self.trains[train_id].movement_direction == FORWARD_DIR and self.lines[line][next_block].TRANSITION_DIRECTIONS[NEXT_BLOCK] != 0:
                         self.trains[train_id].movement_direction = self.lines[line][next_block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
                     elif self.trains[train_id].movement_direction == REVERSE_DIR and self.lines[line][next_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] != 0:
                         self.trains[train_id].movement_direction == self.lines[line][next_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK]
                 
-                    #moves train
-                    self.lines[line][next_block].occupied = train_id
-                    self.trains[train_id].block = next_block
-
-                    print("moving into block " + str(next_block))
 
                     #calls gui update function
                     self.gui.update_occupancy(line, next_block)
@@ -254,15 +255,29 @@ class TrackModel(QObject):
                     signals.send_tc_occupancy.emit(tc_block, True)
 
                     #send beacon signal to train if necessary
-                    #TODO: fix this with new beacon format
-                    if self.lines[line][next_block].BEACON != "":
-                        #station = self.lines[line][next_block].get_next(self.trains[train_id].movement_direction)
-                        #signals.send_tm_beacon.emit(station, self.lines[line][next_block].BEACON)
-                        pass
+                    if self.lines[line][next_block].BEACON[0] != "":
+                        station = self.lines[line][next_block].BEACON[0]
+                        if self.lines[line][next_block].BEACON[1] == "LEFT":
+                            side = STATION_LEFT
+                        elif self.lines[line][next_block].BEACON[1] == "RIGHT":
+                            side = STATION_RIGHT
+                        else:
+                            side = STATION_BOTH
+
+                        signals.send_tm_beacon.emit(station, side)
 
                     #send grade
                     signals.send_tm_grade.emit(train_id, self.lines[line][next_block].GRADE)
                     #send failure
+                    #send tunnel
+                    signals.send_tm_tunnel.emit(self.lines[line][next_block].UNDERGROUND)
+                    #send at station
+                    signals.send_tm_station.emit(self.lines[line][next_block].STATION != "")
+                    #Send new authority to train.
+                    #TODO: comment back in after ctc is working
+                    #signals.send_tm_authority.emit(self.lines[line][next_block].authority)
+                    #Send new commanded speed to train.
+                    #signals.send_tm_commanded_speed.emit(self.lines[line][next_block].commanded_speed)
 
                     
                 else:
