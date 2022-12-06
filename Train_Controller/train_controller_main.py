@@ -283,7 +283,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.set_door_right(self.check_right_door())
         self.real_train.set_internal_light(self.check_internal_light())
         self.real_train.set_external_light(self.check_external_light())
-        self.real_train.set_temp(float(self.temperature_box.toPlainText()))
+        self.real_train.set_temp(int(self.temperature_box.toPlainText()))
         self.real_train.set_annun(self.check_annun())
         self.real_train.set_ad(self.check_ad())
         self.real_train.set_horn(self.check_horn())
@@ -392,7 +392,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         #if failure occurs
         if self.real_train.get_failure_flag() == True:
             #decrease speed
-            self.emergency_slow()
+            #self.emergency_slow()
             self.failure_frame.setStyleSheet("background-color: red")
             self.failure_output.clear()
             self.failure_output.append("Exists!")
@@ -400,10 +400,6 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.failure_frame.setStyleSheet("background-color: white")
             self.failure_output.clear()
             self.failure_output.append("N/A")
-            self.real_train.set_failure_flag(False)
-            self.emergency_brake.setStyleSheet("background-color: light gray")
-            self.emergency_brake.setText("Emergency Brake")
-            self.emer_brake_flag = False
 
         #if train came to stop (fully) in auto mode
         if self.real_train.get_power() == 0 and self.auto_f == True:
@@ -418,8 +414,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         # 
         if self.real_train.get_authority() == 0:
             self.set_norm_brake_flag(True)
-        else:
-            self.set_norm_brake_flag(False)
+        #else:
+        #    self.set_norm_brake_flag(False)
 
         #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
         #if self.norm_brake_flag == True or self.emer_brake_flag == True:

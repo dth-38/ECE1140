@@ -15,11 +15,6 @@ class Train:
         #train id
         self.id = ID
 
-        #dispatch information???
-        #self.destination_block = destination_block
-        #self.line = line
-        #block list = array of blocks from starting block to destination block
-
         #beacon info
         self.next_station = ""
         self.door_side = 0               #0 = closed, 1 = left, 2 = right, 3 = both
@@ -32,18 +27,23 @@ class Train:
         self.passenger_count = 0
         self.mass = 40.25               #imperial tons
 
+        #track info
+        self.grade = 0.0                #%ft risen per 100 ft
+        self.in_station = False
+        self.in_tunnel = False
+        self.authority = 0
+        self.commanded_speed = 0.0      #mph
+
         #train movement info
         self.actual_speed = 0.0         #mph
-        self.commanded_speed = 0.0      #mph
-        self.grade = 0.0                #%ft risen per 100 ft
         self.power = 0.0                #kilowatts
         self.acceleration = 0           #ft/s^2
-        self.authority = 0
         self.distance = 0               #meters
         self.force = 0
 
         #various train functions
         self.ac_cmd = 68.0              #degrees farenheight
+        self.actual_temp = 68.0
         self.horn = "Off"
         self.interior_light_cmd = "On"
         self.exterior_light_cmd = "Off"
@@ -74,8 +74,6 @@ class Train:
         self.PASSENGER_LIMIT = 222
         self.MAX_GRADIENT = 60
 
-        #signals
-
         #track model inputs
         signals.send_tm_authority.connect(self.train_model_update_authority)
         signals.send_tm_grade.connect(self.get_grade)
@@ -83,10 +81,12 @@ class Train:
         signals.send_tm_beacon.connect(self.get_beacon)
         signals.send_tm_passenger_count.connect(self.train_model_update_passengers)
         signals.send_tm_commanded_speed.connect(self.train_model_update_command_speed)
+        signals.send_tm_tunnel.connect(self.train_model_update_tunnel)
+        signals.send_tm_station.connect(self.train_model_update_station)
 
         #open ui
         signals.open_tm_gui.connect(self.show_tm_ui)
-        signals.open_tm_gui.connect(self.show_tc_ui)
+        signals.open_tc_gui.connect(self.show_tc_ui)
 
         #update function
         signals.train_update.connect(self.update_values)
@@ -125,9 +125,11 @@ class Train:
 
     def update_values(self):    #run every 1 sec (infinite loop)
         #get values from track model
-        self.train_ctrl.real_train.set_authority(self.authority)    #authoritys
+        self.train_ctrl.real_train.set_authority(self.authority)    #authority
         self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
+        #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
+        #self.train_ctrl.real_train.set_station(self.in_station)
         
         #send failure to train controller
         if(self.engine_failure or self.brake_failure or self.signal_pickup_failure):
@@ -150,8 +152,11 @@ class Train:
         self.exterior_light_cmd = self.train_ctrl.real_train.get_external_light()
         self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
         self.ac_cmd = self.train_ctrl.real_train.get_temp()
+        self.regulate_temp()
         self.horn = self.train_ctrl.real_train.get_horn()
         self.sbrake = self.train_ctrl.get_norm_brake_flag()
+        print("sbrake: ", self.sbrake)
+        
         if(self.brake_failure):
             self.sbrake = False
         self.ebrake = self.train_ctrl.get_emer_brake_flag()
@@ -172,7 +177,6 @@ class Train:
 
         #update train controller display
         self.train_ctrl.update_train_display()
-        #self.show_tc_ui(0)
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Show UIs ------------------------------------------------------
@@ -187,7 +191,7 @@ class Train:
     def show_tc_ui(self, ctrlid):
         if(self.id == ctrlid):
             self.train_ctrl.show()
-
+            
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Train Controller Inputs ---------------------------------------
 # ---------------------------------------------------------------------------------------------
@@ -199,7 +203,6 @@ class Train:
             self.ui.int_light_line.setText("On")
         else:
             self.ui.int_light_line.setText("Off")
-        #signals.train_model_update.emit()
 
     #display external lights
     def train_model_display_external_lights(self):
@@ -207,7 +210,6 @@ class Train:
             self.ui.ext_light_line.setText("On")
         else:
             self.ui.ext_light_line.setText("Off")
-        #signals.train_model_update.emit()
 
     #display advertisement
     def train_model_display_adv(self):
@@ -215,24 +217,30 @@ class Train:
             self.ui.advertisement_line.setText("On")
         else:
             self.ui.advertisement_line.setText("Off")
-        #signals.train_model_update.emit()
 
     #sets status of doors
-    # def train_model_toggle_doors(self):
-    #     #opens doors depending on the station
-    #     if(self.door_side == 1):
-    #         self.left_door_cmd = 1
-    #         self.right_door_cmd = 0
-    #     elif(self.door_side == 2):
-    #         self.right_door_cmd = 1
-    #         self.left_door_cmd = 0
-    #     elif(self.door_side == 3):
-    #         self.left_door_cmd = 1
-    #         self.right_door_cmd = 1
-    #     else:
-    #         self.left_door_cmd = 0
-    #         self.right_door_cmd = 0
-        #signals.train_model_update.emit()
+    def train_model_update_doors(self,open):
+        #opens doors depending on the station door side
+        if(open):
+            #left side
+            if(self.door_side == 1):
+                self.left_door_cmd = 1
+                self.right_door_cmd = 0
+            #right side
+            elif(self.door_side == 2):
+                self.right_door_cmd = 1
+                self.left_door_cmd = 0
+            #both sides
+            elif(self.door_side == 3):
+                self.left_door_cmd = 1
+                self.right_door_cmd = 1
+            #closed
+            else:
+                self.left_door_cmd = 0
+                self.right_door_cmd = 0
+        else:
+            self.left_door_cmd = 0
+            self.right_door_cmd = 0
 
     #display left door
     def train_model_display_left_door(self):
@@ -240,7 +248,6 @@ class Train:
             self.ui.left_door_line.setText("Open")
         else:
             self.ui.left_door_line.setText("Closed")
-        #signals.train_model_update.emit()
 
     #display right door
     def train_model_display_right_door(self):
@@ -248,7 +255,6 @@ class Train:
             self.ui.right_door_line.setText("Open")
         else:
             self.ui.right_door_line.setText("Closed")
-        #signals.train_model_update.emit()
 
     #display announcement
     def train_model_display_announcement(self):
@@ -256,7 +262,6 @@ class Train:
             self.ui.announcement_line.setText("On")
         else:
             self.ui.announcement_line.setText("Off")
-        #signals.train_model_update.emit()
 
     #display horn
     def train_model_display_horn(self):
@@ -264,7 +269,6 @@ class Train:
             self.ui.horn_line.setText("On")
         else:
             self.ui.horn_line.setText("Off")
-        #signals.train_model_update.emit()
 
     #display advertisement
     def train_model_transfer_ads(self):
@@ -272,29 +276,26 @@ class Train:
             self.ui.advertisement_line.setText("On")
         else:
             self.ui.advertisement_line.setText("Off")
-        #signals.train_model_update.emit()
 
     #display temp
     def train_model_display_temp(self):
-        self.ui.temp_line.setText(str(self.ac_cmd))
-        #signals.train_model_update.emit()
+        self.ui.temp_line.setText(str(self.actual_temp))
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Track Model Inputs --------------------------------------------
 # ---------------------------------------------------------------------------------------------
 
     #get beacon info: doorside, station name, others
-    def get_beacon(self, beacon):
-        self.station_name = beacon
-        #signals.train_model_update.emit()
+    def get_beacon(self, station, side):
+        self.station_name = station
+        self.door_side = side
 
     #get grade from track model
     #@pyqtSlot(int, float)
     def get_grade(self, trainnum, new_grade):
         if(self.id == trainnum):
             self.grade = new_grade
-            self.ui.grade_line.setText(str(self.grade))
-            #signals.train_model_update.emit()        
+            self.ui.grade_line.setText(str(self.grade))        
 
     #update authority
     #@pyqtSlot(int, int)
@@ -304,7 +305,6 @@ class Train:
                 self.authority = new_auth
 
             self.ui.authority_line.setText(str(self.authority))
-        #signals.train_model_update.emit()
 
     #update commanded speed
     #@pyqtSlot(int, int)
@@ -316,7 +316,6 @@ class Train:
                 self.commanded_speed = new_cmd_speed
 
             self.ui.suggested_speed_line.setText(str(self.commanded_speed))
-        #signals.train_model_update.emit()
 
     #update passenger count and calculate new mass
     #@pyqtSlot(int, int)
@@ -330,15 +329,7 @@ class Train:
                 self.mass = 40.25 + ((self.crew_count + self.passenger_count) * 0.0738155)
             self.ui.mass_line.setText(str(self.mass))
             self.ui.passenger_line.setText(str(self.passenger_count))
-            #signals.train_model_update.emit()
 
-    #sets beacon info
-    def train_model_transfer_beacon(self, trainnum, door_side, station):
-        if(self.id == trainnum):
-            self.door_side = door_side
-            self.next_station = station
-            self.ui.station_line = station
-            #signals.train_model_update.emit()
 
     #get if track is in failure
     def get_track_failure(self, failure):
@@ -347,6 +338,19 @@ class Train:
     #stops train
     def stop_train(self):
         self.run_continuously = False
+
+    #track tells train if its in a tunnel
+    def train_model_update_tunnel(self, trainnum, tunnel):
+        if(self.id == trainnum):
+            if(not(self.signal_pickup_failure)):
+                self.in_tunnel = tunnel
+
+    #track tells train if its at a station
+    def train_model_update_station(self, trainnum, station):
+        if(self.id == trainnum):
+            if(not(self.signal_pickup_failure)):
+                self.in_station = station
+
     
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Murphy Inputs -------------------------------------------------
@@ -361,29 +365,21 @@ class Train:
         self.ui.engine_button.setStyleSheet("background-color : white")
         self.ui.sp_button.setStyleSheet("background-color : white")
 
-        #signals.train_model_update.emit()
-
     #murphy sets failure
     def train_model_transfer_brake_failure(self):
         self.brake_failure = True
-        self.sbrake = False
-        self.ebrake = False
-        self.passenger_ebrake = False
         self.ui.brake_button.setStyleSheet("background-color: red")
-        #signals.train_model_update.emit()
 
     #murphy sets failure
     def train_model_transfer_engine_failure(self):
         self.engine_failure = True
         self.power = 0
         self.ui.engine_button.setStyleSheet("background-color: red")
-        #signals.train_model_update.emit()
 
     #murphy sets failure
     def train_model_transfer_signal_pickup_failure(self):
         self.signal_pickup_failure = True
         self.ui.sp_button.setStyleSheet("background-color: red")
-        #signals.train_model_update.emit()
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Passenger Inputs ----------------------------------------------
@@ -396,7 +392,12 @@ class Train:
             self.ui.pbrake_button.setStyleSheet("background-color: red")
         else:
             self.ui.pbrake_button.setStyleSheet("background-color: white")
-        #signals.train_model_update.emit()
+
+    def regulate_temp(self):
+        if(self.actual_temp > self.ac_cmd):
+            self.actual_temp = self.actual_temp - 1
+        elif(self.actual_temp < self.ac_cmd):
+            self.actual_temp = self.actual_temp + 1
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Newtons laws calculation --------------------------------------
@@ -502,8 +503,8 @@ class Train:
                 #print("pass brake: ", self.passenger_ebrake)
                 #print("force: ", self.force)
                 #print("mass", self.mass)
-                #print("sbrake: ", self.sbrake)
-                #print("ebrake: ", self.ebrake)
+                print("sbrake: ", self.sbrake)
+                print("ebrake: ", self.ebrake)
                 temp_acceleration = self.force/mass
                 if(temp_acceleration > self.ACCELERATION_LIMIT):
                     temp_acceleration = self.ACCELERATION_LIMIT
@@ -582,10 +583,9 @@ class Train:
 
                 #print("power:" , self.power)
                 #pprint("-------------------------------")
-
+                self.train_ctrl.real_train.set_power(self.power)
                 self.ui.power_line.setText(str(round(self.power,1)))
 
-                #signals.train_model_update.emit()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

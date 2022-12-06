@@ -12,7 +12,6 @@ from TrackModelV2.TrackModel import TrackModel
 from Signals import signals
 
 
-
 class NSE_Simulation(QMainWindow):
 
     def __init__(self, run=False):
