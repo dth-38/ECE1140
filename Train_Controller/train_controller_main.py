@@ -350,6 +350,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     #display values to train screen
     def update_train_display(self):
         self.train_speed.display(self.real_train.get_speed())
+        self.train_power.display(self.real_train.get_power())
         self.train_left.setPlainText(self.real_train.get_left_door())
         self.train_right.setPlainText(self.real_train.get_right_door())
         self.train_internal.setPlainText(self.real_train.get_internal_light())

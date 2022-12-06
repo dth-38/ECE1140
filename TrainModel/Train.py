@@ -125,11 +125,9 @@ class Train:
 
     def update_values(self):    #run every 1 sec (infinite loop)
         #get values from track model
-        self.train_ctrl.real_train.set_authority(self.authority)    #authority
+        self.train_ctrl.real_train.set_authority(self.authority)    #authoritys
         self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
-        #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
-        #self.train_ctrl.real_train.set_station(self.in_station)
         
         #send failure to train controller
         if(self.engine_failure or self.brake_failure or self.signal_pickup_failure):
@@ -137,13 +135,15 @@ class Train:
         else:
             self.train_ctrl.real_train.set_failure_flag(False)
 
-        #call controller update function
-        self.train_ctrl.update_in_controller()
-        
 
         #do run kinematics calculation
         self.power = self.train_ctrl.real_train.get_power()
         self.train_model_update_speed()
+        self.train_ctrl.real_train.set_speed(self.actual_speed)       #Since update_speed updates speed, also apply it to controller's actual speed
+        self.train_ctrl.real_train.set_power(self.power)              #send power to train controller for display
+        
+        #update train controller
+        self.train_ctrl.update_in_controller()
 
         #get updated values from train controller
         self.left_door_cmd = self.train_ctrl.real_train.get_left_door()
@@ -152,11 +152,8 @@ class Train:
         self.exterior_light_cmd = self.train_ctrl.real_train.get_external_light()
         self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
         self.ac_cmd = self.train_ctrl.real_train.get_temp()
-        self.regulate_temp()
         self.horn = self.train_ctrl.real_train.get_horn()
         self.sbrake = self.train_ctrl.get_norm_brake_flag()
-        print("sbrake: ", self.sbrake)
-        
         if(self.brake_failure):
             self.sbrake = False
         self.ebrake = self.train_ctrl.get_emer_brake_flag()
@@ -175,8 +172,7 @@ class Train:
 
         #self.door_side[] = self.train_ctrl.get_door_left()
 
-        #update train controller display
-        self.train_ctrl.update_train_display()
+        #self.show_tc_ui(0)
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Show UIs ------------------------------------------------------
