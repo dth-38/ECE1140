@@ -1,0 +1,9 @@
+__pycache__
+Train_Controller/__pycache__
+TrainModel/__pycache__
+TrackModelV2/__pycache__
+TrackModel/__pycache__
+TrackController/__pycache__
+TrackController/TCGUI/__pycache__
+TrackController/PLCInterpreter/__pycache__
+CTC/__pycache__
