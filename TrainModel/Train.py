@@ -42,8 +42,8 @@ class Train:
         self.force = 0
 
         #various train functions
-        self.ac_cmd = 68.0              #degrees farenheight
-        self.actual_temp = 68.0
+        self.ac_cmd = 68              #degrees farenheight
+        self.actual_temp = 68
         self.horn = "Off"
         self.interior_light_cmd = "On"
         self.exterior_light_cmd = "Off"
@@ -109,9 +109,6 @@ class Train:
         #train controller that controls this train
         self.train_ctrl = WindowClass()
 
-        #train runs until it reaches destination
-        self.run_continuously = True
-
         #timer for testing
         # self.train_timer = QtCore.QTimer()
         # self.train_timer.start(1000)
@@ -121,13 +118,15 @@ class Train:
 # ----------------------------- Update Train ------------------------------------------------
 # ---------------------------------------------------------------------------------------------
 
-
-
     def update_values(self):    #run every 1 sec (infinite loop)
         #get values from track model
-        self.train_ctrl.real_train.set_authority(self.authority)    #authoritys
+        self.train_ctrl.real_train.set_authority(self.authority)    #authority
         self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
+        #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
+        #self.train_ctrl.real_train.set_station(self.in_station)
+
+
         
         #send failure to train controller
         if(self.engine_failure or self.brake_failure or self.signal_pickup_failure):
@@ -135,15 +134,15 @@ class Train:
         else:
             self.train_ctrl.real_train.set_failure_flag(False)
 
-
+        
         #do run kinematics calculation
         self.power = self.train_ctrl.real_train.get_power()
         self.train_model_update_speed()
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #Since update_speed updates speed, also apply it to controller's actual speed
         self.train_ctrl.real_train.set_power(self.power)              #send power to train controller for display
-        
-        #update train controller
+        #call controller update function
         self.train_ctrl.update_in_controller()
+        self.ui.power_line.setText(str(round(self.train_ctrl.real_train.power,1)))
 
         #get updated values from train controller
         self.left_door_cmd = self.train_ctrl.real_train.get_left_door()
@@ -152,6 +151,7 @@ class Train:
         self.exterior_light_cmd = self.train_ctrl.real_train.get_external_light()
         self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
         self.ac_cmd = self.train_ctrl.real_train.get_temp()
+        self.regulate_temp()
         self.horn = self.train_ctrl.real_train.get_horn()
         self.sbrake = self.train_ctrl.get_norm_brake_flag()
         if(self.brake_failure):
@@ -170,9 +170,6 @@ class Train:
         self.train_model_display_left_door()
         self.train_model_display_right_door()
 
-        #self.door_side[] = self.train_ctrl.get_door_left()
-
-        #self.show_tc_ui(0)
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Show UIs ------------------------------------------------------
@@ -285,6 +282,7 @@ class Train:
     def get_beacon(self, station, side):
         self.station_name = station
         self.door_side = side
+        self.ui.station_line.setText(str(station))
 
     #get grade from track model
     #@pyqtSlot(int, float)
@@ -326,28 +324,20 @@ class Train:
             self.ui.mass_line.setText(str(self.mass))
             self.ui.passenger_line.setText(str(self.passenger_count))
 
-
     #get if track is in failure
     def get_track_failure(self, failure):
             self.track_fail = failure
-    
-    #stops train
-    def stop_train(self):
-        self.run_continuously = False
 
     #track tells train if its in a tunnel
     def train_model_update_tunnel(self, trainnum, tunnel):
         if(self.id == trainnum):
-            if(not(self.signal_pickup_failure)):
                 self.in_tunnel = tunnel
 
     #track tells train if its at a station
     def train_model_update_station(self, trainnum, station):
         if(self.id == trainnum):
-            if(not(self.signal_pickup_failure)):
                 self.in_station = station
 
-    
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Murphy Inputs -------------------------------------------------
 # ---------------------------------------------------------------------------------------------
@@ -404,9 +394,9 @@ class Train:
         power = self.power
         power *= 1000
 
-        # if(self.track_fail):
-        #     power = 0
-        #     self.ebrake = True
+        if(self.track_fail):
+            power = 0
+            self.ebrake = True
 
         #if train is running
         self.run_continuously = True
@@ -431,27 +421,6 @@ class Train:
             mass = self.mass * 1.01605
 
 
-            run = True
-            #if there is a route, set current block and run
-            # if (len(self.block_list) > 0):
-            #     #if theres block is not a station, run
-            #     if (self.block_list[0].station == ""):
-            #         current_block = self.block_list[0]
-            #         current_block_length = current_block.block_length
-            #         self.grade = current_block.grade
-            #         run = True
-            #     else:
-            #         #stop the train if block is a station
-            #         self.run_continuously = False
-            #         run = False
-            # else:
-            #     #stop the train if route doesnt exist
-            #     self.run_continuously = False
-            #     run = False
-
-            #stop when controller tells me
-
-            #test
             run = True
 
             if (run):
@@ -505,11 +474,13 @@ class Train:
                 if(temp_acceleration > self.ACCELERATION_LIMIT):
                     temp_acceleration = self.ACCELERATION_LIMIT
                 elif(self.sbrake and not(self.ebrake or self.passenger_ebrake)):
+                    power = 0
                     if(self.actual_speed > 0):
                         temp_acceleration = self.DECELERATION_SERVICE
                     else:
                         temp_acceleration = 0
                 elif(self.ebrake or self.passenger_ebrake):
+                    power = 0
                     if(self.actual_speed > 0):
                         temp_acceleration = self.DECELERATION_EMERGENCY
                     else:
@@ -580,7 +551,7 @@ class Train:
                 #print("power:" , self.power)
                 #pprint("-------------------------------")
                 self.train_ctrl.real_train.set_power(self.power)
-                self.ui.power_line.setText(str(round(self.power,1)))
+                #self.ui.power_line.setText(str(round(self.power,1)))
 
 
 if __name__ == "__main__":

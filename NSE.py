@@ -60,7 +60,6 @@ class NSE_Simulation(QMainWindow):
         else:
             self.stop_clicked()
         
-
     def start_sim(self, multiplier=0):
         if multiplier > 0 and multiplier < self.MULTIPLIER_LIMIT:
             self.update_period_multiplier = multiplier
