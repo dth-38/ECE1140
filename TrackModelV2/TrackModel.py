@@ -243,10 +243,10 @@ class TrackModel(QObject):
                     print("moving into block " + str(next_block))
 
                     #update movement direction through a block
-                    if self.trains[train_id].movement_direction == FORWARD_DIR and self.lines[line][next_block].TRANSITION_DIRECTIONS[NEXT_BLOCK] != 0:
-                        self.trains[train_id].movement_direction = self.lines[line][next_block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
-                    elif self.trains[train_id].movement_direction == REVERSE_DIR and self.lines[line][next_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] != 0:
-                        self.trains[train_id].movement_direction == self.lines[line][next_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK]
+                    if self.trains[train_id].movement_direction == FORWARD_DIR and self.lines[line][current_block].TRANSITION_DIRECTIONS[NEXT_BLOCK] != 0:
+                        self.trains[train_id].movement_direction = self.lines[line][current_block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
+                    elif self.trains[train_id].movement_direction == REVERSE_DIR and self.lines[line][current_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] != 0:
+                        self.trains[train_id].movement_direction == self.lines[line][current_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK]
                 
 
                     #calls gui update function
@@ -270,9 +270,9 @@ class TrackModel(QObject):
                     signals.send_tm_grade.emit(train_id, self.lines[line][next_block].GRADE)
                     #send failure
                     #send tunnel
-                    signals.send_tm_tunnel.emit(self.lines[line][next_block].UNDERGROUND)
+                    signals.send_tm_tunnel.emit(train_id, self.lines[line][next_block].UNDERGROUND)
                     #send at station
-                    signals.send_tm_station.emit(self.lines[line][next_block].STATION != "")
+                    signals.send_tm_station.emit(train_id, self.lines[line][next_block].STATION != "")
                     #Send new authority to train.
                     #TODO: comment back in after ctc is working
                     #signals.send_tm_authority.emit(self.lines[line][next_block].authority)
