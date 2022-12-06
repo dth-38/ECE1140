@@ -65,9 +65,11 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
 
     def maintenance_pressed(self):
         self.schedule.block_table.set_maintenance(self.block_selection.value(),self.section_selection.currentText(),self.line_maintenance_selection.currentText())
-        tc_block = convert_to_block(self.line_maintenance_selection.currentText(),self.block_selection.value())
-        tc_next_block = convert_to_block(self.line_maintenance_selection.currentText(),self.next_block_selection.value())
+        tc_block = convert_to_block(self.line_maintenance_selection.currentText().upper(),self.block_selection.value())
+        tc_next_block = convert_to_block(self.line_maintenance_selection.currentText().upper(),self.next_block_selection.value())
         #TODO: FIX MAINTENANCE MODE
+        print("tc_block: " + str(tc_block))
+        print("tc_next_block: " + str(tc_next_block))
         signals.set_tc_switch(tc_block,tc_next_block)
 
     def destination_select(self):

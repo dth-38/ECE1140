@@ -55,6 +55,8 @@ class CTC_Scheduler:
         self.red_speed = 44
         self.green_speed = 44
         self.destination_index = 0
+        self.red_sales = 0
+        self.green_sales = 0
         self.red_stations = [[7,"Shadyside"],[16,"Herron_Ave"],
         [21,"Swissville"],[25,"Penn Station"],[35,"Steel Plaza"],[45,"First Ave"],
         [48,"Station Square"],[60,"South Hills Junction"]]
@@ -157,8 +159,6 @@ class CTC_Scheduler:
 
     def calc_throughput(self,station,ticket_sales,hours):
         #TODO: GET TICKET SALES FROM TRACK MODEL
-        red_sales = 0
-        green_sales = 0
         if hours > 0:
             for i in range(len(self.red_stations)):
                 if station == self.red_stations[i][1]:
