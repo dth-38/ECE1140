@@ -4,6 +4,7 @@ import pandas
 import numpy
 import pathlib
 import os
+import random
 
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSlot
@@ -64,7 +65,38 @@ class TrackModel(QObject):
             position_update = self.update_queue.popleft()
             self.update_train_position(position_update[TRAIN_ID], position_update[DELX])
 
+    def station_calc(self, trainid):
+        temp_pass_count = self.trains[trainid].passenger_count
         
+        #calculate passengers deboarding subtract from count
+        passengers_exiting = random.randint(1,15)
+        temp_pass_count -= passengers_exiting
+        if(temp_pass_count < 0):
+            temp_pass_count = 0
+
+        #calcualte passengers onboarding add to count
+        passengers_boarding = random.randint(1,15)
+        temp_pass_count += passengers_boarding
+        #train model handles if it goes over passenger limit
+
+        #send new passenger count to train
+        signals.send_tm_passenger_count(trainid, temp_pass_count)
+
+        #calculate ticket sales
+        #individual ticket prices range from 5 - 25 dollars,random to account for passengers travelling different distances
+        sales = passengers_boarding * random.randint(5,25)
+        
+        # i = 0
+        # sales = 0
+        # while(i < passengers_boarding):
+        #     sales += random.randint(5,25)
+        #     i = i + i
+
+        #send sales for station train is in
+        signals.send_ctc_ticket_sales(self.trains[trainid].next_station, sales)
+
+        #calculate ticket sales based on passengers onboarding, send to ctc
+
 
     @pyqtSlot(str, int, int)
     def handle_authority(self, line, block_num, auth):

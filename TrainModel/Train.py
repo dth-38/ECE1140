@@ -1,9 +1,10 @@
 import math
-from TrainModel.train_ui import TrainData_Ui
+from TrainModel.TrainUi import TrainData_Ui
+#from TrainUi import TrainData_Ui
 from PyQt5 import QtCore, QtWidgets
 import sys
 sys.path.append(".")
-from TrainModel.train_model_signals import *
+from TrainModel.TrainModelSignals import *
 from Train_Controller.train_controller_main import WindowClass
 from Signals import signals
 from PyQt5.QtCore import pyqtSlot
@@ -12,23 +13,23 @@ class Train:
     
     def __init__(self, ID = 0):
 
-        #train id
+        #Train id of this instance of a train
         self.id = ID
 
-        #beacon info
+        #Information stored in the most recent beacon train has passed
         self.next_station = ""
-        self.door_side = 0               #0 = closed, 1 = left, 2 = right, 3 = both
+        self.door_side = -1               #0 = left, 1 = right, 2 = both
 
-        #physical train info
-        self.train_length = 105.6       #ft
-        self.train_width = 11.2         #ft
-        self.train_height = 9.7         #ft
+        #Information about the physical properties of the train
+        self.train_length = 105.6       #Ft
+        self.train_width = 11.2         #Ft
+        self.train_height = 9.7         #Ft
         self.crew_count = 1
         self.passenger_count = 0
-        self.mass = 40.25               #imperial tons
+        self.mass = 40.25               #Imperial tons
 
         #track info
-        self.grade = 0.0                #%ft risen per 100 ft
+        self.grade = 0.0                #%Ft risen per 100 ft
         self.in_station = False
         self.in_tunnel = False
         self.authority = 0
@@ -62,6 +63,10 @@ class Train:
         self.passenger_ebrake = False
         self.ebrake = False
         self.sbrake = False
+
+        #who is setting the temperature
+        self.temp_from_ui = False
+        self.ui_temp = 0
         
         #constants
         self.GRAVITY = 9.80665                     #m/s^2
@@ -97,12 +102,13 @@ class Train:
         ui_sig.train_model_transfer_signal_pickup_failure.connect(self.train_model_transfer_signal_pickup_failure)
         ui_sig.train_model_fix_failure.connect(self.train_model_fix_failure)
         ui_sig.train_model_transfer_passenger_ebrake.connect(self.train_model_passenger_ebrake)
+        ui_sig.train_model_transfer_ac_cmd.connect(self.train_model_set_ac)
 
         #setup ui
         self.app = QtWidgets.QApplication(sys.argv)
         self.train_model = QtWidgets.QMainWindow()
         self.ui = TrainData_Ui()
-        self.ui.setupUi(self.train_model)
+        self.ui.setup_ui(self.train_model)
         #self.train_model.show()
         self.ui.train_id_line.setText(str(self.id))
 
@@ -126,7 +132,7 @@ class Train:
         #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
         #self.train_ctrl.real_train.set_station(self.in_station)
 
-
+        
         
         #send failure to train controller
         if(self.engine_failure or self.brake_failure or self.signal_pickup_failure):
@@ -140,17 +146,28 @@ class Train:
         self.train_model_update_speed()
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #Since update_speed updates speed, also apply it to controller's actual speed
         self.train_ctrl.real_train.set_power(self.power)              #send power to train controller for display
+        if(not(self.engine_failure)):
+            self.ui.power_line.setText(str(round(self.train_ctrl.real_train.power,1)))
+        else:
+            self.ui.power_line.setText(str(0))
+
         #call controller update function
         self.train_ctrl.update_in_controller()
-        self.ui.power_line.setText(str(round(self.train_ctrl.real_train.power,1)))
+        
 
         #get updated values from train controller
+        
         self.left_door_cmd = self.train_ctrl.real_train.get_left_door()
         self.right_door_cmd = self.train_ctrl.real_train.get_right_door()
+        self.train_model_update_doors()
         self.interior_light_cmd = self.train_ctrl.real_train.get_internal_light()
         self.exterior_light_cmd = self.train_ctrl.real_train.get_external_light()
         self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
-        self.ac_cmd = self.train_ctrl.real_train.get_temp()
+        if(self.temp_from_ui == False):
+            self.ac_cmd = self.train_ctrl.real_train.get_temp()
+        else:
+            self.ac_cmd = self.ui_temp
+            self.train_ctrl.real_train.set_temp(self.ui_temp)
         self.regulate_temp()
         self.horn = self.train_ctrl.real_train.get_horn()
         self.sbrake = self.train_ctrl.get_norm_brake_flag()
@@ -212,28 +229,26 @@ class Train:
             self.ui.advertisement_line.setText("Off")
 
     #sets status of doors
-    def train_model_update_doors(self,open):
+    def train_model_update_doors(self):
         #opens doors depending on the station door side
-        if(open):
-            #left side
-            if(self.door_side == 1):
-                self.left_door_cmd = 1
-                self.right_door_cmd = 0
-            #right side
-            elif(self.door_side == 2):
-                self.right_door_cmd = 1
-                self.left_door_cmd = 0
-            #both sides
-            elif(self.door_side == 3):
-                self.left_door_cmd = 1
-                self.right_door_cmd = 1
-            #closed
-            else:
-                self.left_door_cmd = 0
-                self.right_door_cmd = 0
+        #left side
+        if(self.door_side == 0):
+            self.left_door_cmd = "Opened"
+            self.right_door_cmd = "Closed"
+        #right side
+        elif(self.door_side == 1):
+            self.right_door_cmd = "Closed"
+            self.left_door_cmd = "Opened"
+        #both sides
+        elif(self.door_side == 2):
+            self.left_door_cmd = "Closed"
+            self.right_door_cmd = "Closed"
+        #closed
         else:
-            self.left_door_cmd = 0
-            self.right_door_cmd = 0
+            self.left_door_cmd = "Opened"
+            self.right_door_cmd = "Opened"
+        self.left_door_cmd = "Opened"
+        self.right_door_cmd = "Opened"
 
     #display left door
     def train_model_display_left_door(self):
@@ -385,6 +400,18 @@ class Train:
         elif(self.actual_temp < self.ac_cmd):
             self.actual_temp = self.actual_temp + 1
 
+        print("ac cmd: ", self.ac_cmd)
+        print("ui temp: ",self.ui_temp)
+        print(self.temp_from_ui)
+        print("---------------")
+
+        if(self.actual_temp == self.ac_cmd):
+            self.temp_from_ui = False
+
+    def train_model_set_ac(self, ac):
+        self.temp_from_ui = True
+        self.ui_temp = ac
+
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Newtons laws calculation --------------------------------------
 # ---------------------------------------------------------------------------------------------
@@ -468,8 +495,8 @@ class Train:
                 #print("pass brake: ", self.passenger_ebrake)
                 #print("force: ", self.force)
                 #print("mass", self.mass)
-                print("sbrake: ", self.sbrake)
-                print("ebrake: ", self.ebrake)
+                #print("sbrake: ", self.sbrake)
+                #print("ebrake: ", self.ebrake)
                 temp_acceleration = self.force/mass
                 if(temp_acceleration > self.ACCELERATION_LIMIT):
                     temp_acceleration = self.ACCELERATION_LIMIT
@@ -509,24 +536,6 @@ class Train:
                 #self.distance = temp_distance
                 signals.send_tm_distance.emit(self.id, distance_moved)
                 
-                # #if position length is greater than block length, move to next block
-                # if (temp_position > current_block_length):
-                #     #if at last block in route, at destnation, stop
-                #     if (len(self.block_list) <= 1):
-                #         self.block_list.pop(0)
-                #         temp_position = current_block_length
-                #         self.run_continuously = False
-                #     else:
-                #         #move to next block
-                #         temp_position -= current_block_length
-                #         #remove block that train has passed, update current block
-                #         self.block_list.pop(0)
-                #         self.current_block = self.block_list[0]
-                #         current_block = self.block_list[0]
-                
-                        #send block occupancy to track model
-                        #signals.track_model_update_block_occupancy.emit(self.id, current_block)
-                
                 self.actual_speed = temp_velocity * 2.237
                 #if (self.actual_speed > self.VELOCITY_LIMIT):
                 #    self.actual_speed = self.VELOCITY_LIMIT
@@ -538,20 +547,13 @@ class Train:
 
                 self.acceleration = temp_acceleration * 3.28084
                 self.ui.acceleration_line.setText(str(round(self.acceleration,2)))
-                # pprint("Acceleration: ")
-                # pprint(self.acceleration)
 
                 #send speed to train ctrl, get new power
                 self.power = power / 1000
 
-                #self.actual_speed = 20
-                #self.real_train.set_commanded_speed(self.commanded_speed)
-                #self.power = self.train_ctrl.real_train.power_calculation(self.actual_speed)
-
                 #print("power:" , self.power)
                 #pprint("-------------------------------")
                 self.train_ctrl.real_train.set_power(self.power)
-                #self.ui.power_line.setText(str(round(self.power,1)))
 
 
 if __name__ == "__main__":
