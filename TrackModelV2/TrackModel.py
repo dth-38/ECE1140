@@ -208,7 +208,7 @@ class TrackModel(QObject):
         pos = self.trains[train_id].position_in_block
         length = self.trains[train_id].train_length
         blk = self.trains[train_id].block
-        if -1 * (pos - (length * FEET_TO_METERS)) > self.lines[line][blk].LENGTH and blk != YARD:
+        if pos - length < 0 and blk != YARD:
             prev_block = self.lines[line][blk].get_previous(self.trains[train_id].movement_direction)
             self.lines[line][prev_block].occupied = -1
 
@@ -332,11 +332,10 @@ class TrackModel(QObject):
             pos = self.trains[train_id].position_in_block
             length = self.trains[train_id].train_length
             blk = self.trains[train_id].block
-            if -1 * (pos - (length * FEET_TO_METERS)) > self.lines[line][blk].LENGTH and blk != YARD:
+            if pos - length < 0 and blk != YARD:
                 prev_block = self.lines[line][self.trains[train_id].block].get_previous(self.trains[train_id].movement_direction)
                 self.lines[line][prev_block].occupied = train_id
 
-                print("displaying dual occupancy?")
                 self.gui.update_occupancy(line, prev_block)
                 tc_block = line + "_" + self.lines[line][prev_block].SECTION + "_" + str(prev_block)
                 signals.send_tc_occupancy.emit(tc_block, True)
