@@ -56,6 +56,7 @@ class TrackModel(QObject):
         signals.broadcast_gate.connect(self.handle_gate)
         signals.send_tm_dispatch.connect(self.dispatch)
         signals.send_tm_distance.connect(self.handle_train_update)
+        signals.send_tm_stopped_at_station.connect(self.station_calc)
 
 
 
@@ -64,6 +65,8 @@ class TrackModel(QObject):
         while len(self.update_queue) > 0:
             position_update = self.update_queue.popleft()
             self.update_train_position(position_update[TRAIN_ID], position_update[DELX])
+
+        
 
     def station_calc(self, trainid):
         temp_pass_count = self.trains[trainid].passenger_count
