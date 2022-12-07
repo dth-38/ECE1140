@@ -528,12 +528,14 @@ class TrackController(QMainWindow):
                     if previous != "START":
                         previous_Second = self.next_Track_State[previous].get_Previous_Block()
                     else:
+                        previous_Second = -1
                         if previous not in self.previous_Occupations:
                             self.previous_Occupations.append(previous)
                     next_Bl = self.next_Track_State[block].get_Next_Block()
                     if next_Bl != "END":
                         next_Bl_Second = self.next_Track_State[next_Bl].get_Next_Block()
                     else:
+                        next_Bl_Second = -1
                         if next_Bl not in self.previous_Occupations:
                             self.previous_Occupations.append(next_Bl)
 

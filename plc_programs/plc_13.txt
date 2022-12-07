@@ -135,9 +135,9 @@ OR t[0], t[0], green_F_26:occupied
 OR t[0], t[0], green_F_27:occupied
 OR t[0], t[0], green_F_28:occupied
 OR t[0], t[0], green_G_29:occupied
-NOT t[1], t[0]
+NOT t[0], t[0]
 
-AND green_D_13:switch[0], t[1], green_A_1:occupied
+AND green_D_13:switch[0], t[0], green_A_1:occupied
 
 ;light controls for switching
 EQ green_A_1:light[0].GREEN, green_D_13:switch[0]

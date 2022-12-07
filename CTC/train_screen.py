@@ -217,19 +217,19 @@ class train_screen(QtWidgets.QWidget):
             self.schedule_list.insertItem((i*6) + (i + 4),"Authority: " + str(self.ctc.schedule.train_table.get_authority(i)))
 
 
-        for i in range(self.ctc.schedule.block_table.get_table_length()):
-            if self.block_table_display.count() == 0:
-                self.block_table_display.addItem(str(self.ctc.schedule.block_table.get_entry(i)))
-            else:
-                contains = False
-                string = str(self.ctc.schedule.block_table.get_entry(i-1))
-                #print("string: " + string)
-                for j in range(self.block_table_display.count()):
-                    #print("entry: " + str(self.block_table_display.item(j).text()))
-                    if string == self.block_table_display.item(j).text():
-                        contains = True
-                if contains == False:
-                    self.block_table_display.addItem(str(self.ctc.schedule.block_table.get_entry(i)))
+        # for i in range(self.ctc.schedule.block_table.get_table_length()):
+        #     if self.block_table_display.count() == 0:
+        #         self.block_table_display.addItem(str(self.ctc.schedule.block_table.get_entry(i)))
+        #     else:
+        #         contains = False
+        #         string = str(self.ctc.schedule.block_table.get_entry(i-1))
+        #         #print("string: " + string)
+        #         for j in range(self.block_table_display.count()):
+        #             #print("entry: " + str(self.block_table_display.item(j).text()))
+        #             if string == self.block_table_display.item(j).text():
+        #                 contains = True
+        #         if contains == False:
+        #             self.block_table_display.addItem(str(self.ctc.schedule.block_table.get_entry(i)))
 
         
     def retranslateUi(self, Form):
