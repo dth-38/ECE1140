@@ -169,6 +169,8 @@ class Train:
         self.left_door_cmd = self.train_ctrl.real_train.get_left_door()
         self.right_door_cmd = self.train_ctrl.real_train.get_right_door()
         self.train_model_update_doors()
+        self.train_ctrl.real_train.set_door_left(self.left_door_cmd)
+        self.train_ctrl.real_train.set_door_right(self.right_door_cmd)
         self.interior_light_cmd = self.train_ctrl.real_train.get_internal_light()
         self.exterior_light_cmd = self.train_ctrl.real_train.get_external_light()
         self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
@@ -195,6 +197,8 @@ class Train:
         self.train_model_display_horn()
         self.train_model_display_left_door()
         self.train_model_display_right_door()
+        if(self.actual_speed == 0 and self.in_station and self.i == 0):
+            self.door_side = 3
 
 
 # ---------------------------------------------------------------------------------------------
@@ -256,8 +260,6 @@ class Train:
         else:
             self.left_door_cmd = "Opened"
             self.right_door_cmd = "Opened"
-        self.left_door_cmd = "Opened"
-        self.right_door_cmd = "Opened"
 
     #display left door
     def train_model_display_left_door(self):
