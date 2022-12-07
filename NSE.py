@@ -67,7 +67,7 @@ class NSE_Simulation(QMainWindow):
         self.multiplier_input.setText(str(self.update_period_multiplier))
 
         #period is calculated in miliseconds cause thats what the timer takes
-        period = (self.UPDATE_PERIOD / multiplier) * self.SEC_TO_MSEC
+        period = (self.UPDATE_PERIOD / self.update_period_multiplier) * self.SEC_TO_MSEC
         period = math.floor(period)
 
         self.timer.start(period)
