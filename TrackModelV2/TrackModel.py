@@ -83,10 +83,10 @@ class TrackModel(QObject):
         #train model handles if it goes over passenger limit
 
         #send new passenger count to train
-        signals.send_tm_passenger_count(trainid, temp_pass_count)
+        signals.send_tm_passenger_count.emit(trainid, temp_pass_count)
 
         #send sales for station train is in
-        signals.send_ctc_ticket_sales(self.trains[trainid].line, passengers_boarding)
+        signals.send_ctc_ticket_sales.emit(self.trains[trainid].line, passengers_boarding)
 
         #calculate ticket sales based on passengers onboarding, send to ctc
 
