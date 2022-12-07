@@ -67,6 +67,7 @@ class Train:
         #who is setting the temperature
         self.temp_from_ui = False
         self.ui_temp = 0
+        self.prev_station = ""
         
         #so ticket sales are only set at the first tick train is stopped and at station
         self.i = 0
@@ -136,12 +137,12 @@ class Train:
         #self.train_ctrl.real_train.set_station(self.in_station)
 
         if(self.actual_speed == 0 and self.in_station and self.i == 0):
-            signals.send_tm_stopped_at_station(self.id)
+            self.ui.station_line.setText("")
+            signals.send_tm_stopped_at_station.emit(self.id)
             self.i = 1
 
         if(self.actual_speed > 0):
             self.i = 0
-        
         
         #send failure to train controller
         if(self.engine_failure or self.brake_failure or self.signal_pickup_failure):
@@ -303,9 +304,14 @@ class Train:
 
     #get beacon info: doorside, station name, others
     def get_beacon(self, station, side):
-        self.station_name = station
+        if(station == self.prev_station):
+            self.station_name = ""
+        else:
+            self.station_name = station
+            self.prev_station = station
+
         self.door_side = side
-        self.ui.station_line.setText(str(station))
+        self.ui.station_line.setText(str(self.station_name))
 
     #get grade from track model
     #@pyqtSlot(int, float)
