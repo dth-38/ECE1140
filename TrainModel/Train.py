@@ -68,6 +68,9 @@ class Train:
         self.temp_from_ui = False
         self.ui_temp = 0
         
+        #so ticket sales are only set at the first tick train is stopped and at station
+        self.i = 0
+
         #constants
         self.GRAVITY = 9.80665                     #m/s^2
         self.FRICTION_COE = 0.02
@@ -132,6 +135,12 @@ class Train:
         #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
         #self.train_ctrl.real_train.set_station(self.in_station)
 
+        if(self.actual_speed == 0 and self.in_station and self.i == 0):
+            signals.send_tm_stopped_at_station(self.id)
+            self.i = 1
+
+        if(self.actual_speed > 0):
+            self.i = 0
         
         
         #send failure to train controller
