@@ -165,7 +165,6 @@ class Train:
         
 
         #get updated values from train controller
-        
         self.left_door_cmd = self.train_ctrl.real_train.get_left_door()
         self.right_door_cmd = self.train_ctrl.real_train.get_right_door()
         self.train_model_update_doors()
