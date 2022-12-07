@@ -245,8 +245,8 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.schedule.block_table.add_light(line,block,color)
     def update_gate(self,line,block_num,status):
         self.schedule.block_table.add_gate(line,block_num,status)
-    def update_ticket_sales(self,station,ticket_sales):
-        self.schedule.calc_throughput(station,ticket_sales,self.clock.get_hours())
+    def update_ticket_sales(self,line,ticket_sales):
+        self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
     def tick(self):
         schedule_train = self.schedule.check_schedule(self.clock.get_time())
         if len(schedule_train) > 0:
