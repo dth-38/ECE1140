@@ -85,18 +85,8 @@ class TrackModel(QObject):
         #send new passenger count to train
         signals.send_tm_passenger_count(trainid, temp_pass_count)
 
-        #calculate ticket sales
-        #individual ticket prices range from 5 - 25 dollars,random to account for passengers travelling different distances
-        sales = passengers_boarding * random.randint(5,25)
-        
-        # i = 0
-        # sales = 0
-        # while(i < passengers_boarding):
-        #     sales += random.randint(5,25)
-        #     i = i + i
-
         #send sales for station train is in
-        signals.send_ctc_ticket_sales(self.trains[trainid].next_station, sales)
+        signals.send_ctc_ticket_sales(self.trains[trainid].line, passengers_boarding)
 
         #calculate ticket sales based on passengers onboarding, send to ctc
 

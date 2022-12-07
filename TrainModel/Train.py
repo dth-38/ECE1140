@@ -408,10 +408,10 @@ class Train:
         elif(self.actual_temp < self.ac_cmd):
             self.actual_temp = self.actual_temp + 1
 
-        print("ac cmd: ", self.ac_cmd)
-        print("ui temp: ",self.ui_temp)
-        print(self.temp_from_ui)
-        print("---------------")
+        #print("ac cmd: ", self.ac_cmd)
+        #print("ui temp: ",self.ui_temp)
+        #print(self.temp_from_ui)
+        #print("---------------")
 
         if(self.actual_temp == self.ac_cmd):
             self.temp_from_ui = False
