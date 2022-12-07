@@ -17,7 +17,7 @@ DEFINE TRACK
     BLOCK green_A_3
         M 28
         P green_A_2
-        N green_A_4
+        N green_B_4
     END BLOCK
 
     BLOCK green_B_4

@@ -32,7 +32,7 @@ class NSE_Simulation(QMainWindow):
         self.track_controllers = []
         self.ctc = CTC()
         self.track = TrackModel()
-    
+        
 
         super().__init__()
 
@@ -42,8 +42,6 @@ class NSE_Simulation(QMainWindow):
             self.track_controllers.append(TrackController(i, True))
             self.track_controllers[i].tick()
 
-
-        self.scheduler = Scheduler.Scheduler()
 
         self.pool = QThreadPool.globalInstance()
 

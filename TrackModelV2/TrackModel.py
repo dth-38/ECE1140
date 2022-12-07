@@ -199,8 +199,6 @@ class TrackModel(QObject):
 
     #not handling errors here since something is fundamentally wrong if it errors
     def update_train_position(self, train_id, delta_x):
-        #TODO: DEBUGGING
-        print("train is moving in " + str(self.trains[train_id].movement_direction))
         #begins by adding the change in position to the current position
         self.trains[train_id].position_in_block += delta_x
 
@@ -246,8 +244,6 @@ class TrackModel(QObject):
             else:
                 next_dir = self.trains[train_id].movement_direction
 
-            print("current block: " + str(current_block))
-            print("next block: " + str(self.lines[line][next_block].get_previous(next_dir)))
 
             if self.lines[line][next_block].get_previous(next_dir) == current_block:
                 #valid move
@@ -275,8 +271,6 @@ class TrackModel(QObject):
                     #moves train
                     self.lines[line][next_block].occupied = train_id
                     self.trains[train_id].block = next_block
-
-                    print("moving into block " + str(next_block))
 
                     #update movement direction for next block
                     self.trains[train_id].movement_direction = next_dir
