@@ -89,17 +89,12 @@ class TrackBlock:
     def get_occupancy_value(self):
         return self.occupied
 
-    def get_next(self, current_dir, next_dir):
+    def get_next(self, current_dir):
         #first gets the next/previous block from array
-        if next_dir == FORWARD_DIR:
+        if current_dir == FORWARD_DIR:
             next_block = self.CONNECTED_BLOCKS[NEXT_BLOCK]
-        elif next_dir == REVERSE_DIR:
+        elif current_dir == REVERSE_DIR:
             next_block = self.CONNECTED_BLOCKS[PREVIOUS_BLOCK]
-        else:
-            if current_dir == FORWARD_DIR:
-                next_block = self.CONNECTED_BLOCKS[NEXT_BLOCK]
-            else:
-                next_block = self.CONNECTED_BLOCKS[PREVIOUS_BLOCK]
 
         #checks where a switch is going, if temp_next is a switch
         if next_block == "SWITCH":
@@ -110,16 +105,11 @@ class TrackBlock:
 
         return next_block
 
-    def get_previous(self, current_dir, next_dir):
+    def get_previous(self, current_dir):
         if current_dir == FORWARD_DIR:
             previous_block = self.CONNECTED_BLOCKS[PREVIOUS_BLOCK]
         elif current_dir == REVERSE_DIR:
             previous_block = self.CONNECTED_BLOCKS[NEXT_BLOCK]
-        else:
-            if next_dir == FORWARD_DIR:
-                previous_block = self.CONNECTED_BLOCKS[PREVIOUS_BLOCK]
-            else:
-                previous_block = self.CONNECTED_BLOCKS[NEXT_BLOCK]
 
         if previous_block == "SWITCH":
             if self.switch[SWITCH_STATE] == True:
