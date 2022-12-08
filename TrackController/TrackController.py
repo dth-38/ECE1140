@@ -485,10 +485,11 @@ class TrackController(QMainWindow):
         if self.run_Vitals == True:
 
             #copies track state inputs to next state
-            #for block in self.current_Track_State:
+            for block in self.current_Track_State:
             #    self.next_Track_State[block].suggested_Speed = copy.copy(self.current_Track_State[block].suggested_Speed)
-            #    self.next_Track_State[block].authority = copy.copy(self.current_Track_State[block].authority)
-            #    self.next_Track_State[block].occupied = copy.copy(self.current_Track_State[block].occupied)
+            #    self.current_Track_State[block].authority = copy.copy(self.next_Track_State[block].authority)
+            #    self.current_Track_State[block].occupied = copy.copy(self.next_Track_State[block].occupied)
+                self.current_Track_State[block].switches = copy.deepcopy(self.next_Track_State[block].switches)
             #    self.next_Track_State[block].failed = copy.copy(self.current_Track_State[block].failed)
             #    self.next_Track_State[block].closed = copy.copy(self.current_Track_State[block].closed)
             
@@ -595,20 +596,6 @@ class TrackController(QMainWindow):
                     for switch in range(len(self.next_Track_State[block].switches)):
                         self.next_Track_State[block].switches[switch] = copy.copy(self.current_Track_State[block].switches[switch])
 
-                #removes authority from blocks that are not being switched to
-                for switch in self.next_Track_State[block].switches:
-                    if self.next_Track_State[block].switch_To == TO_PREV:
-                        off_block = self.next_Track_State[block].previous_Blocks[0]
-                        on_block = self.next_Track_State[block].previous_Blocks[1]
-                    else:
-                        off_block = self.next_Track_State[block].next_Blocks[0]
-                        on_block = self.next_Track_State[block].next_Blocks[1]
-
-                    if switch == False:
-                        self.next_Track_State[on_block].authority = 0
-                    else:
-                        self.next_Track_State[off_block].authority = 0
-
 
                 #converts the block to line number form for other modules
                 d_block = decompose_block(block)
@@ -630,6 +617,14 @@ class TrackController(QMainWindow):
                             block_num = decompose_block(self.next_Track_State[block].get_switched_to())
                             signals.broadcast_switch.emit(d_block[0], d_block[1], block_num[1])
                             self.current_Track_State[block].switches[0] = copy.copy(self.next_Track_State[block].switches[0])
+
+                            #removes authority from blocks that are not being switched to
+                            not_block = self.next_Track_State[block].get_not_switched_to()
+                            n_blk = decompose_block(not_block)
+                            if n_blk[1] != 0:
+                                self.next_Track_State[not_block].authority = 0
+                                signals.send_track_authority.emit(n_blk[0], n_blk[1], 0)
+                                self.current_Track_State[not_block].authority = copy.copy(self.next_Track_State[not_block].authority)
 
                 if self.current_Track_State[block].lights != []:
                     if self.current_Track_State[block].lights[0] != self.next_Track_State[block].lights[0]:

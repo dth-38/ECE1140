@@ -214,7 +214,7 @@ class TrackModel(QObject):
 
             self.gui.update_occupancy(line, prev_block)
             tc_block = line + "_" + self.lines[line][prev_block].SECTION + "_" + str(prev_block)
-            signals.send_tc_occupancy.emit(tc_block, False)
+            #signals.send_tc_occupancy.emit(tc_block, False)
 
         #loops while the train is past the length of the current block
         while self.trains[train_id].position_in_block > self.lines[line][self.trains[train_id].block].LENGTH:
@@ -243,7 +243,6 @@ class TrackModel(QObject):
                 next_dir = self.lines[line][current_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK]
             else:
                 next_dir = self.trains[train_id].movement_direction
-
 
             if self.lines[line][next_block].get_previous(next_dir) == current_block:
                 #valid move
@@ -321,6 +320,8 @@ class TrackModel(QObject):
                     return 0
 
             else:
+                print("wtf, current block = " + str(current_block) + ", checked against = " + str(self.lines[line][next_block].get_previous(next_dir)))
+
                 #train has derailed
                 print("UH OH: TRAIN " + str(train_id) + " DERAILED ENTERING LINE: " + self.trains[train_id].line + ", BLOCK: " + str(next_block))
                 self.trains.pop(train_id)
@@ -338,7 +339,7 @@ class TrackModel(QObject):
 
                 self.gui.update_occupancy(line, prev_block)
                 tc_block = line + "_" + self.lines[line][prev_block].SECTION + "_" + str(prev_block)
-                signals.send_tc_occupancy.emit(tc_block, True)
+                #signals.send_tc_occupancy.emit(tc_block, True)
 
 
     def initialize_track(self, filename="track.xlsx"):
