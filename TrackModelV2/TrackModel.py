@@ -175,7 +175,7 @@ class TrackModel(QObject):
     #not handling errors here since something is fundamentally wrong if it errors
     def update_train_position(self, train_id, delta_x):
         #TODO: DEBUGGING
-        print("train is moving in " + str(self.trains[train_id].movement_direction))
+        #print("train is moving in " + str(self.trains[train_id].movement_direction))
         #begins by adding the change in position to the current position
         self.trains[train_id].position_in_block += delta_x
 

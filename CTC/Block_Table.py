@@ -6,8 +6,10 @@
 class Block_Table: 
     def __init__(self):
         self.table = []
+        self.switch = []
         self.maintenance_signal = False
         self.length = 0
+        self.switch_length = 0
         """"
         signals.update_switches.connect(self.get_switch_status)
         signals.update_states.connect(self.get_states)
@@ -24,8 +26,8 @@ class Block_Table:
         self.table.append(["Failure",line,block_num,failure])
         self.length += 1
     def add_switch(self,line,block_num,next_block_num):
-        self.table.append(["Switch",line,block_num,next_block_num])
-        self.length += 1
+        self.switch.append(["Switch",line,block_num,next_block_num])
+        self.switch_length += 1
     def add_light(self,line,block_num,color):
         self.table.append(["Light",line,block_num,color])
         self.length += 1

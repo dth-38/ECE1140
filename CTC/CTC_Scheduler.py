@@ -46,10 +46,6 @@ class CTC_Scheduler:
                                  47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32,
                                  31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,
                                  1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
-        # self.red_line = Line("Red Line")
-        # self.green_line = Line("Green Line")
-        # self.red_blocks = self.red_line.get_blocks()
-        # self.green_blocks = self.green_line.get_blocks()
         self.red_blocks = []
         self.green_blocks = []
         self.red_schedule = []
@@ -204,8 +200,6 @@ class CTC_Scheduler:
 
     def calc_suggested_speed(self,line,block):
         #convert km/hr -> mi/hr
-        print("line: " + str(line))
-        print("block: " + str(block))
         if line == "Red":
             return self.red_blocks[block - 1][2]*0.621371
         elif line == "Green":

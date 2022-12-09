@@ -201,8 +201,9 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 string = str(self.schedule.block_table.get_entry(i-1))
                 #print("string: " + string)
                 for j in range(self.block_table_display.count()):
-                    #print("entry: " + str(self.block_table_display.item(j).text()))
+                   #print("entry: " + str(self.block_table_display.item(j).text()))
                     if string == self.block_table_display.item(j).text():
+                        #print("CONTAINS")
                         contains = True
                 if contains == False:
                     self.block_table_display.addItem(str(self.schedule.block_table.get_entry(i)))
@@ -216,8 +217,6 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         #signals.broadcast_light.connect(self.update_light)
         #signals.broadcast_gate.connect(self.update_gate)
     def update_occupancy(self,line,block_num,occ):
-        #print("updating occupancy")
-        #print("occ: " + str(occ))
         contains = False
         num_trains = self.schedule.train_table.get_table_length()
         if occ == 0:
@@ -264,7 +263,9 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
+            print("TESTING!!!!")
             print("tc_block: " + str(tc_block))
+            print("authority: " + str(self.schedule.train_table.get_authority(i)))
             signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(i))
             suggested_speed = self.schedule.calc_suggested_speed(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
             print("suggested speed: " + str(suggested_speed))
