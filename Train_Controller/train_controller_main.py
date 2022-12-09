@@ -30,7 +30,7 @@ class train_status:
         self.kp = 1
         self.pid = PID(self.kp, self.ki, 0, setpoint=self.commanded_speed) # initialize pid with fixed values
         self.pid.outer_limits = (0, 120000)                                  # clamp at max power output specified in datasheet 120kW
-        self.power = 0
+        self.power = 0.0
 
     #set methods
     def set_authority(self, num):
@@ -146,7 +146,7 @@ class train_status:
         self.power = self.pid(self.speed)   #if train has speed, you get less power to speed up than starting from speed = 0
 
         if self.power < 0:
-            self.power = 0
+            self.power = 0.0
 
     def update_power(self):
         self.initialize_PID(self.get_kp(), self.get_ki())
