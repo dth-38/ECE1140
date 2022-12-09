@@ -106,7 +106,7 @@ class TrackModel(QObject):
         train_id = self.lines[line][block_num].occupied
 
         #only sends the new authority if the front of the train is in the block
-        if train_id != -1 and self.trains[train_id].block == block_num:
+        if train_id != -1 and self.trains[train_id].block == block_num and auth != -1:
             print("sending train authority " + str(auth) + " in block " + str(block_num))
             signals.send_tm_authority.emit(train_id, copy.copy(auth))
 
@@ -263,15 +263,11 @@ class TrackModel(QObject):
 
                         #updates gui before deleting train so the gui knows what block to check
                         self.gui.update_occupancy(line, current_block)
-                        print("gets past occupancy")
                         tc_block = line + "_" + self.lines[line][current_block].SECTION + "_" + str(current_block)
                         signals.send_tc_occupancy.emit(tc_block, False)
                         
-                        print("gets past signal")
                         #remove train from dictionary
                         self.trains.pop(train_id)
-
-                        print("TRAIN " + str(train_id) + " HAS BEEN REMOVED FROM THE TRACK.")
 
                         return 0
 
@@ -310,7 +306,9 @@ class TrackModel(QObject):
                     signals.send_tm_station.emit(train_id, self.lines[line][next_block].STATION != "")
                     #Send new authority to train.
                     #TODO: comment back in after ctc is working
-                    #signals.send_tm_authority.emit(self.lines[line][next_block].authority)
+                    if self.lines[line][next_block].authority != -1:
+                        print("sending train new auth as it moves through blocks")
+                        signals.send_tm_authority.emit(train_id, self.lines[line][next_block].authority)
                     #Send new commanded speed to train.
                     signals.send_tm_commanded_speed.emit(train_id, self.lines[line][next_block].commanded_speed)
 

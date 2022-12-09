@@ -26,7 +26,7 @@ NEXT_BLOCK = 1
 class TrackBlock:
     def __init__(self):
         self.occupied = -1
-        self.authority = 0
+        self.authority = -1
         self.commanded_speed = 0
         self.GRADE = 0
         self.STATION = ""
