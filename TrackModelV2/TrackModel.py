@@ -299,7 +299,7 @@ class TrackModel(QObject):
                         else:
                             side = STATION_BOTH
 
-                        signals.send_tm_beacon.emit(station, side)
+                        signals.send_tm_beacon.emit(train_id, station, side)
 
                     #send grade
                     signals.send_tm_grade.emit(train_id, self.lines[line][next_block].GRADE)
