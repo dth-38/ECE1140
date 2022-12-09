@@ -53,23 +53,23 @@ class Train:
         self.advertisement_cmd = "On"
         self.announcement_cmd = "On"
 
-        #failures
+        #Boolean variables for failures, True = failure occuring
         self.brake_failure = False
         self.signal_pickup_failure = False
         self.engine_failure = False
         self.track_fail = False
 
-        #brakes
+        #Boolean variables for brakes, True = brake activated
         self.passenger_ebrake = False
         self.ebrake = False
         self.sbrake = False
 
-        #who is setting the temperature
+        #Who is setting the temperature
         self.temp_from_ui = False
         self.ui_temp = 0
         self.prev_station = ""
         
-        #so ticket sales are only set at the first tick train is stopped and at station
+        #Boolean so ticket sales are only set at the first tick train is stopped and at station
         self.sent_stopped_at_station_sig = False
 
         #constants
