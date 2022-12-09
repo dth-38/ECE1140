@@ -36,7 +36,7 @@ DEFINE TRACK
     BLOCK green_E_18
         M 37
         P green_E_17
-        N green_E_18
+        N green_E_19
     END BLOCK
 
     ;has a gate
