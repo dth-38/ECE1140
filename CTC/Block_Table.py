@@ -43,12 +43,16 @@ class Block_Table:
         self.table.pop(0)
     def get_entry(self,position):
         return self.table[position]
+    def get_last_entry(self):
+        return self.table[[len(self.table) - 1]]
     def get_maintenance_signal(self):
         return self.maintenance_signal
     def get_table_length(self):
         return self.length
     def get_last_entry(self):
         return self.table[self.length - 1]
+    def get_switch(self,position):
+        return self.switch[position]
 
     
 
