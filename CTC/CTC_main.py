@@ -35,7 +35,8 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.dispatch_frame.hide()
         self.throughput_frame.hide()
         self.schedule_frame.hide()
-        self.table_frame.hide()
+        self.train_table_frame.hide()
+        self.block_table_frame.hide()
         self.maintenance_frame.hide()
 
         self.maintenance_button.clicked.connect(lambda: self.maintenance_mode())
@@ -54,23 +55,24 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.dispatch_frame.show()
         self.throughput_frame.show()
         self.schedule_frame.show()
-        self.table_frame.show()
+        self.train_table_frame.show()
+        self.block_table_frame.show()
 
     def maintenance_mode(self):
         self.dispatch_frame.hide()
         self.throughput_frame.hide()
         self.schedule_frame.hide()
-        self.table_frame.hide()
+        self.train_table_frame.hide()
+        self.block_table_frame.show()
         self.maintenance_frame.show()
 
     def maintenance_pressed(self):
         self.schedule.block_table.set_maintenance(self.block_selection.value(),self.section_selection.currentText(),self.line_maintenance_selection.currentText())
         tc_block = convert_to_block(self.line_maintenance_selection.currentText().upper(),self.block_selection.value())
         tc_next_block = convert_to_block(self.line_maintenance_selection.currentText().upper(),self.next_block_selection.value())
-        #TODO: FIX MAINTENANCE MODE
         print("tc_block: " + str(tc_block))
         print("tc_next_block: " + str(tc_next_block))
-        signals.set_tc_switch(tc_block,tc_next_block)
+        signals.set_tc_switch.emit(tc_block,tc_next_block)
 
     def destination_select(self):
         red_stations = ["Shadyside","Herron_Ave",
@@ -103,8 +105,8 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         if self.hour_selection.toPlainText() == "" or self.minute_selection.toPlainText() == "" or self.second_selection.toPlainText() == "" or len(self.destinations) == 0:
             pass
         else:
-            departure_time = (int(self.hour_selection.toPlainText()),int(self.minute_selection.toPlainText()),int(self.second_selection.toPlainText()))
-            self.train_entries, travel_time = self.schedule.manual_dispatch_train(departure_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations)
+            arrival_time = (int(self.hour_selection.toPlainText()),int(self.minute_selection.toPlainText()),int(self.second_selection.toPlainText()))
+            self.train_entries, travel_time = self.schedule.manual_dispatch_train(arrival_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations)
             #sends dispatch signal
             print("manual train entry: " + str(self.schedule.train_table.get_entry(0)))
             line = str(self.train_entries[5])
@@ -141,7 +143,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             self.throughput_output.setText(str(throughput))
     
     def add_schedule(self):
-        print("ADD SCHEDULE!!!")
+        #print("ADD SCHEDULE!!!")
         file_name = QtWidgets.QFileDialog.getOpenFileName(self,"Open File", "", "All Files (*);;Xlsx Files(*.xlsx)")
         print("file_name: " + str(file_name[0]))
         if file_name[0] != "":
@@ -154,14 +156,14 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.current_minute.setText(str(self.clock.get_minutes()))
         self.current_second.setText(str(self.clock.get_seconds()))
         for i in range(self.manual_trains):
-            print("train: " + str(self.schedule.train_table.get_entry(i)))
+            #print("train: " + str(self.schedule.train_table.get_entry(i)))
             if self.schedule.train_table.get_authority(i) == 0:
                 next_destination = self.schedule.train_table.get_next_destination(i)
                 print("next destination: " + str(next_destination))
                 authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),next_destination,self.schedule.train_table.get_position(i))
                 print("next authority: " + str(authority))
                 travel_time = self.schedule.calc_travel_time(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i),next_destination)
-                print("travel_time: " + str(travel_time))
+                print("next travel_time: " + str(travel_time))
                 arrival_time = [int(travel_time[0] + int(self.current_hour.toPlainText())), int(travel_time[1] + int(self.current_minute.toPlainText())), int(travel_time[2] + int(self.current_second.toPlainText()))]
                 self.schedule.train_table.change_authority(i,authority)
                 self.train_table_display.takeItem((i*6) + (i + 2))
@@ -211,11 +213,12 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         signals.send_ctc_occupancy.connect(self.update_occupancy)
         signals.send_ctc_failure.connect(self.update_failure)
         signals.broadcast_switch.connect(self.update_switch)
-        signals.broadcast_light.connect(self.update_light)
-        signals.broadcast_gate.connect(self.update_gate)
+        #signals.broadcast_light.connect(self.update_light)
+        #signals.broadcast_gate.connect(self.update_gate)
     def update_occupancy(self,line,block_num,occ):
         #print("updating occupancy")
         #print("occ: " + str(occ))
+        contains = False
         num_trains = self.schedule.train_table.get_table_length()
         if occ == 0:
             for i in range(num_trains):
@@ -236,7 +239,14 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                     #decrement authority
                     #print("authority decremented")
                     train[4] -= 1
-        self.schedule.block_table.add_occupancy(line,block_num,occ)
+        for item in self.schedule.block_table.table:
+            #print("item[1]: " + str(item[1]) + " = "  +str(line))
+            #print("item[2]: " + str(item[2]) + " = "  +str(block_num))
+            if item[1] == line and item[2] == block_num:
+                #print("CONTAINS")
+                contains == True
+        if contains == False:
+            self.schedule.block_table.add_occupancy(line,block_num,occ)
     def update_failure(self,line,block_num,failure):
         self.schedule.block_table.add_failure(line,block_num,failure)
     def update_switch(self,line,block_num,next_block_num):
@@ -254,11 +264,15 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
+            print("tc_block: " + str(tc_block))
             signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(i))
-            if self.schedule.train_table.get_line(i) == "Red":
-                signals.send_tc_speed.emit(tc_block,self.schedule.red_speed)
-            elif self.schedule.train_table.get_line(i) == "Green":
-                signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
+            suggested_speed = self.schedule.calc_suggested_speed(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
+            print("suggested speed: " + str(suggested_speed))
+            signals.send_tc_speed.emit(tc_block,suggested_speed)
+            # if self.schedule.train_table.get_line(i) == "Red":
+            #     signals.send_tc_speed.emit(tc_block,self.schedule.red_speed)
+            # elif self.schedule.train_table.get_line(i) == "Green":
+            #     signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
         self.clock.update_time()
     
 

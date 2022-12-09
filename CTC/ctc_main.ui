@@ -144,7 +144,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Departure Time:</string>
+      <string>Arrival Time:</string>
      </property>
     </widget>
     <widget class="QPushButton" name="dispatch_button">
@@ -420,13 +420,13 @@
      </rect>
     </property>
    </widget>
-   <widget class="QFrame" name="table_frame">
+   <widget class="QFrame" name="train_table_frame">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>60</y>
       <width>411</width>
-      <height>491</height>
+      <height>251</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -445,19 +445,6 @@
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="label_2">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>250</y>
-       <width>91</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Block Table:</string>
-     </property>
-    </widget>
     <widget class="QLabel" name="label">
      <property name="geometry">
       <rect>
@@ -469,16 +456,6 @@
      </property>
      <property name="text">
       <string>Train Table:</string>
-     </property>
-    </widget>
-    <widget class="QListWidget" name="block_table_display">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>280</y>
-       <width>401</width>
-       <height>211</height>
-      </rect>
      </property>
     </widget>
    </widget>
@@ -841,8 +818,47 @@
      </property>
     </widget>
    </widget>
+   <widget class="QFrame" name="block_table_frame">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>319</y>
+      <width>411</width>
+      <height>231</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>91</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Block Table:</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="block_table_display">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>20</y>
+       <width>401</width>
+       <height>211</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
    <zorder>schedule_frame</zorder>
-   <zorder>table_frame</zorder>
+   <zorder>train_table_frame</zorder>
    <zorder>maintenance_button</zorder>
    <zorder>manual_button</zorder>
    <zorder>label_3</zorder>
@@ -854,6 +870,7 @@
    <zorder>current_minute</zorder>
    <zorder>current_second</zorder>
    <zorder>maintenance_frame</zorder>
+   <zorder>block_table_frame</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
