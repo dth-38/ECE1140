@@ -109,7 +109,7 @@ class Train:
         ui_sig.train_model_transfer_ac_cmd.connect(self.train_model_set_ac)
 
         #setup ui
-        self.app = QtWidgets.QApplication(sys.argv)
+        #self.app = QtWidgets.QApplication(sys.argv)
         self.train_model = QtWidgets.QMainWindow()
         self.ui = TrainData_Ui()
         self.ui.setup_ui(self.train_model)

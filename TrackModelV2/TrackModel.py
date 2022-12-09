@@ -127,7 +127,7 @@ class TrackModel(QObject):
     @pyqtSlot(str, int, int)
     def handle_switch(self, line, sw_block, to_block):
         line = line.lower()
-        print("switching switch in block " + str(sw_block) + " to " + str(to_block))
+        #print("switching switch in block " + str(sw_block) + " to " + str(to_block))
 
         try:
             self.lines[line][sw_block].set_switch(to_block)
@@ -188,6 +188,7 @@ class TrackModel(QObject):
                 self.next_train_id += 1
 
                 signals.send_tc_occupancy.emit(line+"___0", True)
+                signals.send_tm_commanded_speed.emit(new_train.id, self.lines[line][YARD].commanded_speed)
             else:
                 print("Cannot dispatch train, yard is occupied.")
         except:
@@ -262,9 +263,11 @@ class TrackModel(QObject):
 
                         #updates gui before deleting train so the gui knows what block to check
                         self.gui.update_occupancy(line, current_block)
+                        print("gets past occupancy")
                         tc_block = line + "_" + self.lines[line][current_block].SECTION + "_" + str(current_block)
                         signals.send_tc_occupancy.emit(tc_block, False)
-
+                        
+                        print("gets past signal")
                         #remove train from dictionary
                         self.trains.pop(train_id)
 
