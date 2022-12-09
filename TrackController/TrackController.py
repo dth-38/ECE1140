@@ -523,32 +523,44 @@ class TrackController(QMainWindow):
             prev_block = self.next_Track_State[blk1].get_Previous_Block()
 
             #train has moved since blk1 is no longer occupied
-            if self.next_Track_State[blk1].occupied != True:
+            if self.next_Track_State[blk1].occupied == False:
                 train[1] = blk2
-                train[2] = -1
-                blk2 = -1
+                train[2] = ""
+                blk2 = ""
+                blk1 = train[1]
 
-            #checks to see if second occupied block must be updated
-            if blk2 == -1:
-                #train moving forward, check next block
-                if dir == 1 and self.next_Track_State[next_block].occupied == True:
-                    train[2] = next_block
-                    blk2 = next_block
-                #train moving backwards, check previous block
-                elif dir == 0 and self.next_Track_State[prev_block].occupied == True:
-                    train[2] = prev_block
-                    blk2 = prev_block
+                if blk1 != "":
+                    next_block = self.next_Track_State[blk1].get_Next_Block()
+                    prev_block = self.next_Track_State[blk1].get_Previous_Block()
 
             #checks to see if train has left the area and removes it from tracker if necessary
-            if not self.next_Track_State[blk1].occupied and not self.next_Track_State[blk2].occupied:
+            if blk1 == "" and blk2 == "":
                 self.tracker.remove(train)
                 continue
+
+            #checks to see if second occupied block must be updated
+            if blk2 == "":
+                #train moving forward, check next block
+                if next_block != "END":
+                    if dir == 1 and self.next_Track_State[next_block].occupied == True:
+                        train[2] = next_block
+                        blk2 = next_block
+                #train moving backwards, check previous block
+                if prev_block != "START":
+                    if dir == 0 and self.next_Track_State[prev_block].occupied == True:
+                        train[2] = prev_block
+                        blk2 = prev_block
+
 
             #updates authority based on new train position
             if dir == 1 and prev_block != "START":
                 self.next_Track_State[prev_block].authority = 0
+                p_block = decompose_block(prev_block)
+                signals.send_track_authority.emit(p_block[0], p_block[1], 0)
             elif dir == 0 and next_block != "END":
                 self.next_Track_State[next_block].authority = 0
+                n_block = decompose_block(next_block)
+                signals.send_track_authority.emit(n_block[0], n_block[1], 0)
 
 
         #runs vital safety logic then
@@ -557,6 +569,10 @@ class TrackController(QMainWindow):
 
             #speed safety check: commanded speed cannot exceed block maximum
             self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
+            #if there is no commanded speed for a block, it is set to the maximum value
+            if self.next_Track_State[block].commanded_Speed == 0:
+                self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].max_Speed)
+
             if self.next_Track_State[block].commanded_Speed > self.next_Track_State[block].max_Speed and self.next_Track_State[block].max_Speed != 0:
                 self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].max_Speed)
 
@@ -575,14 +591,14 @@ class TrackController(QMainWindow):
                         break
                     
                 #if a train isnt found and the block is an endpoint, a train start tracking a new train
-                if next_block == "END" and train_found == False:
+                if next_block == "END" and train_found == False and block[len(block)-1:] != "0":
                     #creates a new train moving backwards through the blocks
-                    new_train = [0, block, -1]
+                    new_train = [0, block, ""]
                     self.tracker.append(new_train)
 
                 elif prev_block == "START" and train_found == False:
                     #creates a new train moving forwards through the blocks
-                    new_train = [1, block, -1]
+                    new_train = [1, block, ""]
                     self.tracker.append(new_train)
                     
 
@@ -728,7 +744,7 @@ class TrackController(QMainWindow):
             if block == bl:
                 #d_block = decompose_block(bl)
 
-                self.next_Track_State[bl].occupied = occ
+                self.next_Track_State[bl].occupied = copy.copy(occ)
                 #signals.send_ctc_occupancy.emit(d_block[0], d_block[1], occ)
                 break
 

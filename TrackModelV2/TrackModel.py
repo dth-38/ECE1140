@@ -103,7 +103,11 @@ class TrackModel(QObject):
 
         self.gui.update_authority(line, block_num)
         train_id = self.lines[line][block_num].occupied
-        signals.send_tm_authority.emit(train_id, copy.copy(auth))
+
+        #only sends the new authority if the front of the train is in the block
+        if train_id != -1 and self.trains[train_id].block == block_num:
+            print("sending train authority " + str(auth) + " in block " + str(block_num))
+            signals.send_tm_authority.emit(train_id, copy.copy(auth))
 
     @pyqtSlot(str, int, int)
     def handle_speed(self, line, block_num, speed):
@@ -247,7 +251,7 @@ class TrackModel(QObject):
             if self.lines[line][next_block].get_previous(next_dir) == current_block:
                 #valid move
 
-                if not self.lines[line][next_block].get_occupancy():
+                if self.lines[line][next_block].get_occupancy() == False:
                     #no collision has occured
 
                     #REMOVES TRAIN UPON REACHING YARD
@@ -304,7 +308,7 @@ class TrackModel(QObject):
                     #TODO: comment back in after ctc is working
                     #signals.send_tm_authority.emit(self.lines[line][next_block].authority)
                     #Send new commanded speed to train.
-                    #signals.send_tm_commanded_speed.emit(self.lines[line][next_block].commanded_speed)
+                    signals.send_tm_commanded_speed.emit(train_id, self.lines[line][next_block].commanded_speed)
 
                     
                 else:
@@ -320,8 +324,6 @@ class TrackModel(QObject):
                     return 0
 
             else:
-                print("wtf, current block = " + str(current_block) + ", checked against = " + str(self.lines[line][next_block].get_previous(next_dir)))
-
                 #train has derailed
                 print("UH OH: TRAIN " + str(train_id) + " DERAILED ENTERING LINE: " + self.trains[train_id].line + ", BLOCK: " + str(next_block))
                 self.trains.pop(train_id)
