@@ -28,21 +28,21 @@ class Train:
         self.passenger_count = 0
         self.mass = 40.25               #Imperial tons
 
-        #track info
+        #Information about block of track train is on
         self.grade = 0.0                #%Ft risen per 100 ft
         self.in_station = False
         self.in_tunnel = False
         self.authority = 0
         self.commanded_speed = 0.0      #mph
 
-        #train movement info
+        #Information about the movement of the train
         self.actual_speed = 0.0         #mph
         self.power = 0.0                #kilowatts
         self.acceleration = 0           #ft/s^2
         self.distance = 0               #meters
         self.force = 0
 
-        #various train functions
+        #Information about the physical state of the train
         self.ac_cmd = 68              #degrees farenheight
         self.actual_temp = 68
         self.horn = "Off"
@@ -70,7 +70,7 @@ class Train:
         self.prev_station = ""
         
         #so ticket sales are only set at the first tick train is stopped and at station
-        self.i = 0
+        self.sent_stopped_at_station_sig = False
 
         #constants
         self.GRAVITY = 9.80665                     #m/s^2
@@ -92,6 +92,7 @@ class Train:
         signals.send_tm_commanded_speed.connect(self.train_model_update_command_speed)
         signals.send_tm_tunnel.connect(self.train_model_update_tunnel)
         signals.send_tm_station.connect(self.train_model_update_station)
+        signals.send_tm_new_block.connect(self.decrement_authority)
 
         #open ui
         signals.open_tm_gui.connect(self.show_tm_ui)
@@ -136,13 +137,13 @@ class Train:
         #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
         #self.train_ctrl.real_train.set_station(self.in_station)
 
-        if(self.actual_speed == 0 and self.in_station and self.i == 0):
+        if(self.actual_speed == 0 and self.in_station and self.sent_stopped_at_station_sig == False):
             self.ui.station_line.setText("")
             signals.send_tm_stopped_at_station.emit(self.id)
-            self.i = 1
+            self.sent_stopped_at_station_sig = True
 
         if(self.actual_speed > 0):
-            self.i = 0
+            self.sent_stopped_at_station_sig = False
         
         #send failure to train controller
         if(self.engine_failure or self.brake_failure or self.signal_pickup_failure):
@@ -182,7 +183,7 @@ class Train:
         self.regulate_temp()
         self.horn = self.train_ctrl.real_train.get_horn()
         self.sbrake = self.train_ctrl.get_norm_brake_flag()
-        if(self.brake_failure):
+        if(self.brake_failure and self.authority >= 1):
             self.sbrake = False
         self.ebrake = self.train_ctrl.get_emer_brake_flag()
         self.announcement_cmd = self.train_ctrl.real_train.get_annun()
@@ -197,7 +198,7 @@ class Train:
         self.train_model_display_horn()
         self.train_model_display_left_door()
         self.train_model_display_right_door()
-        if(self.actual_speed == 0 and self.in_station and self.i == 0):
+        if(self.actual_speed == 0 and self.in_station and self.sent_stopped_at_station_sig == False):
             self.door_side = 3
 
 
@@ -304,6 +305,11 @@ class Train:
 # ----------------------------- Track Model Inputs --------------------------------------------
 # ---------------------------------------------------------------------------------------------
 
+    #decrement authroity
+    def decrement_authority(self):
+        self.authority = self.authority - 1
+        self.ui.authority_line.setText(str(self.authority))
+
     #get beacon info: doorside, station name, others
     def get_beacon(self, station, side):
         if(station == self.prev_station):
@@ -328,6 +334,7 @@ class Train:
         if(self.id == trainnum):
             if(not(self.signal_pickup_failure)):
                 self.authority = new_auth
+                self.authority = self.authority - 1
 
             self.ui.authority_line.setText(str(self.authority))
 
@@ -352,7 +359,7 @@ class Train:
                 self.passenger_count = pass_count
             if(pass_count > 0):
                 self.mass = 40.25 + ((self.crew_count + self.passenger_count) * 0.0738155)
-            self.ui.mass_line.setText(str(self.mass))
+            self.ui.mass_line.setText(str(round(self.mass,2)))
             self.ui.passenger_line.setText(str(self.passenger_count))
 
     #get if track is in failure
@@ -390,7 +397,7 @@ class Train:
     #murphy sets failure
     def train_model_transfer_engine_failure(self):
         self.engine_failure = True
-        self.power = 0
+        self.power = 0.0
         self.ui.engine_button.setStyleSheet("background-color: red")
 
     #murphy sets failure
@@ -438,7 +445,7 @@ class Train:
         power *= 1000
 
         if(self.track_fail):
-            power = 0
+            power = 0.0
             self.ebrake = True
 
         #if train is running
@@ -447,7 +454,7 @@ class Train:
 
             #set power to 0 if engine failed
             if(self.engine_failure):
-                power = 0
+                power = 0.0
             
             #if power exceeds limit, set to limit of engine
             if(power > self.POWER_LIMIT):
@@ -517,13 +524,13 @@ class Train:
                 if(temp_acceleration > self.ACCELERATION_LIMIT):
                     temp_acceleration = self.ACCELERATION_LIMIT
                 elif(self.sbrake and not(self.ebrake or self.passenger_ebrake)):
-                    power = 0
+                    power = 0.0
                     if(self.actual_speed > 0):
                         temp_acceleration = self.DECELERATION_SERVICE
                     else:
                         temp_acceleration = 0
                 elif(self.ebrake or self.passenger_ebrake):
-                    power = 0
+                    power = 0.0
                     if(self.actual_speed > 0):
                         temp_acceleration = self.DECELERATION_EMERGENCY
                     else:

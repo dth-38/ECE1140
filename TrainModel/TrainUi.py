@@ -346,7 +346,7 @@ class TrainData_Ui(object):
         self.int_light_line.setText(_translate("MainWindow", "Off"))
         self.int_light_label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Interior Lights</span></p></body></html>"))
         self.right_door_line.setText(_translate("MainWindow", "Closed"))
-        self.murphy_label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:22pt;\">Murphy Failures</span></p></body></html>"))
+        self.murphy_label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:22pt;\">Failure Mode Activation</span></p></body></html>"))
         self.p_label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:22pt;\">Passenger</span></p></body></html>"))
         self.repair_button.setText(_translate("MainWindow", "Repair Failures"))
         self.engine_button.setText(_translate("MainWindow", "Engine"))
