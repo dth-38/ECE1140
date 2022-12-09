@@ -26,6 +26,7 @@ DELX = 1
 
 #conversion factor since train length is in feet
 FEET_TO_METERS = 0.3408
+KPH_TO_MPH = 0.621371
 
 class TrackModel(QObject):
     def __init__(self):
@@ -392,6 +393,7 @@ class TrackModel(QObject):
                     new_line[block_num].GRADE = l_data.iloc[i,4]
                     new_line[block_num].LENGTH = l_data.iloc[i,3]
                     new_line[block_num].SECTION = l_data.iloc[i,1]
+                    new_line[block_num].MAX_SPEED = round(l_data.iloc[i,5] * KPH_TO_MPH, 0)
 
                 #2nd parse for track infrastructure
                 #this is done to ensure all blocks exist before trying to connect with switches and add beacons

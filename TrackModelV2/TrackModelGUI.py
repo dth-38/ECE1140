@@ -39,8 +39,8 @@ class TrackModelGUI(QMainWindow):
         for line in track:
             new_line = QTableWidget()
 
-            new_line.setColumnCount(9)
-            col_headers = ["Section","Occupied","Authority","Commanded Spd.","Station","Beacon","Switch","Light","Gate"]
+            new_line.setColumnCount(13)
+            col_headers = ["Section","Occupied","Authority","Commanded Spd.","Station","Beacon","Switch","Light","Gate","Length","Grade","Underground","Max Speed"]
             new_line.setHorizontalHeaderLabels(col_headers)
 
             row_headers = []
@@ -108,6 +108,25 @@ class TrackModelGUI(QMainWindow):
                 else:
                     g = QTableWidgetItem()
                 new_line.setItem(block,8, g)
+
+                #create length item
+                l_b = QTableWidgetItem(str(track[line][block].LENGTH))
+                new_line.setItem(block,9,l_b)
+
+                #create grade item
+                g_b = QTableWidgetItem(str(track[line][block].GRADE))
+                new_line.setItem(block,10,g_b)
+
+                #create undergound item
+                if track[line][block].UNDERGROUND == True:
+                    u_b = QTableWidgetItem("Y")
+                else:
+                    u_b = QTableWidgetItem("N")
+                new_line.setItem(block,11,u_b)
+
+                #create max speed item
+                ms_b = QTableWidgetItem(str(track[line][block].MAX_SPEED))
+                new_line.setItem(block,12,ms_b)
 
             #set newly generated headers
             new_line.setVerticalHeaderLabels(row_headers)

@@ -40,6 +40,7 @@ class TrackBlock:
         self.SWITCH_TRANSITIONS = [0, 0]
         self.LENGTH = 0
         self.UNDERGROUND = False
+        self.MAX_SPEED = 0
 
         #might be useful for displaying stuff so im putting this here
         self.SECTION = "_"
