@@ -106,7 +106,7 @@ class TrackModel(QObject):
         train_id = self.lines[line][block_num].occupied
 
         #only sends the new authority if the front of the train is in the block
-        if train_id != -1 and self.trains[train_id].block == block_num and auth != -1:
+        if train_id != -1 and self.trains[train_id].block == block_num:
             print("sending train authority " + str(auth) + " in block " + str(block_num))
             signals.send_tm_authority.emit(train_id, copy.copy(auth))
 
@@ -305,13 +305,12 @@ class TrackModel(QObject):
                     #send at station
                     signals.send_tm_station.emit(train_id, self.lines[line][next_block].STATION != "")
                     #Send new authority to train.
-                    #TODO: comment back in after ctc is working
                     if self.lines[line][next_block].authority != -1:
-                        print("sending train new auth as it moves through blocks")
+                        print("sending train new auth " + str(self.lines[line][next_block].authority) + " as it moves through blocks")
                         signals.send_tm_authority.emit(train_id, self.lines[line][next_block].authority)
                     #Send new commanded speed to train.
                     signals.send_tm_commanded_speed.emit(train_id, self.lines[line][next_block].commanded_speed)
-                    #signals.send_tm_new_block.emit()
+                    signals.send_tm_new_block.emit()
 
                     
                 else:
