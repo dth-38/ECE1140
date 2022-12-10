@@ -557,10 +557,22 @@ class TrackController(QMainWindow):
                 self.next_Track_State[prev_block].authority = 0
                 p_block = decompose_block(prev_block)
                 signals.send_track_authority.emit(p_block[0], p_block[1], 0)
+                
+                p_prev_block = self.next_Track_State[prev_block].get_Previous_Block()
+                if p_prev_block != "START":
+                    p_p_block = decompose_block(p_prev_block)
+                    signals.send_track_authority.emit(p_p_block[0], p_p_block[1], -1)
+                    print("line 564")
             elif dir == 0 and next_block != "END":
                 self.next_Track_State[next_block].authority = 0
                 n_block = decompose_block(next_block)
                 signals.send_track_authority.emit(n_block[0], n_block[1], 0)
+
+                n_next_block = self.next_Track_State[next_block].get_Next_Block()
+                if n_next_block != "END":
+                    n_n_block = decompose_block(n_next_block)
+                    signals.send_track_authority.emit(n_n_block[0], n_n_block[1], -1)
+                    print("line 573")
 
 
         #runs vital safety logic then
@@ -638,6 +650,9 @@ class TrackController(QMainWindow):
                         block_num = decompose_block(self.next_Track_State[block].get_switched_to())
                         signals.broadcast_switch.emit(d_block[0], d_block[1], block_num[1])
                         self.current_Track_State[block].switches[0] = copy.copy(self.next_Track_State[block].switches[0])
+
+                        signals.send_track_authority.emit(block_num[0], block_num[1], -1)
+                        print("line 653")
 
                         #removes authority from blocks that are not being switched to if they are not already occupied
                         not_block = self.next_Track_State[block].get_not_switched_to()

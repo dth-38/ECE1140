@@ -71,6 +71,10 @@ class Train:
         #Boolean so ticket sales are only set at the first tick train is stopped and at station
         self.sent_stopped_at_station_sig = False
 
+        #authority saved when a train must come to a stop
+        #used to restart the train without sending a new authority
+        self.saved_authority = 0
+
         #Constats used in calculations
         self.GRAVITY = 9.80665                     #m/s^2
         self.FRICTION_COE = 0.02
@@ -324,11 +328,18 @@ class Train:
 # ---------------------------------------------------------------------------------------------
 
     #Decrement authroity
+    #@pyqtSlot()
     def decrement_authority(self):
         self.authority = self.authority - 1
+
+        #authority cannot go below 0
+        if self.authority < 0:
+            self.authority = 0
+
         self.ui.authority_line.setText(str(self.authority))
 
     #Get beacon info: doorside, station name, others
+    #@pyqtSlot(int, str, int)
     def get_beacon(self, id, station, side):
         if(id == self.id):
             if(station == self.prev_station):
@@ -352,8 +363,19 @@ class Train:
     def train_model_update_authority(self, trainnum, new_auth):
         if(self.id == trainnum):
             if(not(self.signal_pickup_failure)):
-                self.authority = new_auth
-                self.authority = self.authority - 1
+                #saves a previous authority if the train must stop
+                #allows it to resume without a new authority being generated
+                if new_auth == 0:
+                    self.saved_authority = self.authority
+
+                #restores old authority if a -1 is sent
+                if new_auth == -1 and self.saved_authority != 0:
+                    self.authority = self.saved_authority
+                else:
+                    self.authority = new_auth
+
+                #workaround we might need if ctc sends wrong authority
+                #self.authority = self.authority - 1
 
             self.ui.authority_line.setText(str(self.authority))
 
