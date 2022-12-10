@@ -279,10 +279,6 @@ class Train:
         elif(self.door_side == 2):
             self.left_door_cmd = "Closed"
             self.right_door_cmd = "Closed"
-        #closed
-        else:
-            self.left_door_cmd = "Opened"
-            self.right_door_cmd = "Opened"
 
     #Display left door
     def train_model_display_left_door(self):
