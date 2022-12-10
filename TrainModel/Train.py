@@ -182,7 +182,8 @@ class Train:
         #Configure door signal from train controller to correct door side
         self.left_door_cmd = self.train_ctrl.real_train.get_left_door()
         self.right_door_cmd = self.train_ctrl.real_train.get_right_door()
-        self.train_model_update_doors()
+        if(self.in_station):
+            self.train_model_update_doors()
         self.train_ctrl.real_train.set_door_left(self.left_door_cmd)
         self.train_ctrl.real_train.set_door_right(self.right_door_cmd)
         
