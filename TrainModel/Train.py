@@ -110,7 +110,7 @@ class Train:
 
         #Setup train model ui
         self.train_model = QtWidgets.QMainWindow()
-        self.ui = TrainData_Ui()
+        self.ui = TrainData_Ui(self.id)
         self.ui.setup_ui(self.train_model)
         #self.train_model.show()
         self.ui.train_id_line.setText(str(self.id))
@@ -400,41 +400,46 @@ class Train:
 # ---------------------------------------------------------------------------------------------
 
     #Murphy fixes any failure
-    def train_model_fix_failure(self):
-        self.brake_failure = False
-        self.engine_failure = False
-        self.signal_pickup_failure = False
-        self.ui.brake_button.setStyleSheet("background-color : white")
-        self.ui.engine_button.setStyleSheet("background-color : white")
-        self.ui.sp_button.setStyleSheet("background-color : white")
+    def train_model_fix_failure(self, id):
+        if(id == self.id):
+            self.brake_failure = False
+            self.engine_failure = False
+            self.signal_pickup_failure = False
+            self.ui.brake_button.setStyleSheet("background-color : white")
+            self.ui.engine_button.setStyleSheet("background-color : white")
+            self.ui.sp_button.setStyleSheet("background-color : white")
 
     #Murphy sets failure
-    def train_model_transfer_brake_failure(self):
-        self.brake_failure = True
-        self.ui.brake_button.setStyleSheet("background-color: red")
+    def train_model_transfer_brake_failure(self,id):
+        if(id == self.id):
+            self.brake_failure = True
+            self.ui.brake_button.setStyleSheet("background-color: red")
 
     #Murphy sets failure
-    def train_model_transfer_engine_failure(self):
-        self.engine_failure = True
-        self.power = 0.0
-        self.ui.engine_button.setStyleSheet("background-color: red")
+    def train_model_transfer_engine_failure(self, id):
+        if(id == self.id):
+            self.engine_failure = True
+            self.power = 0.0
+            self.ui.engine_button.setStyleSheet("background-color: red")
 
     #Murphy sets failure
-    def train_model_transfer_signal_pickup_failure(self):
-        self.signal_pickup_failure = True
-        self.ui.sp_button.setStyleSheet("background-color: red")
+    def train_model_transfer_signal_pickup_failure(self, id):
+        if(id == self.id):
+            self.signal_pickup_failure = True
+            self.ui.sp_button.setStyleSheet("background-color: red")
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Passenger Inputs ----------------------------------------------
 # ---------------------------------------------------------------------------------------------
  
     #Get emergency brake from passenger
-    def train_model_passenger_ebrake(self):
-        self.passenger_ebrake = not(self.passenger_ebrake)
-        if(self.passenger_ebrake):
-            self.ui.pbrake_button.setStyleSheet("background-color: red")
-        else:
-            self.ui.pbrake_button.setStyleSheet("background-color: white")
+    def train_model_passenger_ebrake(self, id):
+        if(id == self.id):
+            self.passenger_ebrake = not(self.passenger_ebrake)
+            if(self.passenger_ebrake):
+                self.ui.pbrake_button.setStyleSheet("background-color: red")
+            else:
+                self.ui.pbrake_button.setStyleSheet("background-color: white")
 
     #Regulate temperature in train
     def regulate_temp(self):
@@ -446,9 +451,10 @@ class Train:
             self.temp_from_ui = False
 
     #Set cabin temperature
-    def train_model_set_ac(self, ac):
-        self.temp_from_ui = True
-        self.ui_temp = ac
+    def train_model_set_ac(self, id, ac):
+        if(id == self.id):
+            self.temp_from_ui = True
+            self.ui_temp = ac
 
 # ---------------------------------------------------------------------------------------------
 # ----------------------------- Newtons laws calculation --------------------------------------

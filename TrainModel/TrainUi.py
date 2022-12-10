@@ -12,6 +12,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from TrainModel.TrainModelSignals import *
 
 class TrainData_Ui(object):
+
+    def __init__(self, id = 0):
+        self.id = id
+
     def setup_ui(self, train_model):
         train_model.setObjectName("MainWindow")
         train_model.resize(1000, 853)
@@ -286,22 +290,22 @@ class TrainData_Ui(object):
     def set_ac(self):
         temp = self.textEdit.toPlainText()
         new_temp = int(temp)
-        ui_sig.train_model_transfer_ac_cmd.emit(new_temp)
+        ui_sig.train_model_transfer_ac_cmd.emit(self.id, new_temp)
 
     def toggle_engine_failure(self):
-        ui_sig.train_model_transfer_engine_falure.emit()
+        ui_sig.train_model_transfer_engine_falure.emit(self.id)
 
     def toggle_sp_failure(self):
-        ui_sig.train_model_transfer_signal_pickup_failure.emit()
+        ui_sig.train_model_transfer_signal_pickup_failure.emit(self.id)
 
     def toggle_brake_failure(self):
-        ui_sig.train_model_transfer_brake_failure.emit()
+        ui_sig.train_model_transfer_brake_failure.emit(self.id)
 
     def toggle_fix_failure(self):
-        ui_sig.train_model_fix_failure.emit()
+        ui_sig.train_model_fix_failure.emit(self.id)
         
     def toggle_pbrake(self):
-        ui_sig.train_model_transfer_passenger_ebrake.emit()
+        ui_sig.train_model_transfer_passenger_ebrake.emit(self.id)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
