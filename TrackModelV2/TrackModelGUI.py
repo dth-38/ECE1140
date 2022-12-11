@@ -159,6 +159,10 @@ class TrackModelGUI(QMainWindow):
 
 
     def update_light(self, line, block):
+        #TODO: check that excel is being parsed right
+        if self.get_track()[line][block].light == []:
+            return 0
+
         if self.get_track()[line][block].light[0] == 1:
             self.table_widgets[line].item(block,7).setText("GREEN")
             self.table_widgets[line].item(block,7).setBackground(self.GREEN)

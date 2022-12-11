@@ -1,0 +1,279 @@
+DEFINE TRACK
+    BLOCK red_A_1
+        M 25
+        P red_F_16
+        N red_A_2
+        L 1
+    END BLOCK
+
+    BLOCK red_A_2
+        M 25
+        P red_A_1
+        N red_A_3
+    END BLOCK
+
+    BLOCK red_A_3
+        M 25
+        P red_A_2
+        N END
+    END BLOCK
+
+    BLOCK red_B_4
+        M 25
+        P red_B_5
+        N END
+    END BLOCK
+
+    BLOCK red_B_5
+        M 25
+        P red_B_6
+        N red_B_4
+    END BLOCK
+
+    BLOCK red_B_6
+        M 25
+        P red_C_7
+        N red_B_5
+    END BLOCK
+
+    BLOCK red_C_7
+        M 25
+        P red_C_8
+        N red_B_6
+        L 1
+    END BLOCK
+
+    BLOCK red_C_8
+        M 25
+        P red_C_9
+        N red_C_7
+    END BLOCK
+
+    BLOCK red_C_9
+        M 25
+        N red_C_8
+        S PREV, red___0, red_D_10
+    END BLOCK
+
+    BLOCK red_D_10
+        M 25
+        P red_D_11
+        N red_C_9
+        L 1
+    END BLOCK
+
+    BLOCK red___0
+        P START
+        N red_C_9
+        L 1
+    END BLOCK
+
+    BLOCK red_D_11
+        M 25
+        P red_D_12
+        N red_D_10
+    END BLOCK
+
+    BLOCK red_D_12
+        M 25
+        P red_E_13
+        N red_D_11
+    END BLOCK
+
+    BLOCK red_E_13
+        M 25
+        P red_E_14
+        N red_D_12
+    END BLOCK
+
+    BLOCK red_E_14
+        M 25
+        P red_E_15
+        N red_E_13
+    END BLOCK
+
+    BLOCK red_E_15
+        M 25
+        P red_F_16
+        N red_E_14
+        L 1
+    END BLOCK
+
+    ;switch off = red_A_1, switch on = red_E_15
+    BLOCK red_F_16
+        M 25
+        P red_F_17
+        S NEXT, red_E_15, red_A_1
+        L 1
+    END BLOCK
+
+    BLOCK red_F_17
+        M 34
+        P red_F_18
+        N red_F_16
+    END BLOCK
+
+    BLOCK red_F_18
+        M 43
+        P red_F_19
+        N red_F_17
+    END BLOCK
+
+    BLOCK red_F_19
+        M 43
+        P red_F_20
+        N red_F_18
+    END BLOCK
+
+    BLOCK red_F_20
+        M 43
+        P red_G_21
+        N red_F_19
+    END BLOCK
+
+    BLOCK red_G_21
+        M 34
+        P red_G_22
+        N red_F_20
+        L 1
+    END BLOCK
+
+    BLOCK red_G_22
+        M 34
+        P red_G_23
+        N red_G_21
+    END BLOCK
+
+    BLOCK red_G_23
+        M 34
+        P red_H_24
+        N red_G_22
+    END BLOCK
+
+    BLOCK red_H_24
+        M 43
+        P red_H_25
+        N red_G_24
+    END BLOCK
+
+    BLOCK red_H_25
+        M 43
+        P red_H_26
+        N red_H_24
+        L 1
+    END BLOCK
+
+    BLOCK red_H_26
+        M 43
+        P red_H_27
+        N red_H_25
+    END BLOCK
+
+    BLOCK red_H_27
+        M 43
+        S PREV, red_H_28, red_T_76
+        N red_H_26
+    END BLOCK
+
+    BLOCK red_H_28
+        M 43
+        P START
+        N red_H_27
+        L 1
+    END BLOCK
+
+    BLOCK red_T_76
+        M 34
+        P START
+        N red_H_27
+        L 1
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;3 critical sections sort of
+;c1, t[0] for occupancies in red_A_1 through red_C_9
+;c2, t[1] for occupancies in red_D_10 through red_E_15
+;c3, t[2] for occupancies in red_F_16 through red_H_27
+
+OR t[0], red_A_1:occupied, red_A_2:occupied
+OR t[0], t[0], red_A_3:occupied
+OR t[0], t[0], red_B_4:occupied
+OR t[0], t[0], red_B_5:occupied
+OR t[0], t[0], red_B_6:occupied
+OR t[0], t[0], red_C_7:occupied
+OR t[0], t[0], red_C_8:occupied
+OR t[0], t[0], red_C_9:occupied
+
+OR t[1], red_D_10:occupied, red_D_11:occupied
+OR t[1], t[1], red_D_12:occupied
+OR t[1], t[1], red_E_13:occupied
+OR t[1], t[1], red_E_14:occupied
+OR t[1], t[1], red_E_15:occupied
+
+OR t[2], red_F_16:occupied, red_F_17:occupied
+OR t[2], t[2], red_F_18:occupied
+OR t[2], t[2], red_F_19:occupied
+OR t[2], t[2], red_F_20:occupied
+OR t[2], t[2], red_G_21:occupied
+OR t[2], t[2], red_G_22:occupied
+OR t[2], t[2], red_G_23:occupied
+OR t[2], t[2], red_H_24:occupied
+OR t[2], t[2], red_H_25:occupied
+OR t[2], t[2], red_H_26:occupied
+OR t[2], t[2], red_H_27:occupied
+
+;switch in block red_C_9
+;s1 = (yard and (c1 or c3) or (c2 and (not c1)))
+OR t[3], t[0], t[2]
+AND t[3], t[3], red___0:occupied
+NOT t[4], t[0]
+AND t[4], t[4], t[1]
+OR red_C_9:switch[0], t[3], t[4]
+
+;switch in block red_F_16
+;s2 = (c1 and c3) or (not c1 and c2 and not c3)
+AND t[3], t[0], t[2]
+NOT t[4], t[0]
+NOT t[5], t[2]
+AND t[6], t[4], t[5]
+AND t[6], t[6], t[1]
+OR red_F_16:switch[0], t[3], t[6]
+NOT red_F_16:switch[0], red_F_16:switch[0]
+
+;switch in block red_H_27
+;s3 = (H_28 and c3) or (T_76 and not c3)
+AND t[3], red_H_28:occupied, t[2]
+NOT t[4], t[2]
+AND t[4], t[4], red_T_76:occupied
+OR red_H_27:switch[0], t[3], t[4]
+
+;light controls
+EQ red_D_10:light[0].GREEN, red_C_9:switch[0]
+NOT red_D_10:light[0].RED, red_C_9:switch[0]
+NOT red___0:light[0].GREEN, red_C_9:switch[0]
+EQ red___0:light[0].RED, red_C_9:switch[0]
+
+EQ red_A_1:light[0].RED, red_F_16:switch[0]
+NOT red_A_1:light[0].GREEN, red_F_16:switch[0]
+NOT red_E_15:light[0].RED, red_F_16:switch[0]
+EQ red_E_15:light[0].GREEN, red_F_16:switch[0]
+
+EQ red_T_76:light[0].GREEN, red_H_27:switch[0]
+NOT red_T_76:light[0].RED, red_H_27:switch[0]
+NOT red_H_28:light[0].GREEN, red_H_27:switch[0]
+EQ red_H_28:light[0].RED, red_H_27:switch[0]
+
+EQ red_C_7:light[0].RED, red_C_7:occupied
+NOT red_C_7:light[0].GREEN, red_C_7:occupied
+
+EQ red_F_16:light[0].RED, red_F_16:occupied
+NOT red_F_16:light[0].GREEN, red_F_16:occupied
+
+EQ red_G_21:light[0].RED, red_G_21:occupied
+NOT red_G_21:light[0].GREEN, red_G_21:occupied
+
+EQ red_H_25:light[0].RED, red_H_25:occupied
+NOT red_H_25:light[0].GREEN, red_H_25:occupied
+
+END LOGIC

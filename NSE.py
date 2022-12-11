@@ -16,7 +16,7 @@ class NSE_Simulation(QMainWindow):
 
     def __init__(self, run=False):
         #idk number of track controllers yet
-        self.NUM_CONTROLLERS = 15
+        self.NUM_CONTROLLERS = 18
         self.SEC_TO_MSEC = 1000
 
         self.X_OFFSET = 80

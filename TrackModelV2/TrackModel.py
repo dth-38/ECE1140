@@ -250,6 +250,7 @@ class TrackModel(QObject):
             else:
                 next_dir = self.trains[train_id].movement_direction
 
+            print("current: " + str(current_block) + ", next: " + str(self.lines[line][next_block].get_previous(next_dir)))
             if self.lines[line][next_block].get_previous(next_dir) == current_block:
                 #valid move
 
@@ -381,6 +382,7 @@ class TrackModel(QObject):
             for l_sheet in r_sheets:
                 new_line = {}
                 l_name = l_sheet[:len(l_sheet)-6]
+                l_name = l_name.lower()
                 l_data = trk_excel.parse(l_sheet)
 
 
@@ -585,6 +587,8 @@ class TrackModel(QObject):
 
                                     new_line[YARD].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = block_num
                                     new_line[YARD].CONNECTED_BLOCKS[NEXT_BLOCK] = block_num
+                                    new_line[YARD].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = REVERSE_DIR
+                                    new_line[YARD].TRANSITION_DIRECTIONS[NEXT_BLOCK] = REVERSE_DIR
 
                                     new_line[YARD].light.append(0)
                                     new_line[block_num+1].light.append(0)
