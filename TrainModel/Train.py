@@ -373,7 +373,7 @@ class Train:
                 #restores old authority if a -1 is sent
                 if new_auth == -1 and self.saved_authority != 0:
                     self.authority = self.saved_authority
-                else:
+                elif new_auth != -1:
                     self.authority = new_auth
 
                 #workaround we might need if ctc sends wrong authority

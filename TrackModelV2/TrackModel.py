@@ -107,7 +107,6 @@ class TrackModel(QObject):
 
         #only sends the new authority if the front of the train is in the block
         if train_id != -1 and self.trains[train_id].block == block_num:
-            print("sending train authority " + str(auth) + " in block " + str(block_num))
             signals.send_tm_authority.emit(train_id, copy.copy(auth))
 
     @pyqtSlot(str, int, int)
@@ -250,7 +249,6 @@ class TrackModel(QObject):
             else:
                 next_dir = self.trains[train_id].movement_direction
 
-            print("current: " + str(current_block) + ", next: " + str(self.lines[line][next_block].get_previous(next_dir)))
             if self.lines[line][next_block].get_previous(next_dir) == current_block:
                 #valid move
 
@@ -307,7 +305,6 @@ class TrackModel(QObject):
                     signals.send_tm_station.emit(train_id, self.lines[line][next_block].STATION != "")
                     #Send new authority to train.
                     if self.lines[line][next_block].authority != -1:
-                        print("sending train new auth " + str(self.lines[line][next_block].authority) + " as it moves through blocks")
                         signals.send_tm_authority.emit(train_id, self.lines[line][next_block].authority)
                     #Send new commanded speed to train.
                     signals.send_tm_commanded_speed.emit(train_id, self.lines[line][next_block].commanded_speed)

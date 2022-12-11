@@ -10,7 +10,7 @@ class Block:
         #constants for if the switch is connected to next blocks or previous blocks
 
         self.id = id
-        self.authority = 0
+        self.authority = -1
         self.suggested_Speed = 0
         self.commanded_Speed = 0
         self.max_Speed = 0
