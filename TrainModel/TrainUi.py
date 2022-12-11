@@ -10,6 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from TrainModel.TrainModelSignals import *
+#from TrainModelSignals import *
 
 class TrainData_Ui(object):
 
