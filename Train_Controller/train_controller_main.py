@@ -184,6 +184,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         self.norm_brake_flag = False
         self.emer_brake_flag = False
+        self.train_authority_stop_flag = False
 
         #update train controller display every 1 sec
         # self.timer_update = QtCore.QTimer(self) 
@@ -410,17 +411,14 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.update_power() 
 
         #if train reaches the end of track (authority = 0), set power = 0
-        # if self.real_train.get_authority() == 0:
-        #     self.real_train.set_power(0)
-        # 
         if self.real_train.get_authority() == 0:
+            self.train_authority_stop_flag = True
             self.set_norm_brake_flag(True)
-        #else:
-        #    self.set_norm_brake_flag(False)
 
-        #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
-        #if self.norm_brake_flag == True or self.emer_brake_flag == True:
-        #    self.real_train.set_power(0)
+        #if train moving & normal brake flag is on & train authority stop flag is still True then:
+        elif self.real_train.get_authority != 0 and self.get_norm_brake_flag() == True and self.train_authority_stop_flag == True:
+            self.set_norm_brake_flag(False)
+            self.train_authority_stop_flag = False
 
         #update to screen
         self.update_train_display()
@@ -446,7 +444,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.norm_brake_flag = state
 
     def reset(self):
-        self.real_train.reset_all_train()
+        #self.real_train.reset_all_train()
         self.train_speed.display(0)
         self.train_left.clear()
         self.train_right.clear()
@@ -456,9 +454,6 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.train_annun.clear()
         self.train_ad.clear()
         self.train_horn.clear()
-
-        self.manual_button.setEnabled(True)
-        self.automatic_button.setEnabled(True)
 
         #clear input boxes
         self.cs_box.clear()
@@ -520,24 +515,15 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.horn_off.setChecked(False)
         self.horn_off.setAutoExclusive(True)
 
-        #ki, kp
-        self.ki_box.clear()
-        self.kp_box.clear()
+        # self.emergency_brake.setStyleSheet("background-color: light gray")
+        # self.emergency_brake.setText("Emergency Brake")
 
-        self.auto_f = False
-        self.manual_f = False
-        self.norm_brake_flag = False
-        self.emer_brake_flag = False
+        # self.normal_brake.setStyleSheet("background-color: light gray")
+        # self.normal_brake.setText("Normal Brake")
 
-        self.emergency_brake.setStyleSheet("background-color: light gray")
-        self.emergency_brake.setText("Emergency Brake")
-
-        self.normal_brake.setStyleSheet("background-color: light gray")
-        self.normal_brake.setText("Normal Brake")
-
-        self.failure_frame.setStyleSheet("background-color: light gray")
-        self.failure_output.clear()
-        self.failure_output.append("N/A")
+        # self.failure_frame.setStyleSheet("background-color: light gray")
+        # self.failure_output.clear()
+        # self.failure_output.append("N/A")
 
     def partial_reset(self):
         #clear input boxes
