@@ -127,7 +127,7 @@ class CTC_Scheduler:
             schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
                 print("Red schedule train")
-                train = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.red_schedule[i][0],destinations=self.red_schedule[i][1])
+                train = self.manual_dispatch_train(arrival_time=arrival_time,train_id=self.train_id,line=self.red_schedule[i][i],destinations=self.red_schedule[i][1])
         for i in range(len(self.green_schedule)):
             travel_time = self.green_schedule[i][2]
             travel_minutes = int(travel_time)
@@ -139,11 +139,10 @@ class CTC_Scheduler:
             schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
             print("schedule arrival_time: " + str(arrival_time))
             print("schedule_time: " + str(schedule_time))
-            #TODO: FIX SCHEDULE SO ARRIVAL TIME AND SCHEDULE TIME ARE EQUAL AT SOME POINT, TEMP FIX
-            arrival_time = (0,2,18)
+            #TODO: FIX SCHEDULE SO ARRIVAL TIME AND SCHEDULE TIME ARE EQUAL AT SOME POINT
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
                 print("Green schedule train")
-                train = self.manual_dispatch_train(departure_time=current_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=self.green_schedule[i][1])
+                train = self.manual_dispatch_train(arrival_time=arrival_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=self.green_schedule[i][1])
         return train
 
     def calc_throughput(self,line,ticket_sales,hours):

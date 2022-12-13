@@ -474,35 +474,12 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QTextBrowser" name="schedule_list">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>231</width>
-       <height>151</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="clear_schedule">
-     <property name="geometry">
-      <rect>
-       <x>140</x>
-       <y>180</y>
-       <width>111</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Clear All</string>
-     </property>
-    </widget>
     <widget class="QPushButton" name="schedule_button">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>10</x>
        <y>180</y>
-       <width>141</width>
+       <width>231</width>
        <height>31</height>
       </rect>
      </property>
@@ -521,6 +498,16 @@
      </property>
      <property name="text">
       <string>Scheduled Trains:</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="schedule_list">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>231</width>
+       <height>161</height>
+      </rect>
      </property>
     </widget>
    </widget>
