@@ -306,12 +306,8 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
-            print("TESTING!!!!")
-            print("tc_block: " + str(tc_block))
-            print("authority: " + str(self.schedule.train_table.get_authority(i)))
-            #signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(i))
             suggested_speed = self.schedule.calc_suggested_speed(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
-            print("suggested speed: " + str(suggested_speed))
+            #print("suggested speed: " + str(suggested_speed))
             s_speed = int(round(suggested_speed, 0))
             signals.send_tc_speed.emit(tc_block,s_speed)
             # if self.schedule.train_table.get_line(i) == "Red":

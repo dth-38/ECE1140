@@ -95,8 +95,8 @@ class CTC_Scheduler:
             else:
                 if row[0] == "Red":
                     self.red_blocks.append([row["Block Number"], row["Block Length (m)"], row["Speed Limit (Km/Hr)"]])
-        for i in range(len(self.red_blocks)):
-            print("RED BLOCK: " + str(self.red_blocks[i][0]) + " " + str(self.red_blocks[i][1]) + " " + str(self.red_blocks[i][2]))
+        #for i in range(len(self.red_blocks)):
+            #print("RED BLOCK: " + str(self.red_blocks[i][0]) + " " + str(self.red_blocks[i][1]) + " " + str(self.red_blocks[i][2]))
         green_blocks = pd.read_excel("./CTC/block_info.xlsx", sheet_name="Green Line")
         for index, row in green_blocks.iterrows():
             if row[0] == "nan":
@@ -104,9 +104,14 @@ class CTC_Scheduler:
             else:
                 if row[0] == "Green":
                     self.green_blocks.append([row["Block Number"], row["Block Length (m)"], row["Speed Limit (Km/Hr)"]])
+<<<<<<< HEAD
         for i in range(len(self.green_blocks)):
             print("GREEN BLOCK: " + str(self.green_blocks[i][0]) + " " + str(self.green_blocks[i][1]) + " " + str(self.green_blocks[i][2]))
    
+=======
+        #for i in range(len(self.green_blocks)):
+            #print("GREEN BLOCK: " + str(self.green_blocks[i][0]) + " " + str(self.green_blocks[i][1]) + " " + str(self.green_blocks[i][2]))
+>>>>>>> 0bfd33a55ed4440ec6e7c917143bb342d4799877
     def manual_dispatch_train(self,arrival_time,train_id,line,destinations):
         print("destinations: " + str(destinations))
         self.authority = self.calc_authority(train_id,line,destinations[0],0)

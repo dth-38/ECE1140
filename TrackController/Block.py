@@ -93,7 +93,7 @@ class Block:
 
     #toggles the state of the specified switch
     def toggle_Switch(self, switchNum):
-        self.switches[switchNum] = ~self.switches[switchNum]
+        self.switches[switchNum] = not self.switches[switchNum]
 
     def set_Switch(self, switchNum=0, state=False):
         self.switches[switchNum] = state
