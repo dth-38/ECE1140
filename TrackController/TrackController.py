@@ -52,6 +52,9 @@ class TrackController(QMainWindow):
         # *second occupied is -1 if there isnt one
         self.tracker = []
 
+        #used for setting up initial track state without doing switch state comparisons
+        self.init = True
+
         super().__init__()
 
 
@@ -547,10 +550,14 @@ class TrackController(QMainWindow):
                     before_end = self.next_Track_State[blk1_backup].get_Next_Block()
 
                 #need to remove 0 authority from last block the train was in
-                before_end_arr = decompose_block(before_end)
-                signals.send_track_authority.emit(before_end_arr[0], before_end_arr[1], -1)
-                self.next_Track_State[before_end].authority = -1
-                self.current_Track_State[before_end].authority = -1
+                try:
+                    before_end_arr = decompose_block(before_end)
+                    signals.send_track_authority.emit(before_end_arr[0], before_end_arr[1], -1)
+                    self.next_Track_State[before_end].authority = -1
+                    self.current_Track_State[before_end].authority = -1
+                except:
+                    print("ERROR occurred in track controller train tracking system")
+
                 continue
 
             #checks to see if second occupied block must be updated
@@ -612,7 +619,7 @@ class TrackController(QMainWindow):
 
 
             #occupancy check for tracking purposes
-            if self.next_Track_State[block].occupied == True:
+            if self.next_Track_State[block].occupied == True and self.next_Track_State[block].failed == False:
                 prev_block = self.next_Track_State[block].get_Previous_Block()
                 next_block = self.next_Track_State[block].get_Next_Block()
 
@@ -666,23 +673,31 @@ class TrackController(QMainWindow):
 
                 
             #probably shouldnt be able to run logic on switches when the block is closed
-            if self.current_Track_State[block].closed == False:
-                if self.current_Track_State[block].switches != []:
-                    if self.current_Track_State[block].switches[0] != self.next_Track_State[block].switches[0]:
-                        block_num = decompose_block(self.next_Track_State[block].get_switched_to())
-                        signals.broadcast_switch.emit(d_block[0], d_block[1], block_num[1])
-                        self.current_Track_State[block].switches[0] = copy.copy(self.next_Track_State[block].switches[0])
+            switch_check = self.current_Track_State[block].closed == False and self.current_Track_State[block].switches != []
 
-                        signals.send_track_authority.emit(block_num[0], block_num[1], -1)
-                        self.current_Track_State[block].authority = -1
+            if switch_check == True:
+                if self.current_Track_State[block].switches[0] != self.next_Track_State[block].switches[0] or self.init == True:
+                    self.init = False
 
-                        #removes authority from blocks that are not being switched to if they are not already occupied
-                        not_block = self.next_Track_State[block].get_not_switched_to()
-                        n_blk = decompose_block(not_block)
-                        if n_blk[1] != 0 and self.next_Track_State[not_block].occupied == False:
-                            self.next_Track_State[not_block].authority = 0
-                            signals.send_track_authority.emit(n_blk[0], n_blk[1], 0)
-                            self.current_Track_State[not_block].authority = copy.copy(self.next_Track_State[not_block].authority)
+                    next_block = self.next_Track_State[block].get_switched_to()
+                    block_num = decompose_block(next_block)
+
+                    signals.broadcast_switch.emit(d_block[0], d_block[1], block_num[1])
+                    self.current_Track_State[block].switches[0] = copy.copy(self.next_Track_State[block].switches[0])
+
+                    signals.send_track_authority.emit(block_num[0], block_num[1], -1)
+                    self.next_Track_State[next_block].authority = -1
+                    self.current_Track_State[next_block].authority = -1
+
+                    #removes authority from blocks that are not being switched to if they are not already occupied
+                    not_block = self.next_Track_State[block].get_not_switched_to()
+                    n_blk = decompose_block(not_block)
+
+                    if n_blk[1] != 0 and self.next_Track_State[not_block].occupied == False:
+                    #if n_blk[1] != 0:
+                        self.next_Track_State[not_block].authority = 0
+                        signals.send_track_authority.emit(n_blk[0], n_blk[1], 0)
+                        self.current_Track_State[not_block].authority = copy.copy(self.next_Track_State[not_block].authority)
 
             #check for light change and signal if so
             if self.current_Track_State[block].lights != []:

@@ -188,6 +188,7 @@ class TrackModel(QObject):
 
                 signals.send_tc_occupancy.emit(line+"___0", True)
                 signals.send_tm_commanded_speed.emit(new_train.id, self.lines[line][YARD].commanded_speed)
+                signals.send_tm_authority.emit(new_train.id, self.lines[line][YARD].authority)
             else:
                 print("Cannot dispatch train, yard is occupied.")
         except:
