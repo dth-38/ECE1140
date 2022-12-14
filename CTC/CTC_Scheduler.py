@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime
 from CTC.CTC_Clock import CTC_Clock
 import math
+from collections import deque
 #TODO: GROUP SIGNALS FILE
 
 #TODO: GET TRAIN FROM TRAIN MODEL AND LINE,STATION, AND TRACKMODEL FROM TRACK MODEL
@@ -13,6 +14,7 @@ from CTC.Block_Table import Block_Table
 from CTC.CTC_Clock import  CTC_Clock
 from TrackModel.line import Line
 from TrackModel.block import Block
+from CTC.Dispatch_Item import Dispatch_Item
 
 class CTC_Scheduler: 
     def __init__(self):

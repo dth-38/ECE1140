@@ -8,6 +8,7 @@ from PyQt5 import uic
 from Signals import signals
 from CTC.CTC_Scheduler import CTC_Scheduler
 from CTC.CTC_Clock import CTC_Clock
+from CTC.Dispatch_Item import Dispatch_Item
 
 from TrackController.TCTools import convert_to_block
 
@@ -117,7 +118,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
 
     def dispatch(self):
 
-        if self.hour_selection.toPlainText() == "" and self.minute_selection.toPlainText() == "" and self.second_selection.toPlainText() == "" or len(self.destinations) == 0 or math.isnan(float(self.hour_selection.toPlainText())):
+        if self.hour_selection.toPlainText() == "" or self.minute_selection.toPlainText() == "" or self.second_selection.toPlainText() == "" or len(self.destinations) == 0 or math.isnan(float(self.hour_selection.toPlainText())):
             pass
         else:
             arrival_time = (int(self.hour_selection.toPlainText()),int(self.minute_selection.toPlainText()),int(self.second_selection.toPlainText()))
@@ -133,10 +134,13 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             dispatch_time = arrival_real - travel_real
 
             #check for day rollover
+            rollover = False
             if dispatch_time < 0:
                 dispatch_time = 24 + dispatch_time
+                rollover = True
             elif dispatch_time > 24:
                 dispatch_time -= 24
+                rollover = True
 
             #convert dispatch time in hours to hrs,mins,secs
             t_hrs = math.floor(dispatch_time)
@@ -149,27 +153,41 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
 
             departure_time = [t_hrs, t_mins, t_secs]
 
-            print("DEPARTURE TIME: " + str(departure_time))
-            current_time = self.clock.get_time()
-            print("CURRENT TIME: "  + str(current_time))
-            if current_time[0] == departure_time[0] and current_time[1] == departure_time[1] and current_time[2] == departure_time[2]:
-                self.train_entries = self.schedule.manual_dispatch_train(arrival_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations)
-                print("manual train entry: " + str(self.schedule.train_table.get_entry(0)))
-                line = str(self.train_entries[5])
-                line.upper()
-                signals.send_tm_dispatch.emit(line)
-                tc_block = convert_to_block(self.train_entries[5],self.train_entries[1])
-                signals.send_tc_authority.emit(tc_block,self.train_entries[4])
+            #creates new dispatch object with all needed info and adds it to the queue
+            if rollover == False:
+                dispatch = Dispatch_Item()
+                dispatch.arrival_time = arrival_time
+                dispatch.departure_time = departure_time
+                dispatch.destinations = copy.copy(self.destinations)
+                dispatch.manual_trains = copy.copy(self.manual_trains)
+                dispatch.line_train_selection = copy.copy(self.line_train_selection.currentText())
 
-                self.train_table_display.addItem("MANUAL TRAIN DISPATCHED!!!!!!!!!")
-                self.train_table_display.addItem("Train #: " + str(self.train_entries[0]))
-                self.train_table_display.addItem("Position: " + str(self.train_entries[1]))
-                self.train_table_display.addItem("Destinations: " + str(self.train_entries[3]))
-                self.train_table_display.addItem("Authority: " + str(self.train_entries[4]))
-                self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
-                self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
-            
-                self.manual_trains += 1
+                self.schedule.dispatch_queue.append(dispatch)
+
+
+            #OLD DISPATCH CODE, MOST OF IT WAS MOVED TO TICK FUNCTION
+
+            #print("DEPARTURE TIME: " + str(departure_time))
+            #current_time = self.clock.get_time()
+            #print("CURRENT TIME: "  + str(current_time))
+            #if current_time[0] == departure_time[0] and current_time[1] == departure_time[1] and current_time[2] == departure_time[2]:
+            #    self.train_entries = self.schedule.manual_dispatch_train(arrival_time,self.manual_trains,self.line_train_selection.currentText(),self.destinations)
+            #    print("manual train entry: " + str(self.schedule.train_table.get_entry(0)))
+            #    line = str(self.train_entries[5])
+            #    line.upper()
+            #    signals.send_tm_dispatch.emit(line)
+            #    tc_block = convert_to_block(self.train_entries[5],self.train_entries[1])
+            #    signals.send_tc_authority.emit(tc_block,self.train_entries[4])
+            #
+            #    self.train_table_display.addItem("MANUAL TRAIN DISPATCHED!!!!!!!!!")
+            #    self.train_table_display.addItem("Train #: " + str(self.train_entries[0]))
+            #    self.train_table_display.addItem("Position: " + str(self.train_entries[1]))
+            #    self.train_table_display.addItem("Destinations: " + str(self.train_entries[3]))
+            #    self.train_table_display.addItem("Authority: " + str(self.train_entries[4]))
+            #    self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
+            #    self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
+            #
+            #    self.manual_trains += 1
     
     def schedule_output(self,train):
         self.schedule_list.addItem("SCHEDULE TRAIN DISPATCHED!!!!!!!!!")
@@ -298,7 +316,57 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.schedule.block_table.add_gate(line,block_num,status)
     def update_ticket_sales(self,line,ticket_sales):
         self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
+
     def tick(self):
+        #checks all dispatch items
+        dispatches = []
+
+        for i in range(len(self.schedule.dispatch_queue)):
+            scheduled_dispatch = self.schedule.dispatch_queue[i]
+
+            d_time = scheduled_dispatch.departure_time
+
+            time = self.clock.get_time()
+
+            #checks if the current time and departure time match
+            if time[0] == d_time[0] and time[1] == d_time[1] and time[2] == d_time[2]:
+                dispatches.append(i)
+                #pops item off queue and gets variables
+
+                a_time = scheduled_dispatch.arrival_time
+                m_trains = scheduled_dispatch.manual_trains
+                l_t_selection = scheduled_dispatch.line_train_selection
+                destinations = scheduled_dispatch.destinations
+
+                #idk what this does
+                self.train_entries = self.schedule.manual_dispatch_train(a_time, m_trains, l_t_selection, destinations)
+
+                #gets line and signals to track model
+                line = str(self.train_entries[5])
+                line.upper()
+                signals.send_tm_dispatch.emit(line)
+
+                #sends track controller new authority
+                tc_block = convert_to_block(self.train_entries[5],self.train_entries[1])
+                signals.send_tc_authority.emit(tc_block,self.train_entries[4])
+
+                #adds to dispatch gui
+                self.train_table_display.addItem("MANUAL TRAIN DISPATCHED!!!!!!!!!")
+                self.train_table_display.addItem("Train #: " + str(self.train_entries[0]))
+                self.train_table_display.addItem("Position: " + str(self.train_entries[1]))
+                self.train_table_display.addItem("Destinations: " + str(self.train_entries[3]))
+                self.train_table_display.addItem("Authority: " + str(self.train_entries[4]))
+                self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
+                self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
+            
+                self.manual_trains += 1
+
+
+        #pops the number of dispatches off
+        for j in dispatches:
+            self.schedule.dispatch_queue.pop(j)
+
+
         schedule_train = self.schedule.check_schedule(self.clock.get_time())
         if len(schedule_train) > 0:
             self.schedule_output(schedule_train)
