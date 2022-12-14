@@ -188,6 +188,9 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         self.automatic_mode()   #auto mode on by default
 
+        self.ki_box.setPlainText(str(self.real_train.get_ki()))
+        self.kp_box.setPlainText(str(self.real_train.get_kp()))
+
         #update train controller display every 1 sec
         # self.timer_update = QtCore.QTimer(self) 
         # self.timer_update.start(1000)
@@ -425,13 +428,39 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         #update to screen
         self.update_train_display()
 
+    #if in tunnel
+    def train_in_tunnel(self, tunnel_status):
+
+        #only change states when in automatic mode
+        if self.manual_f == True:
+            return
+
+        if tunnel_status == True:
+            self.real_train.set_external_light("On")
+            #self.real_train.set_internal_light("On")
+        else:
+            self.real_train.set_external_light("Off")
+
+    def train_in_station(self, station_status, left_door, right_door):
+
+        #if in manual mode, reject
+        if self.manual_f == True:
+            return
+
+        if station_status == True:
+            if left_door == True: self.real_train.set_door_left("Opened")
+            if right_door == True: self.real_train.set_door_right("Closed")
+        else:
+            self.real_train.set_door_left("Closed")
+            self.real_train.set_door_right("Closed")
+
     #if train is at stop, status changes accordingly
-    def auto_train_stopped(self):
-        self.real_train.set_door_left("Opened")
-        self.real_train.set_door_right("Opened")
-        self.real_train.set_external_light("On")
-        self.real_train.set_annun("On")
-        self.real_train.set_horn("On")
+    # def auto_train_stopped(self):
+    #     self.real_train.set_door_left("Opened")
+    #     self.real_train.set_door_right("Opened")
+    #     self.real_train.set_external_light("On")
+    #     self.real_train.set_annun("On")
+    #     self.real_train.set_horn("On")
 
     def get_emer_brake_flag(self):
         return self.emer_brake_flag
