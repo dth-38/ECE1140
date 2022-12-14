@@ -237,9 +237,14 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         signals.send_ctc_ticket_sales.connect(self.update_ticket_sales)
         signals.send_ctc_occupancy.connect(self.update_occupancy)
         signals.send_ctc_failure.connect(self.update_failure)
+        signals.send_ctc_train_position.connect(self.update_position)
         signals.broadcast_switch.connect(self.update_switch)
         #signals.broadcast_light.connect(self.update_light)
         #signals.broadcast_gate.connect(self.update_gate)
+    def update_position(self,train_id,line,block_number):
+        self.schedule.train_table.change_position(train_id,block_number)
+        authority = self.schedule.train_table.get_authority(train_id)
+        self.schedule.train_table.change_authority(train_id,authority-1)
     def update_occupancy(self,line,block_num,occ):
         contains = False
         num_trains = self.schedule.train_table.get_table_length()
