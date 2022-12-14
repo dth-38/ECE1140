@@ -84,9 +84,9 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         tc_block = convert_to_block(self.line_maintenance_selection.currentText().upper(),self.block_selection.value())
         #0 = open block, 1 = close block for maintenance
         if self.status_selection.currentText() == "Open":
-            signals.send_tc_maintenance(tc_block,0)
+            signals.send_tc_maintenance.emit(tc_block,0)
         elif self.status_selection.currentText() == "Close":
-            signals.send_tc_maintenance(tc_block,1)
+            signals.send_tc_maintenance.emit(tc_block,1)
         
     def destination_select(self):
         red_stations = ["Shadyside","Herron_Ave",

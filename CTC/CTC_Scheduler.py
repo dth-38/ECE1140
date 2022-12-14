@@ -206,9 +206,9 @@ class CTC_Scheduler:
     def calc_travel_time(self,line,start_block,destination):
         dist = 0
         travel_time = 0
+        destination_block = 0
         if line == "Red":
             for j in range(len(self.red_stations)):
-
                 if self.red_stations[j][1] == destination:
                     destination_block = self.red_stations[j][0]
                     
