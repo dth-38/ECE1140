@@ -20,13 +20,10 @@ class CTC_Scheduler:
         self.position = 0
         self.red_throughput = 0
         self.green_throughput = 0
-        #TODO: ASK HOW DISPATCH QUEUE WORKS
         self.dispatch_queue = []
         self.train_table = Train_Table()
         self.block_table = Block_Table()
         self.train_id = 0
-        #TODO: CREATE OBJECT OF TRACKMODEL
-        #self.track_model = TrackModel()
         #route for trains, 0 = yard
         self.green_route_blocks = [0, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
                                    77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92,
@@ -170,6 +167,7 @@ class CTC_Scheduler:
         print("DESTINATION: " + str(destination))
         destination = destination.strip()
         print("POSITION: " + str(position))
+        authority = 0
         if position == -1:
             return 0
         authority = 0
@@ -202,6 +200,7 @@ class CTC_Scheduler:
                     authority += 1
                 else:
                     return authority
+        return authority
 
     def calc_suggested_speed(self,line,block):
         #convert km/hr -> mi/hr
