@@ -32,6 +32,10 @@ class Train_Table:
         return self.table[position][5]
     def get_authority(self,position):
         return self.table[position][4]
+
+    def set_authority(self, position, authority):
+        self.table[position][4] = authority
+
     def get_train_states(self,position):
         return self.table[position][2]
     def get_entry(self,position):

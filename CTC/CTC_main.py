@@ -208,6 +208,10 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 print("next destination: " + str(next_destination))
                 authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),next_destination,self.schedule.train_table.get_position(i))
                 print("next authority: " + str(authority))
+
+                #you forgot to set the new authority
+                self.schedule.train_table.set_authority(i, authority)
+
                 tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
                 signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(i))
                 travel_time = self.schedule.calc_travel_time(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i),next_destination)
@@ -250,7 +254,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         #signals.broadcast_light.connect(self.update_light)
         #signals.broadcast_gate.connect(self.update_gate)
     def update_position(self,train_id,line,block_number):
-        print("UPDATING POSITION")
+        #print("UPDATING POSITION")
         self.schedule.train_table.change_position(train_id,block_number)
         authority = self.schedule.train_table.get_authority(train_id)
         self.schedule.train_table.change_authority(train_id,authority-1)
