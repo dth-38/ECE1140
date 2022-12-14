@@ -138,10 +138,10 @@ class Train:
     def update_values(self):
         #Pass track circuit signals to train controller
         self.train_ctrl.real_train.set_authority(self.authority)    #authority
-        self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
-        
-        #Sends actual speed of train to train controller
-        self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
+
+        #self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
+        #self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
+        self.train_ctrl.provide_speed(self.commanded_speed, self.actual_speed)
         
         #Passes information about block train is on to train controller
         #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
@@ -169,7 +169,7 @@ class Train:
         self.train_model_update_speed()
 
         #Send Train controller actual speed and power
-        self.train_ctrl.real_train.set_speed(self.actual_speed)       #Since update_speed updates speed, also apply it to controller's actual speed
+        #self.train_ctrl.real_train.set_speed(self.actual_speed)       #Since update_speed updates speed, also apply it to controller's actual speed
         self.train_ctrl.real_train.set_power(self.power)              #send power to train controller for display
         
         #If the engine is not in failure, display power in ui, else display 0
