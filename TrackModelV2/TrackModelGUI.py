@@ -1,7 +1,10 @@
-from PyQt5.QtWidgets import QMainWindow, QTableWidget, QTabWidget, QVBoxLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QMainWindow, QTableWidget, QTabWidget, QGridLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QComboBox, QLabel, QPushButton
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtCore import Qt
 from Signals import signals
+from TrackController.TCTools import convert_to_block
 
 HEIGHT = 1000
 WIDTH = 1000
@@ -13,6 +16,8 @@ class TrackModelGUI(QMainWindow):
         super().__init__()
 
         self.get_track = gt
+        self.lines = []
+        self.blocks = {}
         self.setup_gui()
 
     def setup_gui(self):
@@ -32,10 +37,40 @@ class TrackModelGUI(QMainWindow):
         #self.main_layout.addWidget(self.tabs)
         self.setCentralWidget(self.tabs)
 
-        #self.failure_tab = QWidget()
+        self.failure_tab = QWidget()
+        self.failure_layout = QGridLayout()
+        self.failure_layout.setAlignment(Qt.AlignTop)
+
+        self.failure_tab.setLayout(self.failure_layout)
+
+        self.lines_dropdown = QComboBox()
+        self.lines_dropdown.setEditable(True)
+        self.lines_dropdown.currentTextChanged.connect(self.update_blocks)
+        self.lines_dropdown.setFont(self.text_font)
+
+        self.blocks_dropdown = QComboBox()
+        self.lines_dropdown.setEditable(True)
+        self.blocks_dropdown.currentTextChanged.connect(self.check_label)
+        self.blocks_dropdown.setFont(self.text_font)
+
+        self.failure_label = QLabel()
+        self.failure_label.setFont(self.text_font)
+
+        self.failure_toggle = QPushButton("Toggle Failure")
+        self.failure_toggle.clicked.connect(self.toggle_failure)
+        self.failure_toggle.setFont(self.text_font)
+
+        self.failure_layout.addWidget(self.lines_dropdown, 0, 0)
+        self.failure_layout.addWidget(self.blocks_dropdown, 0, 1)
+        self.failure_layout.addWidget(self.failure_label, 0, 2)
+        self.failure_layout.addWidget(self.failure_toggle, 0, 3)
+
 
 
     def initialize_lines(self):
+        self.lines_dropdown.clear()
+        self.lines_dropdown.addItems(self.get_track().keys())
+
         self.table_widgets.clear()
         self.tabs.clear()
 
@@ -171,6 +206,9 @@ class TrackModelGUI(QMainWindow):
             self.table_widgets[line] = new_line
             self.tabs.addTab(new_line, line)
 
+        
+        self.tabs.addTab(self.failure_tab, "Failures")
+
     def update_occupancy(self, line, block):
         occ = self.get_track()[line][block].occupied
         self.table_widgets[line].item(block,1).setText(str(occ))
@@ -220,4 +258,54 @@ class TrackModelGUI(QMainWindow):
 
     def show_incident(self, line, block):
         self.table_widgets[line].item(block,1).setBackground(self.RED)
+
+    def update_blocks(self):
+        line = self.lines_dropdown.currentText()
+        
+        blocks = list(self.get_track()[line].keys())
+
+        for i in range(len(blocks)):
+            blocks[i] = str(blocks[i])
+
+        self.blocks_dropdown.clear()
+        self.blocks_dropdown.addItems(blocks)
+
+
+    def toggle_failure(self):
+        line = self.lines_dropdown.currentText()
+        block = self.blocks_dropdown.currentText()
+
+        try:
+            block = int(block)
+
+            self.get_track()[line][block].failed = not self.get_track()[line][block].failed
+
+            tc_block = convert_to_block(line, block)
+            signals.send_tc_failure.emit(tc_block, self.get_track()[line][block].failed)
+
+            if self.get_track()[line][block].failed == True:
+                self.table_widgets[line].item(block, 0).setBackground(self.RED)
+            else:
+                self.table_widgets[line].item(block, 0).setBackground(self.WHITE)
+
+            self.check_label()
+
+        except:
+            print("Conversion error in track model failure tab")
+
+    def check_label(self):
+        line = self.lines_dropdown.currentText()
+        block = self.blocks_dropdown.currentText()
+        try:
+            block = int(block)
+
+            if self.get_track()[line][block].failed == True:
+                self.failure_label.setText("Failed: True")
+                self.failure_label.setStyleSheet("color: red")
+            else:
+                self.failure_label.setText("Failed: False")
+                self.failure_label.setStyleSheet("color: green")
+        except:
+            print("Conversion error in track model failure tab.")
+
         

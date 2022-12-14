@@ -846,6 +846,8 @@ class TrackController(QMainWindow):
         for bl in self.current_Track_State:
             if block == bl:
                 self.next_Track_State[bl].failed = fail
+                d_block = decompose_block(block)
+                signals.send_ctc_failure.emit(d_block[0], d_block[1], fail)
                 break
 
 

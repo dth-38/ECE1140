@@ -303,6 +303,7 @@ class TrackModel(QObject):
                     #send grade
                     signals.send_tm_grade.emit(train_id, self.lines[line][next_block].GRADE)
                     #send failure
+                    signals.send_tm_failure.emit(train_id, self.lines[line][next_block].failed)
                     #send tunnel
                     signals.send_tm_tunnel.emit(train_id, self.lines[line][next_block].UNDERGROUND)
                     #send at station
