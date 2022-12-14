@@ -759,36 +759,52 @@ class TrackController(QMainWindow):
     def handle_suggested_speed(self, block, s_speed):
         for bl in self.current_Track_State:
             if block == bl:
-                self.next_Track_State[bl].suggested_Speed = s_speed
+                self.next_Track_State[block].suggested_Speed = s_speed
                 break
 
     @pyqtSlot(str, int)
     def handle_maintenance(self, block, maintenance):
         for bl in self.current_Track_State:
             if block == bl:
-                self.next_Track_State[bl].closed = maintenance
+                self.next_Track_State[block].closed = maintenance
                 break
 
     @pyqtSlot(str, str)
     def handle_manual_switch(self, block, next_block):
+        block_found = False
+
+        #attempts to find the block in the track controller
         for bl in self.current_Track_State:
             if block == bl:
-                if self.next_Track_State[bl].closed == True and self.next_Track_State[bl].switches != []:
-                    if self.next_Track_State[bl].switch_to == TO_NEXT:
-                        if self.next_Track_State[bl].next_blocks[0] == next_block:
-                            self.next_Track_State[bl].switch[0] = False
-                        elif self.next_Track_State[bl].next_blocks[1] == next_block:
-                            self.next_Track_State[bl].switch[0] = True
-                        else:
-                            pass
-                    elif self.next_Track_State[bl].switch_to == TO_PREV:
-                        if self.next_Track_State[bl].next_blocks[0] == next_block:
-                            self.next_Track_State[bl].switch[0] = False
-                        elif self.next_Track_State[bl].next_blocks[1] == next_block:
-                            self.next_Track_State[bl].switch[0] = True
-                        else:
-                            pass
-            break
+                block_found = True
+                break
+
+
+        if block_found == True:
+            #checks if the block has switches and is closed for maintenance
+            if self.next_Track_State[block].closed == True and self.next_Track_State[block].switches != []:
+                if self.next_Track_State[block].switch_to == TO_NEXT:
+                    if self.next_Track_State[block].next_blocks[0] == next_block:
+                        self.next_Track_State[block].switch[0] = False
+                        self.current_Track_State[block].switch[0] = False
+                    elif self.next_Track_State[block].next_blocks[1] == next_block:
+                        self.next_Track_State[block].switch[0] = True
+                        self.current_Track_State[block].switch[0] = True
+                    else:
+                        pass
+                elif self.next_Track_State[block].switch_to == TO_PREV:
+                    if self.next_Track_State[block].next_blocks[0] == next_block:
+                        self.next_Track_State[block].switch[0] = False
+                        self.current_Track_State[block].switch[0] = False
+                    elif self.next_Track_State[block].next_blocks[1] == next_block:
+                        self.next_Track_State[block].switch[0] = True
+                        self.current_Track_State[block].switch[0] = True
+                    else:
+                        pass
+
+                d_block = decompose_block(block)
+                next_d_block = decompose_block(next_block)
+                signals.broadcast_switch.emit(d_block[0], d_block[1], next_d_block[1])
 
     @pyqtSlot(str, int)
     def handle_occupancy(self, block, occ):
