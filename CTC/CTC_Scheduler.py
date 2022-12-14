@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from CTC.CTC_Clock import CTC_Clock
+import math
 #TODO: GROUP SIGNALS FILE
 
 #TODO: GET TRAIN FROM TRAIN MODEL AND LINE,STATION, AND TRACKMODEL FROM TRACK MODEL
@@ -206,35 +207,59 @@ class CTC_Scheduler:
         dist = 0
         travel_time = 0
         if line == "Red":
-            for i in range(len(self.red_stations)):
-                if self.red_stations[i][1] == destination:
-                    destination_block = self.red_stations[i][0]
+            for j in range(len(self.red_stations)):
+
+                if self.red_stations[j][1] == destination:
+                    destination_block = self.red_stations[j][0]
+                    
             start_block = self.red_route_blocks.index(start_block)
+
             for i in range(start_block, len(self.red_route_blocks)):
                 idx = self.red_route_blocks[i]
                 if idx == 0: 
                     dist += 0
                 else:
-                    dist += self.red_blocks[idx - 1][1]
+                    #gets block length and speed
+                    dist = self.red_blocks[idx - 1][1]
                     red_speed = self.calc_suggested_speed("Red",idx)
-                    travel_time += dist/(red_speed)*.06
+
+                    #travel time in hours
+                    #factor of 0.0006 is meters to miles
+                    travel_time += (dist * 0.0006) / red_speed
+
+                #breaks once destination is reached
+                if destination_block == idx:
+                    break
+
         elif line == "Green":
             for i in range(len(self.green_stations)):
+
                 if self.green_stations[i][1] == destination:
                     destination_block = self.green_stations[i][0]
+
             start_block = self.green_route_blocks.index(start_block)
+
             for i in range(start_block, len(self.green_route_blocks)):
+
                 idx = self.green_route_blocks[i]
                 if idx == 0: 
                     dist += 0
                 else:
-                    dist += self.green_blocks[idx - 1][1]
+                    dist = self.green_blocks[idx - 1][1]
                     green_speed = self.calc_suggested_speed("Green",idx)
-                    travel_time += dist/(green_speed)*.06
+                    travel_time += (dist * 0.0006) / green_speed
+
+                if destination_block == idx:
+                    break
             
-        travel_hours = (travel_time//3600)
-        travel_minutes = (travel_time%3600)//6060
-        travel_seconds = (travel_time%3600)%60
+        travel_hours = math.floor(travel_time)
+
+        mins = (travel_time - travel_hours) * 60
+        travel_minutes = math.floor(mins)
+
+        secs = (mins - travel_minutes) * 60
+        travel_seconds = math.floor(secs)
+
         travel_time = (travel_hours,travel_minutes,travel_seconds)
         print("travel_time: " + str(travel_time))
         return travel_time
