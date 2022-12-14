@@ -2,30 +2,29 @@ from CTC.CTC_Scheduler import CTC_Scheduler
 from CTC.CTC_GUI import Ui_MainWindow
 #from TrackModel import TrackModel
 from CTC.CTC_Clock import CTC_Clock
-from CTC.CTC_GUI import Ui_MainWindow
+#from CTC.CTC_main import CTCWindowClass
 
 #import sys
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget
 
 from Signals import signals
 from TrackController.TCTools import convert_to_block
 
 
-class CTC(QWidget): 
+class CTC(): 
     def __init__(self):
         super().__init__()
 
         self.clock = CTC_Clock()
         self.schedule = CTC_Scheduler()
+        # self.setupUi()
         self.setup_signals()
-        self.add_ui()
+        #self.add_ui()
     #CREATE UI
     def add_ui(self):
-        #app = QtWidgets.QApplication(sys.argv)
-        self.MainWindow = QtWidgets.QMainWindow()
-        self.ui = Ui_MainWindow(self)
-        self.ui.setupUi(self.MainWindow)
+        pass
+        #ctcmainwindow = CTCWindowClass(self)
+        #self.MainWindow.setupUi(self.MainWindow)
         #self.MainWindow.show()
         #sys.exit(app.exec_())
     def setup_signals(self):
@@ -72,9 +71,9 @@ class CTC(QWidget):
         self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
     def tick(self):
         schedule_train = self.schedule.check_schedule(self.clock.get_time())
-        if len(schedule_train) > 0:
-            self.ui.train.schedule_output(schedule_train)
-        self.ui.train.update_current_time()
+        # if len(schedule_train) > 0:
+        #     self.ui.schedule_output(schedule_train)
+        #self.ui.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
             signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(i))
@@ -83,21 +82,4 @@ class CTC(QWidget):
             elif self.schedule.train_table.get_line(i) == "Green":
                 signals.send_tc_speed.emit(tc_block,self.schedule.green_speed)
         self.clock.update_time()
-
-    """""
-    def add_schedule(self):
-        print("ADD SCHEDULE!!!!!")
-        self.schedule.upload_schedule("./input/Schedule_v2.xlsx")
-        while self.clock.get_time() < (23,59,59):
-            self.schedule.update_authority()
-            self.clock.update_time(10)
-    
-    def maintenance_mode(self):
-        print("MAINTENANCE!!!!!!!")
-    
-    def manual_dispatch(self):
-        print("MANUAL DISPATCH")
-        while self.clock.get_time() < (23,59,59):
-            self.clock.update_time(10)
-    """
 
