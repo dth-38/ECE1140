@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow, QTableWidget, QTabWidget, QVBoxLayout, QTableWidgetItem
+from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QColor
 from Signals import signals
 
@@ -30,6 +31,8 @@ class TrackModelGUI(QMainWindow):
         #self.main_layout.addWidget(self.tabs)
         self.setCentralWidget(self.tabs)
 
+        #self.failure_tab = QWidget()
+
 
     def initialize_lines(self):
         self.table_widgets.clear()
@@ -58,7 +61,11 @@ class TrackModelGUI(QMainWindow):
                 new_line.setItem(block,0, QTableWidgetItem(track[line][block].SECTION))
 
                 #create occupancy item
-                occ = QTableWidgetItem(str(track[line][block].occupied))
+                occ_val = track[line][block].occupied
+                if occ_val == -1:
+                    occ = QTableWidgetItem("")
+                else:
+                    occ = QTableWidgetItem(str(occ_val))
                 if self.get_track()[line][block].occupied != -1:
                     occ.setBackground(self.GREEN)
 
@@ -144,8 +151,10 @@ class TrackModelGUI(QMainWindow):
         self.table_widgets[line].item(block,1).setText(str(occ))
         if occ != -1:
             self.table_widgets[line].item(block,1).setBackground(self.GREEN)
+            self.table_widgets[line].item(block,1).setText(str(occ))
         else:
             self.table_widgets[line].item(block,1).setBackground(self.WHITE)
+            self.table_widgets[line].item(block,1).setText("")
 
     def update_authority(self, line, block):
         auth = self.get_track()[line][block].authority
