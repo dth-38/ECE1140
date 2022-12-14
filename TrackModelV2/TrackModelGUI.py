@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import QMainWindow, QTableWidget, QTabWidget, QVBoxLayout, 
 from PyQt5.QtGui import QColor
 from Signals import signals
 
-HEIGHT = 1080
-WIDTH = 1080
+HEIGHT = 1000
+WIDTH = 1000
 X_POS = 0
 Y_POS = 0
 
@@ -39,8 +39,8 @@ class TrackModelGUI(QMainWindow):
         for line in track:
             new_line = QTableWidget()
 
-            new_line.setColumnCount(9)
-            col_headers = ["Section","Occupied","Authority","Commanded Spd.","Station","Beacon","Switch","Light","Gate"]
+            new_line.setColumnCount(13)
+            col_headers = ["Section","Occupied","Authority (Blocks)","Commanded Spd. (mph)","Station","Beacon","Switch","Light","Gate","Length (ft)","Grade","Underground","Max Speed"]
             new_line.setHorizontalHeaderLabels(col_headers)
 
             row_headers = []
@@ -65,7 +65,11 @@ class TrackModelGUI(QMainWindow):
                 new_line.setItem(block,1, occ)
 
                 #create authority item
-                new_line.setItem(block,2, QTableWidgetItem(str(track[line][block].authority)))
+                auth = track[line][block].authority
+                if auth == -1:
+                    new_line.setItem(block,2, QTableWidgetItem(""))
+                else:
+                    new_line.setItem(block,2, QTableWidgetItem(str(auth)))
 
                 #create commanded speed item
                 new_line.setItem(block,3, QTableWidgetItem(str(track[line][block].commanded_speed)))
@@ -109,6 +113,25 @@ class TrackModelGUI(QMainWindow):
                     g = QTableWidgetItem()
                 new_line.setItem(block,8, g)
 
+                #create length item
+                l_b = QTableWidgetItem(str(round(track[line][block].LENGTH / 0.3408, 2)))
+                new_line.setItem(block,9,l_b)
+
+                #create grade item
+                g_b = QTableWidgetItem(str(track[line][block].GRADE))
+                new_line.setItem(block,10,g_b)
+
+                #create undergound item
+                if track[line][block].UNDERGROUND == True:
+                    u_b = QTableWidgetItem("Y")
+                else:
+                    u_b = QTableWidgetItem("N")
+                new_line.setItem(block,11,u_b)
+
+                #create max speed item
+                ms_b = QTableWidgetItem(str(track[line][block].MAX_SPEED))
+                new_line.setItem(block,12,ms_b)
+
             #set newly generated headers
             new_line.setVerticalHeaderLabels(row_headers)
 
@@ -125,7 +148,11 @@ class TrackModelGUI(QMainWindow):
             self.table_widgets[line].item(block,1).setBackground(self.WHITE)
 
     def update_authority(self, line, block):
-        self.table_widgets[line].item(block,2).setText(str(self.get_track()[line][block].authority))
+        auth = self.get_track()[line][block].authority
+        if auth == -1:
+            self.table_widgets[line].item(block,2).setText("")
+        else:
+            self.table_widgets[line].item(block,2).setText(str(auth))
 
     def update_spd(self, line, block):
         self.table_widgets[line].item(block,3).setText(str(self.get_track()[line][block].commanded_speed))
@@ -140,6 +167,10 @@ class TrackModelGUI(QMainWindow):
 
 
     def update_light(self, line, block):
+        #TODO: check that excel is being parsed right
+        if self.get_track()[line][block].light == []:
+            return 0
+
         if self.get_track()[line][block].light[0] == 1:
             self.table_widgets[line].item(block,7).setText("GREEN")
             self.table_widgets[line].item(block,7).setBackground(self.GREEN)

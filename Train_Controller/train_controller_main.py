@@ -30,7 +30,7 @@ class train_status:
         self.kp = 1
         self.pid = PID(self.kp, self.ki, 0, setpoint=self.commanded_speed) # initialize pid with fixed values
         self.pid.outer_limits = (0, 120000)                                  # clamp at max power output specified in datasheet 120kW
-        self.power = 0
+        self.power = 0.0
 
     #set methods
     def set_authority(self, num):
@@ -146,7 +146,7 @@ class train_status:
         self.power = self.pid(self.speed)   #if train has speed, you get less power to speed up than starting from speed = 0
 
         if self.power < 0:
-            self.power = 0
+            self.power = 0.0
 
     def update_power(self):
         self.initialize_PID(self.get_kp(), self.get_ki())
@@ -184,6 +184,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         self.norm_brake_flag = False
         self.emer_brake_flag = False
+        self.train_authority_stop_flag = False
 
         #update train controller display every 1 sec
         # self.timer_update = QtCore.QTimer(self) 
@@ -283,7 +284,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.set_door_right(self.check_right_door())
         self.real_train.set_internal_light(self.check_internal_light())
         self.real_train.set_external_light(self.check_external_light())
-        self.real_train.set_temp(float(self.temperature_box.toPlainText()))
+        self.real_train.set_temp(int(self.temperature_box.toPlainText()))
         self.real_train.set_annun(self.check_annun())
         self.real_train.set_ad(self.check_ad())
         self.real_train.set_horn(self.check_horn())
@@ -350,6 +351,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     #display values to train screen
     def update_train_display(self):
         self.train_speed.display(self.real_train.get_speed())
+        self.train_power.display(self.real_train.get_power())
         self.train_left.setPlainText(self.real_train.get_left_door())
         self.train_right.setPlainText(self.real_train.get_right_door())
         self.train_internal.setPlainText(self.real_train.get_internal_light())
@@ -392,7 +394,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         #if failure occurs
         if self.real_train.get_failure_flag() == True:
             #decrease speed
-            self.emergency_slow()
+            #self.emergency_slow()
             self.failure_frame.setStyleSheet("background-color: red")
             self.failure_output.clear()
             self.failure_output.append("Exists!")
@@ -400,10 +402,6 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.failure_frame.setStyleSheet("background-color: white")
             self.failure_output.clear()
             self.failure_output.append("N/A")
-            self.real_train.set_failure_flag(False)
-            self.emergency_brake.setStyleSheet("background-color: light gray")
-            self.emergency_brake.setText("Emergency Brake")
-            self.emer_brake_flag = False
 
         #if train came to stop (fully) in auto mode
         if self.real_train.get_power() == 0 and self.auto_f == True:
@@ -413,17 +411,14 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.update_power() 
 
         #if train reaches the end of track (authority = 0), set power = 0
-        # if self.real_train.get_authority() == 0:
-        #     self.real_train.set_power(0)
-        # 
         if self.real_train.get_authority() == 0:
+            self.train_authority_stop_flag = True
             self.set_norm_brake_flag(True)
-        else:
-            self.set_norm_brake_flag(False)
 
-        #train model calls these flags --> change the speed accordingly (ex. if norm_brake flag = True, speed - 10)
-        #if self.norm_brake_flag == True or self.emer_brake_flag == True:
-        #    self.real_train.set_power(0)
+        #if train moving & normal brake flag is on & train authority stop flag is still True then:
+        elif self.real_train.get_authority != 0 and self.get_norm_brake_flag() == True and self.train_authority_stop_flag == True:
+            self.set_norm_brake_flag(False)
+            self.train_authority_stop_flag = False
 
         #update to screen
         self.update_train_display()
@@ -449,7 +444,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.norm_brake_flag = state
 
     def reset(self):
-        self.real_train.reset_all_train()
+        #self.real_train.reset_all_train()
         self.train_speed.display(0)
         self.train_left.clear()
         self.train_right.clear()
@@ -459,9 +454,6 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.train_annun.clear()
         self.train_ad.clear()
         self.train_horn.clear()
-
-        self.manual_button.setEnabled(True)
-        self.automatic_button.setEnabled(True)
 
         #clear input boxes
         self.cs_box.clear()
@@ -523,24 +515,15 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.horn_off.setChecked(False)
         self.horn_off.setAutoExclusive(True)
 
-        #ki, kp
-        self.ki_box.clear()
-        self.kp_box.clear()
+        # self.emergency_brake.setStyleSheet("background-color: light gray")
+        # self.emergency_brake.setText("Emergency Brake")
 
-        self.auto_f = False
-        self.manual_f = False
-        self.norm_brake_flag = False
-        self.emer_brake_flag = False
+        # self.normal_brake.setStyleSheet("background-color: light gray")
+        # self.normal_brake.setText("Normal Brake")
 
-        self.emergency_brake.setStyleSheet("background-color: light gray")
-        self.emergency_brake.setText("Emergency Brake")
-
-        self.normal_brake.setStyleSheet("background-color: light gray")
-        self.normal_brake.setText("Normal Brake")
-
-        self.failure_frame.setStyleSheet("background-color: light gray")
-        self.failure_output.clear()
-        self.failure_output.append("N/A")
+        # self.failure_frame.setStyleSheet("background-color: light gray")
+        # self.failure_output.clear()
+        # self.failure_output.append("N/A")
 
     def partial_reset(self):
         #clear input boxes

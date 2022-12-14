@@ -26,7 +26,7 @@ NEXT_BLOCK = 1
 class TrackBlock:
     def __init__(self):
         self.occupied = -1
-        self.authority = 0
+        self.authority = -1
         self.commanded_speed = 0
         self.GRADE = 0
         self.STATION = ""
@@ -40,6 +40,7 @@ class TrackBlock:
         self.SWITCH_TRANSITIONS = [0, 0]
         self.LENGTH = 0
         self.UNDERGROUND = False
+        self.MAX_SPEED = 0
 
         #might be useful for displaying stuff so im putting this here
         self.SECTION = "_"
@@ -89,17 +90,12 @@ class TrackBlock:
     def get_occupancy_value(self):
         return self.occupied
 
-    def get_next(self, current_dir, next_dir):
+    def get_next(self, current_dir):
         #first gets the next/previous block from array
-        if next_dir == FORWARD_DIR:
+        if current_dir == FORWARD_DIR:
             next_block = self.CONNECTED_BLOCKS[NEXT_BLOCK]
-        elif next_dir == REVERSE_DIR:
+        elif current_dir == REVERSE_DIR:
             next_block = self.CONNECTED_BLOCKS[PREVIOUS_BLOCK]
-        else:
-            if current_dir == FORWARD_DIR:
-                next_block = self.CONNECTED_BLOCKS[NEXT_BLOCK]
-            else:
-                next_block = self.CONNECTED_BLOCKS[PREVIOUS_BLOCK]
 
         #checks where a switch is going, if temp_next is a switch
         if next_block == "SWITCH":
@@ -110,16 +106,11 @@ class TrackBlock:
 
         return next_block
 
-    def get_previous(self, current_dir, next_dir):
+    def get_previous(self, current_dir):
         if current_dir == FORWARD_DIR:
             previous_block = self.CONNECTED_BLOCKS[PREVIOUS_BLOCK]
         elif current_dir == REVERSE_DIR:
             previous_block = self.CONNECTED_BLOCKS[NEXT_BLOCK]
-        else:
-            if next_dir == FORWARD_DIR:
-                previous_block = self.CONNECTED_BLOCKS[PREVIOUS_BLOCK]
-            else:
-                previous_block = self.CONNECTED_BLOCKS[NEXT_BLOCK]
 
         if previous_block == "SWITCH":
             if self.switch[SWITCH_STATE] == True:

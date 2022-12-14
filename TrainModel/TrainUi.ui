@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:36pt;&quot;&gt;TestUi&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:36pt;&quot;&gt;Train #&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="train_id_line">
@@ -197,7 +197,7 @@
      <rect>
       <x>30</x>
       <y>460</y>
-      <width>221</width>
+      <width>141</width>
       <height>31</height>
      </rect>
     </property>
@@ -252,14 +252,14 @@
    <widget class="QLabel" name="station_label">
     <property name="geometry">
      <rect>
-      <x>260</x>
+      <x>180</x>
       <y>450</y>
       <width>201</width>
       <height>61</height>
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Station&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Next Station&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
    <widget class="QLabel" name="width_label">
@@ -465,7 +465,7 @@
     <property name="geometry">
      <rect>
       <x>700</x>
-      <y>450</y>
+      <y>470</y>
       <width>71</width>
       <height>31</height>
      </rect>
@@ -476,7 +476,7 @@
      </font>
     </property>
     <property name="text">
-     <string>70</string>
+     <string>68</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="left_door_line">
@@ -596,11 +596,11 @@
       <x>780</x>
       <y>440</y>
       <width>331</width>
-      <height>61</height>
+      <height>81</height>
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Temperature (°F)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Internal&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Temperature (°F)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
    <widget class="QLabel" name="ext_light_label">
@@ -668,14 +668,14 @@
    <widget class="QLabel" name="murphy_label">
     <property name="geometry">
      <rect>
-      <x>320</x>
+      <x>250</x>
       <y>510</y>
-      <width>171</width>
+      <width>261</width>
       <height>61</height>
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:22pt;&quot;&gt;Murphy&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:22pt;&quot;&gt;Murphy Failures&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
    <widget class="QLabel" name="p_label">
@@ -769,7 +769,7 @@
       <x>770</x>
       <y>580</y>
       <width>211</width>
-      <height>171</height>
+      <height>81</height>
      </rect>
     </property>
     <property name="font">
@@ -812,17 +812,40 @@
      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Advertisement&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QTextEdit" name="textEdit">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>20</y>
-      <width>221</width>
-      <height>91</height>
+      <x>780</x>
+      <y>700</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="p_label_2">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>670</y>
+      <width>170</width>
+      <height>28</height>
      </rect>
     </property>
     <property name="text">
-     <string>Update</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Set Temperature&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>700</y>
+      <width>93</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Apply</string>
     </property>
    </widget>
   </widget>

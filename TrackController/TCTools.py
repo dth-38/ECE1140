@@ -8,7 +8,49 @@ def convert_to_block(line, num):
     tc_block = ""
 
     if line == "RED":
-        pass
+        if num == 0:
+            tc_block = "red___0"
+        elif num < 4:
+            tc_block = "red_A_" + str(num)
+        elif num < 7:
+            tc_block = "red_B_" + str(num)
+        elif num < 10:
+            tc_block = "red_C_" + str(num)
+        elif num < 13:
+            tc_block = "red_D_" + str(num)
+        elif num < 16:
+            tc_block = "red_E_" + str(num)
+        elif num < 21:
+            tc_block = "red_F_" + str(num)
+        elif num < 24:
+            tc_block = "red_G_" + str(num)
+        elif num < 46:
+            tc_block = "red_H_" + str(num)
+        elif num < 49:
+            tc_block = "red_I_" + str(num)
+        elif num < 55:
+            tc_block = "red_J_" + str(num)
+        elif num < 58:
+            tc_block = "red_K_" + str(num)
+        elif num < 61:
+            tc_block = "red_L_" + str(num)
+        elif num < 64:
+            tc_block = "red_M_" + str(num)
+        elif num < 67:
+            tc_block = "red_N_" + str(num)
+        elif num < 68:
+            tc_block = "red_O_" + str(num)
+        elif num < 71:
+            tc_block = "red_P_" + str(num)
+        elif num < 72:
+            tc_block = "red_Q_" + str(num)
+        elif num < 73:
+            tc_block = "red_R_" + str(num)
+        elif num < 76:
+            tc_block = "red_S_" + str(num)
+        else:
+            tc_block = "red_T_" + str(num)
+
     elif line == "GREEN":
         if num == 0:
             tc_block = "green___0"

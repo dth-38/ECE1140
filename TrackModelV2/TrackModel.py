@@ -4,6 +4,7 @@ import pandas
 import numpy
 import pathlib
 import os
+import random
 
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSlot
@@ -25,6 +26,7 @@ DELX = 1
 
 #conversion factor since train length is in feet
 FEET_TO_METERS = 0.3408
+KPH_TO_MPH = 0.621371
 
 class TrackModel(QObject):
     def __init__(self):
@@ -55,6 +57,7 @@ class TrackModel(QObject):
         signals.broadcast_gate.connect(self.handle_gate)
         signals.send_tm_dispatch.connect(self.dispatch)
         signals.send_tm_distance.connect(self.handle_train_update)
+        signals.send_tm_stopped_at_station.connect(self.station_calc)
 
 
 
@@ -65,6 +68,29 @@ class TrackModel(QObject):
             self.update_train_position(position_update[TRAIN_ID], position_update[DELX])
 
         
+
+    def station_calc(self, trainid):
+        temp_pass_count = self.trains[trainid].passenger_count
+        
+        #calculate passengers deboarding subtract from count
+        passengers_exiting = random.randint(1,15)
+        temp_pass_count -= passengers_exiting
+        if(temp_pass_count < 0):
+            temp_pass_count = 0
+
+        #calcualte passengers onboarding add to count
+        passengers_boarding = random.randint(1,15)
+        temp_pass_count += passengers_boarding
+        #train model handles if it goes over passenger limit
+
+        #send new passenger count to train
+        signals.send_tm_passenger_count.emit(trainid, temp_pass_count)
+
+        #send sales for station train is in
+        signals.send_ctc_ticket_sales.emit(self.trains[trainid].line, passengers_boarding)
+
+        #calculate ticket sales based on passengers onboarding, send to ctc
+
 
     @pyqtSlot(str, int, int)
     def handle_authority(self, line, block_num, auth):
@@ -78,7 +104,10 @@ class TrackModel(QObject):
 
         self.gui.update_authority(line, block_num)
         train_id = self.lines[line][block_num].occupied
-        signals.send_tm_authority.emit(train_id, copy.copy(auth))
+
+        #only sends the new authority if the front of the train is in the block
+        if train_id != -1 and self.trains[train_id].block == block_num:
+            signals.send_tm_authority.emit(train_id, copy.copy(auth))
 
     @pyqtSlot(str, int, int)
     def handle_speed(self, line, block_num, speed):
@@ -97,7 +126,7 @@ class TrackModel(QObject):
     @pyqtSlot(str, int, int)
     def handle_switch(self, line, sw_block, to_block):
         line = line.lower()
-        print("switching switch in block " + str(sw_block) + " to " + str(to_block))
+        #print("switching switch in block " + str(sw_block) + " to " + str(to_block))
 
         try:
             self.lines[line][sw_block].set_switch(to_block)
@@ -158,6 +187,8 @@ class TrackModel(QObject):
                 self.next_train_id += 1
 
                 signals.send_tc_occupancy.emit(line+"___0", True)
+                signals.send_tm_commanded_speed.emit(new_train.id, self.lines[line][YARD].commanded_speed)
+                signals.send_tm_authority.emit(new_train.id, self.lines[line][YARD].authority)
             else:
                 print("Cannot dispatch train, yard is occupied.")
         except:
@@ -174,8 +205,6 @@ class TrackModel(QObject):
 
     #not handling errors here since something is fundamentally wrong if it errors
     def update_train_position(self, train_id, delta_x):
-        #TODO: DEBUGGING
-        #print("train is moving in " + str(self.trains[train_id].movement_direction))
         #begins by adding the change in position to the current position
         self.trains[train_id].position_in_block += delta_x
 
@@ -185,8 +214,8 @@ class TrackModel(QObject):
         pos = self.trains[train_id].position_in_block
         length = self.trains[train_id].train_length
         blk = self.trains[train_id].block
-        if -1 * (pos - (length * FEET_TO_METERS)) > self.lines[line][blk].LENGTH and blk != YARD:
-            prev_block = self.lines[line][blk].get_previous(self.trains[train_id].movement_direction, 0)
+        if pos - length < 0 and blk != YARD:
+            prev_block = self.lines[line][blk].get_previous(self.trains[train_id].movement_direction)
             self.lines[line][prev_block].occupied = -1
 
             self.gui.update_occupancy(line, prev_block)
@@ -209,18 +238,26 @@ class TrackModel(QObject):
             signals.send_tc_occupancy.emit(tc_block, False)
 
             #check validity of move
-            next_block = self.lines[line][current_block].get_next(self.trains[train_id].movement_direction, 0)
-            next_dir = self.lines[line][current_block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
 
+            #gets next block based on movement direction
+            next_block = self.lines[line][current_block].get_next(self.trains[train_id].movement_direction)
 
-            if self.lines[line][next_block].get_previous(self.trains[train_id].movement_direction, next_dir) == current_block:
+            #determines which way the train will be moving through the next block
+            if self.trains[train_id].movement_direction == FORWARD_DIR and self.lines[line][current_block].TRANSITION_DIRECTIONS[NEXT_BLOCK] != 0:
+                next_dir = self.lines[line][current_block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
+            elif self.trains[train_id].movement_direction == REVERSE_DIR and self.lines[line][current_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] != 0:
+                next_dir = self.lines[line][current_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK]
+            else:
+                next_dir = self.trains[train_id].movement_direction
+
+            if self.lines[line][next_block].get_previous(next_dir) == current_block:
                 #valid move
 
-                if not self.lines[line][next_block].get_occupancy():
+                if self.lines[line][next_block].get_occupancy() == False:
                     #no collision has occured
 
                     #REMOVES TRAIN UPON REACHING YARD
-                    if self.lines[line][current_block].get_next(self.trains[train_id].movement_direction, 0) == YARD:
+                    if self.lines[line][current_block].get_next(self.trains[train_id].movement_direction) == YARD:
                         #unoccupies block
                         self.lines[line][current_block].occupied = -1
 
@@ -228,41 +265,51 @@ class TrackModel(QObject):
                         self.gui.update_occupancy(line, current_block)
                         tc_block = line + "_" + self.lines[line][current_block].SECTION + "_" + str(current_block)
                         signals.send_tc_occupancy.emit(tc_block, False)
-
+                        
                         #remove train from dictionary
                         self.trains.pop(train_id)
 
-                        print("TRAIN " + str(train_id) + " HAS BEEN REMOVED FROM THE TRACK.")
-
                         return 0
 
-                    #update movement direction through a block
-                    if self.trains[train_id].movement_direction == FORWARD_DIR and self.lines[line][next_block].TRANSITION_DIRECTIONS[NEXT_BLOCK] != 0:
-                        self.trains[train_id].movement_direction = self.lines[line][next_block].TRANSITION_DIRECTIONS[NEXT_BLOCK]
-                    elif self.trains[train_id].movement_direction == REVERSE_DIR and self.lines[line][next_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] != 0:
-                        self.trains[train_id].movement_direction == self.lines[line][next_block].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK]
-                
                     #moves train
                     self.lines[line][next_block].occupied = train_id
                     self.trains[train_id].block = next_block
 
-                    print("moving into block " + str(next_block))
+                    #update movement direction for next block
+                    self.trains[train_id].movement_direction = next_dir
 
                     #calls gui update function
                     self.gui.update_occupancy(line, next_block)
+
+                    #update occupancy in track controllers
                     tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
                     signals.send_tc_occupancy.emit(tc_block, True)
 
                     #send beacon signal to train if necessary
-                    #TODO: fix this with new beacon format
-                    if self.lines[line][next_block].BEACON != "":
-                        #station = self.lines[line][next_block].get_next(self.trains[train_id].movement_direction)
-                        #signals.send_tm_beacon.emit(station, self.lines[line][next_block].BEACON)
-                        pass
+                    if self.lines[line][next_block].BEACON[0] != "":
+                        station = self.lines[line][next_block].BEACON[0]
+                        if self.lines[line][next_block].BEACON[1] == "LEFT":
+                            side = STATION_LEFT
+                        elif self.lines[line][next_block].BEACON[1] == "RIGHT":
+                            side = STATION_RIGHT
+                        else:
+                            side = STATION_BOTH
+
+                        signals.send_tm_beacon.emit(train_id, station, side)
 
                     #send grade
                     signals.send_tm_grade.emit(train_id, self.lines[line][next_block].GRADE)
                     #send failure
+                    #send tunnel
+                    signals.send_tm_tunnel.emit(train_id, self.lines[line][next_block].UNDERGROUND)
+                    #send at station
+                    signals.send_tm_station.emit(train_id, self.lines[line][next_block].STATION != "")
+                    #Send new authority to train.
+                    if self.lines[line][next_block].authority != -1:
+                        signals.send_tm_authority.emit(train_id, self.lines[line][next_block].authority)
+                    #Send new commanded speed to train.
+                    signals.send_tm_commanded_speed.emit(train_id, self.lines[line][next_block].commanded_speed)
+                    signals.send_tm_new_block.emit()
 
                     
                 else:
@@ -289,11 +336,10 @@ class TrackModel(QObject):
             pos = self.trains[train_id].position_in_block
             length = self.trains[train_id].train_length
             blk = self.trains[train_id].block
-            if -1 * (pos - (length * FEET_TO_METERS)) > self.lines[line][blk].LENGTH and blk != YARD:
-                prev_block = self.lines[line][self.trains[train_id].block].get_previous(self.trains[train_id].movement_direction, 0)
+            if pos - length < 0 and blk != YARD:
+                prev_block = self.lines[line][self.trains[train_id].block].get_previous(self.trains[train_id].movement_direction)
                 self.lines[line][prev_block].occupied = train_id
 
-                print("displaying dual occupancy?")
                 self.gui.update_occupancy(line, prev_block)
                 tc_block = line + "_" + self.lines[line][prev_block].SECTION + "_" + str(prev_block)
                 signals.send_tc_occupancy.emit(tc_block, True)
@@ -334,6 +380,7 @@ class TrackModel(QObject):
             for l_sheet in r_sheets:
                 new_line = {}
                 l_name = l_sheet[:len(l_sheet)-6]
+                l_name = l_name.lower()
                 l_data = trk_excel.parse(l_sheet)
 
 
@@ -347,6 +394,7 @@ class TrackModel(QObject):
                     new_line[block_num].GRADE = l_data.iloc[i,4]
                     new_line[block_num].LENGTH = l_data.iloc[i,3]
                     new_line[block_num].SECTION = l_data.iloc[i,1]
+                    new_line[block_num].MAX_SPEED = round(l_data.iloc[i,5] * KPH_TO_MPH, 0)
 
                 #2nd parse for track infrastructure
                 #this is done to ensure all blocks exist before trying to connect with switches and add beacons
@@ -537,6 +585,8 @@ class TrackModel(QObject):
 
                                     new_line[YARD].CONNECTED_BLOCKS[PREVIOUS_BLOCK] = block_num
                                     new_line[YARD].CONNECTED_BLOCKS[NEXT_BLOCK] = block_num
+                                    new_line[YARD].TRANSITION_DIRECTIONS[PREVIOUS_BLOCK] = REVERSE_DIR
+                                    new_line[YARD].TRANSITION_DIRECTIONS[NEXT_BLOCK] = REVERSE_DIR
 
                                     new_line[YARD].light.append(0)
                                     new_line[block_num+1].light.append(0)

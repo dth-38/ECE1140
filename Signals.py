@@ -74,11 +74,16 @@ class Signals(QObject):
     send_tm_grade = pyqtSignal(int, float)
     #(int id, int True/False)
     send_tm_failure = pyqtSignal(int, int)
-    #(str station, int side)
-    send_tm_beacon = pyqtSignal(str, int)
+    #(int id, str station, int doorside)
+    send_tm_beacon = pyqtSignal(int, str, int)
     #(int id, int passenger_count)
     send_tm_passenger_count = pyqtSignal(int, int)
-
+    #(int id, bool tunnel)
+    send_tm_tunnel = pyqtSignal(int, bool)
+    #(int id, bool station)
+    send_tm_station = pyqtSignal(int, bool)
+    #()
+    send_tm_new_block = pyqtSignal()
 
     #-----------------------------------------
     # Train Model Signals
@@ -88,6 +93,8 @@ class Signals(QObject):
 
     #(int id, float distance)
     send_tm_distance = pyqtSignal(int, float)
+    #(int id)
+    send_tm_stopped_at_station = pyqtSignal(int)
 
     #-----------------------------------------
     # Signals to open train controller/track model gui

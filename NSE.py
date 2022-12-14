@@ -12,12 +12,11 @@ from TrackModelV2.TrackModel import TrackModel
 from Signals import signals
 
 
-
 class NSE_Simulation(QMainWindow):
 
     def __init__(self, run=False):
         #idk number of track controllers yet
-        self.NUM_CONTROLLERS = 15
+        self.NUM_CONTROLLERS = 18
         self.SEC_TO_MSEC = 1000
 
         self.X_OFFSET = 80
@@ -26,14 +25,14 @@ class NSE_Simulation(QMainWindow):
         self.HEIGHT = 400
 
         self.UPDATE_PERIOD = 1
-        self.MULTIPLIER_LIMIT = 15
+        self.MULTIPLIER_LIMIT = 30
         self.update_period_multiplier = 1
 
 
         self.track_controllers = []
         self.ctc = CTCWindowClass()
         self.track = TrackModel()
-    
+        
 
         super().__init__()
 
@@ -43,8 +42,6 @@ class NSE_Simulation(QMainWindow):
             self.track_controllers.append(TrackController(i, True))
             self.track_controllers[i].tick()
 
-
-        self.scheduler = Scheduler.Scheduler()
 
         self.pool = QThreadPool.globalInstance()
 
@@ -61,7 +58,6 @@ class NSE_Simulation(QMainWindow):
         else:
             self.stop_clicked()
         
-
     def start_sim(self, multiplier=0):
         if multiplier > 0 and multiplier < self.MULTIPLIER_LIMIT:
             self.update_period_multiplier = multiplier
@@ -69,7 +65,7 @@ class NSE_Simulation(QMainWindow):
         self.multiplier_input.setText(str(self.update_period_multiplier))
 
         #period is calculated in miliseconds cause thats what the timer takes
-        period = (self.UPDATE_PERIOD / multiplier) * self.SEC_TO_MSEC
+        period = (self.UPDATE_PERIOD / self.update_period_multiplier) * self.SEC_TO_MSEC
         period = math.floor(period)
 
         self.timer.start(period)
@@ -208,7 +204,7 @@ class NSE_Simulation(QMainWindow):
             num = int(self.num_select_textbox.text())
             #check num is in valid range
             #open corresponding train model
-            if num > -1 and num < len(self.track.trains):
+            if num > -1:
                 signals.open_tm_gui.emit(num)
             else:
                 print("Error: Selection does not exist.")
@@ -222,7 +218,7 @@ class NSE_Simulation(QMainWindow):
 
             #check num is in valid range
             #open corresponding train controller
-            if num > -1 and num < len(self.track.trains):
+            if num > -1:
                 signals.open_tc_gui.emit(num)
             else:
                 print("Error: Selection does not exist.")

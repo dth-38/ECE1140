@@ -10,7 +10,7 @@ class Block:
         #constants for if the switch is connected to next blocks or previous blocks
 
         self.id = id
-        self.authority = 0
+        self.authority = -1
         self.suggested_Speed = 0
         self.commanded_Speed = 0
         self.max_Speed = 0
@@ -125,6 +125,25 @@ class Block:
                 block = self.next_Blocks[1]
             else:
                 block = self.next_Blocks[0]
+        else:
+            pass
+
+
+        return block
+
+    def get_not_switched_to(self, switchNum=0):
+        block = ""
+
+        if self.switch_To == TO_PREV:
+            if self.switches[switchNum] == True:
+                block = self.previous_Blocks[0]
+            else:
+                block = self.previous_Blocks[1]
+        elif self.switch_To == TO_NEXT:
+            if self.switches[switchNum] == True:
+                block = self.next_Blocks[0]
+            else:
+                block = self.next_Blocks[1]
         else:
             pass
 

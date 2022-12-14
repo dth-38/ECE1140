@@ -1,0 +1,200 @@
+DEFINE TRACK
+    BLOCK red_H_43
+        M 43
+        P START
+        N red_H_44
+        L 1
+    END BLOCK
+
+    BLOCK red_O_67
+        M 34
+        P START
+        N red_H_44
+        L 1
+    END BLOCK
+
+    BLOCK red_H_44
+        M 43
+        S PREV, red_O_67, red_H_43
+        N red_H_45
+    END BLOCK
+
+    BLOCK red_H_45
+        M 43
+        P red_H_44
+        N red_I_46
+        L 1
+    END BLOCK
+
+    BLOCK red_I_46
+        M 43
+        P red_H_45
+        N red_I_47
+    END BLOCK
+
+    BLOCK red_I_47
+        M 43
+        P red_I_46
+        N red_I_48
+    END BLOCK
+
+    BLOCK red_I_48
+        M 43
+        P red_I_47
+        N red_J_49
+        L 1
+    END BLOCK
+
+    BLOCK red_J_49
+        M 37
+        P red_I_48
+        N red_J_50
+    END BLOCK
+
+    BLOCK red_J_50
+        M 37
+        P red_J_49
+        N red_J_51
+    END BLOCK
+
+    BLOCK red_J_51
+        M 34
+        P red_J_50
+        N red_J_52
+    END BLOCK
+
+    BLOCK red_J_52
+        M 34
+        P red_J_51
+        S NEXT, red_J_53, red_N_66
+    END BLOCK
+
+    BLOCK red_J_53
+        M 34
+        P red_J_52
+        N red_J_54
+        L 1
+    END BLOCK
+
+    BLOCK red_J_54
+        M 34
+        P red_J_53
+        N red_K_55
+    END BLOCK
+
+    BLOCK red_K_55
+        M 34
+        P red_J_54
+        N red_K_56
+    END BLOCK
+
+    BLOCK red_K_56
+        M 34
+        P red_K_55
+        N red_K_57
+    END BLOCK
+
+    BLOCK red_K_57
+        M 34
+        P red_K_56
+        N red_L_58
+    END BLOCK
+
+    BLOCK red_L_58
+        M 34
+        P red_K_57
+        N red_L_59
+    END BLOCK
+
+    BLOCK red_L_59
+        M 34
+        P red_L_58
+        N red_L_60
+    END BLOCK
+
+    BLOCK red_L_60
+        M 34
+        P red_L_59
+        N red_M_61
+        L 1
+    END BLOCK
+
+    BLOCK red_M_61
+        M 34
+        P red_L_60
+        N red_M_62
+    END BLOCK
+
+    BLOCK red_M_62
+        M 34
+        P red_M_61
+        N red_M_63
+    END BLOCK
+
+    BLOCK red_M_63
+        M 34
+        P red_M_62
+        N red_N_64
+    END BLOCK
+
+    BLOCK red_N_64
+        M 34
+        P red_M_63
+        N red_N_65
+    END BLOCK
+
+    BLOCK red_N_65
+        M 34
+        P red_N_64
+        N END
+    END BLOCK
+
+    BLOCK red_N_66
+        M 34
+        P red_J_52
+        N END
+        L 1
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;critical section from red_H_44 to red_J_52
+OR t[0], red_H_44:occupied, red_H_45:occupied
+OR t[0], t[0], red_I_46:occupied
+OR t[0], t[0], red_I_47:occupied
+OR t[0], t[0], red_I_48:occupied
+OR t[0], t[0], red_J_49:occupied
+OR t[0], t[0], red_J_50:occupied
+OR t[0], t[0], red_J_51:occupied
+OR t[0], t[0], red_J_52:occupied
+
+;switch in block red_H_44
+;s1 = red_H_43 and not c1
+NOT t[1], t[0]
+AND red_H_44:switch[0], t[1], red_H_43:occupied
+
+;switch in block red_J_52
+;s2 = red_N_66 and not c1
+AND red_J_52:switch[0], t[1], red_N_66:occupied
+
+;light controls
+EQ red_H_43:light[0].GREEN, red_H_44:switch[0]
+NOT red_H_43:light[0].RED, red_H_44:switch[0]
+NOT red_O_67:light[0].GREEN, red_H_44:switch[0]
+EQ red_O_67:light[0].RED, red_H_44:switch[0]
+
+EQ red_N_66:light[0].GREEN, red_J_52:switch[0]
+NOT red_N_66:light[0].RED, red_J_52:switch[0]
+NOT red_J_53:light[0].GREEN, red_J_52:switch[0]
+EQ red_J_53:light[0].RED, red_J_52:switch[0]
+
+EQ red_H_45:light[0].RED, red_H_45:occupied
+NOT red_H_45:light[0].GREEN, red_H_45:occupied
+
+EQ red_I_48:light[0].RED, red_I_48:occupied
+NOT red_I_48:light[0].GREEN, red_I_48:occupied
+
+EQ red_L_60:light[0].RED, red_L_60:occupied
+NOT red_L_60:light[0].GREEN, red_L_60:occupied
+END LOGIC
+

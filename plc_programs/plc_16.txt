@@ -1,0 +1,223 @@
+DEFINE TRACK
+    BLOCK red_H_28
+        M 43
+        P START
+        N red_H_29
+    END BLOCK
+
+    BLOCK red_T_76
+        M 34
+        P START
+        N red_S_75
+    END BLOCK
+
+    BLOCK red_S_75
+        M 34
+        P red_T_76
+        N red_S_74
+    END BLOCK
+
+    BLOCK red_S_74
+        M 34
+        P red_S_75
+        N red_S_73
+    END BLOCK
+
+    BLOCK red_S_73
+        M 34
+        P red_S_74
+        N red_R_72
+    END BLOCK
+
+    BLOCK red_R_72
+        M 34
+        P red_S_73
+        N red_H_33
+        L 1
+    END BLOCK
+
+    BLOCK red_H_29
+        M 43
+        P red_H_28
+        N red_H_30
+    END BLOCK
+
+    BLOCK red_H_30
+        M 43
+        P red_H_29
+        N red_H_31
+    END BLOCK
+
+    BLOCK red_H_31
+        M 43
+        P red_H_30
+        N red_H_32
+    END BLOCK
+
+    BLOCK red_H_32
+        M 43
+        P red_H_31
+        N red_H_33
+        L 1
+    END BLOCK
+
+    BLOCK red_H_33
+        M 43
+        S PREV, red_H_32, red_R_72
+        N red_H_34
+    END BLOCK
+
+    BLOCK red_H_34
+        M 43
+        P red_H_33
+        N red_H_35
+    END BLOCK
+
+    BLOCK red_H_35
+        M 43
+        P red_H_34
+        N red_H_36
+        L 1
+    END BLOCK
+
+    BLOCK red_H_36
+        M 43
+        P red_H_35
+        N red_H_37
+    END BLOCK
+
+    BLOCK red_H_37
+        M 43
+        P red_H_36
+        N red_H_38
+    END BLOCK
+
+    BLOCK red_H_38
+        M 43
+        P red_H_37
+        S NEXT, red_H_39, red_Q_71
+    END BLOCK
+
+    BLOCK red_Q_71
+        M 34
+        P red_H_38
+        N red_P_70
+        L 1
+    END BLOCK
+
+    BLOCK red_P_70
+        M 34
+        P red_Q_71
+        N red_P_69
+    END BLOCK
+
+    BLOCK red_P_69
+        M 34
+        P red_P_70
+        N red_P_68
+    END BLOCK
+
+    BLOCK red_P_68
+        M 34
+        P red_P_69
+        N red_O_67
+    END BLOCK
+
+    BLOCK red_O_67
+        M 34
+        P red_P_68
+        N END
+    END BLOCK
+
+    BLOCK red_H_39
+        M 43
+        P red_H_38
+        N red_H_40
+        L 1
+    END BLOCK
+
+    BLOCK red_H_40
+        M 43
+        P red_H_39
+        N red_H_41
+    END BLOCK
+
+    BLOCK red_H_41
+        M 43
+        P red_H_40
+        N red_H_42
+    END BLOCK
+
+    BLOCK red_H_42
+        M 43
+        P red_H_41
+        N red_H_43
+    END BLOCK
+
+    BLOCK red_H_43
+        M 43
+        P red_H_42
+        N END
+    END BLOCK
+END TRACK
+
+DEFINE LOGIC
+;5 critical sections
+;c1, t[0] for blocks T_76-R_72, c2, t[1] for blocks H_28-red_H_32
+;c3, t[2] for blocks H_33-H_38, c4, t[3] for blocks Q_71-red_O_67
+;c5, t[4] for blocks H_39-red_H_43
+
+OR t[0], red_T_76:occupied, red_S_75:occupied
+OR t[0], t[0], red_S_74:occupied
+OR t[0], t[0], red_S_73:occupied
+OR t[0], t[0], red_R_72:occupied
+
+OR t[1], red_H_28:occupied, red_H_29:occupied
+OR t[1], t[1], red_H_30:occupied
+OR t[1], t[1], red_H_31:occupied
+OR t[1], t[1], red_H_32:occupied
+
+OR t[2], red_H_33:occupied, red_H_34:occupied
+OR t[2], t[2], red_H_35:occupied
+OR t[2], t[2], red_H_36:occupied
+OR t[2], t[2], red_H_37:occupied
+OR t[2], t[2], red_H_38:occupied
+
+OR t[3], red_Q_71:occupied, red_P_70:occupied
+OR t[3], t[3], red_P_69:occupied
+OR t[3], t[3], red_P_68:occupied
+OR t[3], t[3], red_O_67:occupied
+
+OR t[4], red_H_39:occupied, red_H_40:occupied
+OR t[4], t[4], red_H_41:occupied
+OR t[4], t[4], red_H_42:occupied
+OR t[4], t[4], red_H_43:occupied
+
+;switch in block red_H_33
+;s1 = (c2 and c3) or (c1 and not c3)
+AND t[5], t[3], t[4]
+NOT t[6], t[4]
+AND t[6], t[6], t[0]
+OR red_H_33:switch[0], t[5], t[6]
+
+;switch in block red_H_38
+;s2 = (c3 and c5) or (c4 and not c3)
+AND t[5], t[2], t[4]
+NOT t[6], t[2]
+AND t[6], t[6], t[3]
+OR red_H_38:switch[0], t[5], t[6]
+
+;light controls
+EQ red_R_72:light[0].GREEN, red_H_33:switch[0]
+NOT red_R_72:light[0].RED, red_H_33:switch[0]
+NOT red_H_32:light[0].GREEN, red_H_33:switch[0]
+EQ red_H_32:light[0].RED, red_H_33:switch[0]
+
+EQ red_Q_71:light[0].GREEN, red_H_38:switch[0]
+NOT red_Q_71:light[0].RED, red_H_38:switch[0]
+NOT red_H_39:light[0].GREEN, red_H_38:switch[0]
+EQ red_H_39:light[0].RED, red_H_38:switch[0]
+
+EQ red_H_35:light[0].RED, red_H_35:occupied
+NOT red_H_35:light[0].GREEN, red_H_35:occupied
+END LOGIC
