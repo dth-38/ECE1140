@@ -284,6 +284,9 @@ class TrackModel(QObject):
                     #update occupancy in track controllers
                     tc_block = line + "_" + self.lines[line][next_block].SECTION + "_" + str(next_block)
                     signals.send_tc_occupancy.emit(tc_block, True)
+                    
+                    #workaround for ctc not doing its job
+                    signals.send_ctc_train_position.emit(train_id, line, next_block)
 
                     #send beacon signal to train if necessary
                     if self.lines[line][next_block].BEACON[0] != "":

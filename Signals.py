@@ -51,6 +51,9 @@ class Signals(QObject):
     send_tc_maintenance = pyqtSignal(str, int)
     #(str block, str next_block)
     set_tc_switch = pyqtSignal(str, str)
+    
+    #(int train_id, str line, int block_number)
+    send_ctc_train_position = pyqtSignal(int, str, int)
 
     #------------------------------------------
     # TRACK MODEL SIGNALS
