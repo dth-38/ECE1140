@@ -1,5 +1,6 @@
 from smtplib import LMTP
 import sys
+import math
 from PyQt5 import QtWidgets
 from PyQt5 import uic
 
@@ -114,13 +115,36 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             self.destinations.clear()
 
     def dispatch(self):
-        if self.hour_selection.toPlainText() == "" or self.minute_selection.toPlainText() == "" or self.second_selection.toPlainText() == "" or len(self.destinations) == 0:
-            pass
-        else:
+        if self.hour_selection.toPlainText() != "" and self.minute_selection.toPlainText() != "" and self.second_selection.toPlainText() != "" or len(self.destinations) == 0:
             arrival_time = (int(self.hour_selection.toPlainText()),int(self.minute_selection.toPlainText()),int(self.second_selection.toPlainText()))
             travel_time = self.schedule.calc_travel_time(self.line_train_selection.currentText(),0,self.destinations[0])
             #sends dispatch signal
-            departure_time = [int(arrival_time[0] - travel_time[0]), int(arrival_time[1] - travel_time[1]), int(arrival_time[2] - travel_time[2])]
+            #bruh
+            #departure_time = [int(arrival_time[0] - travel_time[0]), int(arrival_time[1] - travel_time[1]), int(arrival_time[2] - travel_time[2])]
+
+            #converts hrs,mins,secs to just hours to simplify rollover check
+            arrival_real = arrival_time[0] + (arrival_time[1] / 60) + (arrival_time[2] / 3600)
+            travel_real = travel_time[0] + (travel_time[1] / 60) + (travel_time[2] / 3600)
+
+            dispatch_time = arrival_real - travel_real
+
+            #check for day rollover
+            if dispatch_time < 0:
+                dispatch_time = 24 + dispatch_time
+            elif dispatch_time > 24:
+                dispatch_time -= 24
+
+            #convert dispatch time in hours to hrs,mins,secs
+            t_hrs = math.floor(dispatch_time)
+            
+            mins = (dispatch_time - t_hrs) * 60
+            t_mins = math.floor(mins)
+
+            secs = (mins - t_mins) * 60
+            t_secs = math.floor(secs)
+
+            departure_time = [t_hrs, t_mins, t_secs]
+
             print("DEPARTURE TIME: " + str(departure_time))
             current_time = self.clock.get_time()
             print("CURRENT TIME: "  + str(current_time))
