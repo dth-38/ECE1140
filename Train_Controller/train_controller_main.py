@@ -681,6 +681,10 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.cs_box.setStyleSheet("background-color: light gray")
         self.temperature_box.setStyleSheet("background-color: light gray")
     
+    def provide_speed(self, commanded_speed, actual_speed): #call this from train.py to update speed when auto mode is on
+        if self.auto_f == True:
+            self.real_train.set_commanded_speed(commanded_speed)
+            self.real_train.set_speed(actual_speed)
 
 if __name__ == "__main__" :
 
