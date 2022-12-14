@@ -87,6 +87,7 @@ class CTC_Scheduler:
                     self.red_schedule.append([line,station,time_to_station,arrival_time])
                 elif line == "Green":
                     self.green_schedule.append([line,station,time_to_station,arrival_time])
+        return self.red_schedule, self.green_schedule
     def block_info(self):
         red_blocks = pd.read_excel("./CTC/block_info.xlsx", sheet_name="Red Line")
         for index, row in red_blocks.iterrows():
@@ -104,14 +105,8 @@ class CTC_Scheduler:
             else:
                 if row[0] == "Green":
                     self.green_blocks.append([row["Block Number"], row["Block Length (m)"], row["Speed Limit (Km/Hr)"]])
-<<<<<<< HEAD
-        for i in range(len(self.green_blocks)):
-            print("GREEN BLOCK: " + str(self.green_blocks[i][0]) + " " + str(self.green_blocks[i][1]) + " " + str(self.green_blocks[i][2]))
-   
-=======
         #for i in range(len(self.green_blocks)):
             #print("GREEN BLOCK: " + str(self.green_blocks[i][0]) + " " + str(self.green_blocks[i][1]) + " " + str(self.green_blocks[i][2]))
->>>>>>> 0bfd33a55ed4440ec6e7c917143bb342d4799877
     def manual_dispatch_train(self,arrival_time,train_id,line,destinations):
         print("destinations: " + str(destinations))
         self.authority = self.calc_authority(train_id,line,destinations[0],0)
