@@ -186,6 +186,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.emer_brake_flag = False
         self.train_authority_stop_flag = False
 
+        self.automatic_mode()   #auto mode on by default
+
         #update train controller display every 1 sec
         # self.timer_update = QtCore.QTimer(self) 
         # self.timer_update.start(1000)
@@ -404,8 +406,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.failure_output.append("N/A")
 
         #if train came to stop (fully) in auto mode
-        if self.real_train.get_power() == 0 and self.auto_f == True:
-            self.auto_train_stopped()
+        # if self.real_train.get_power() == 0 and self.auto_f == True:
+        #     self.auto_train_stopped()
 
         #NOTE Update power. Train model uses power --> speed & pass actual speed + commanded speed to train controller
         self.real_train.update_power() 
@@ -445,15 +447,15 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
     def reset(self):
         #self.real_train.reset_all_train()
-        self.train_speed.display(0)
-        self.train_left.clear()
-        self.train_right.clear()
-        self.train_internal.clear()
-        self.train_external.clear()
-        self.train_temp.clear()
-        self.train_annun.clear()
-        self.train_ad.clear()
-        self.train_horn.clear()
+        # self.train_speed.display(0)
+        # self.train_left.clear()
+        # self.train_right.clear()
+        # self.train_internal.clear()
+        # self.train_external.clear()
+        # self.train_temp.clear()
+        # self.train_annun.clear()
+        # self.train_ad.clear()
+        # self.train_horn.clear()
 
         #clear input boxes
         self.cs_box.clear()
@@ -525,7 +527,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         # self.failure_output.clear()
         # self.failure_output.append("N/A")
 
-    def partial_reset(self):
+    def partial_reset(self):    #when switch from manual -> automatic, clear out manual section
         #clear input boxes
         self.cs_box.clear()
         self.temperature_box.clear()
@@ -656,23 +658,4 @@ if __name__ == "__main__" :
     app = QtWidgets.QApplication(sys.argv) 
     myWindow = WindowClass() 
     sys.exit(app.exec_())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#threadL https://ybworld.tistory.com/39
+    
