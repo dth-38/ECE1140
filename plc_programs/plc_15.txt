@@ -153,7 +153,7 @@ DEFINE TRACK
     BLOCK red_H_24
         M 43
         P red_H_25
-        N red_G_24
+        N red_G_23
     END BLOCK
 
     BLOCK red_H_25
