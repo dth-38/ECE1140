@@ -783,22 +783,22 @@ class TrackController(QMainWindow):
         if block_found == True:
             #checks if the block has switches and is closed for maintenance
             if self.next_Track_State[block].closed == True and self.next_Track_State[block].switches != []:
-                if self.next_Track_State[block].switch_to == TO_NEXT:
-                    if self.next_Track_State[block].next_blocks[0] == next_block:
-                        self.next_Track_State[block].switch[0] = False
-                        self.current_Track_State[block].switch[0] = False
-                    elif self.next_Track_State[block].next_blocks[1] == next_block:
-                        self.next_Track_State[block].switch[0] = True
-                        self.current_Track_State[block].switch[0] = True
+                if self.next_Track_State[block].switch_To == TO_NEXT:
+                    if self.next_Track_State[block].next_Blocks[0] == next_block:
+                        self.next_Track_State[block].switches[0] = False
+                        self.current_Track_State[block].switches[0] = False
+                    elif self.next_Track_State[block].next_Blocks[1] == next_block:
+                        self.next_Track_State[block].switches[0] = True
+                        self.current_Track_State[block].switches[0] = True
                     else:
                         pass
-                elif self.next_Track_State[block].switch_to == TO_PREV:
-                    if self.next_Track_State[block].next_blocks[0] == next_block:
-                        self.next_Track_State[block].switch[0] = False
-                        self.current_Track_State[block].switch[0] = False
-                    elif self.next_Track_State[block].next_blocks[1] == next_block:
-                        self.next_Track_State[block].switch[0] = True
-                        self.current_Track_State[block].switch[0] = True
+                elif self.next_Track_State[block].switch_To == TO_PREV:
+                    if self.next_Track_State[block].previous_Blocks[0] == next_block:
+                        self.next_Track_State[block].switches[0] = False
+                        self.current_Track_State[block].switches[0] = False
+                    elif self.next_Track_State[block].previous_Blocks[1] == next_block:
+                        self.next_Track_State[block].switches[0] = True
+                        self.current_Track_State[block].switches[0] = True
                     else:
                         pass
 
