@@ -169,7 +169,7 @@ class Train:
         self.train_model_update_speed()
 
         #Send Train controller actual speed and power
-        #self.train_ctrl.real_train.set_speed(self.actual_speed)       #Since update_speed updates speed, also apply it to controller's actual speed
+        self.train_ctrl.provide_speed(self.commanded_speed,self.actual_speed)       #Since update_speed updates speed, also apply it to controller's actual speed
         self.train_ctrl.real_train.set_power(self.power)              #send power to train controller for display
         
         #If the engine is not in failure, display power in ui, else display 0
