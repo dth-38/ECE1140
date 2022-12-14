@@ -227,7 +227,6 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
 
         for i in range(self.schedule_trains):
-            print("LOOPING")
             if self.schedule.train_table.get_authority(i) == 0:
                 authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),self.schedule.train_table.get_next_destination(i),self.schedule.train_table.get_position(i))
                 self.schedule.train_table.change_authority(i,authority)
@@ -302,6 +301,8 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             line = str(schedule_train[5])
             line.upper()
             signals.send_tm_dispatch.emit(line)
+            tc_block = convert_to_block(self.train_entries[5],self.train_entries[1])
+            signals.send_tc_authority.emit(tc_block,schedule_train[4])
         self.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 
             tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
