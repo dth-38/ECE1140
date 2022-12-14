@@ -424,7 +424,7 @@ class TrackController(QMainWindow):
     #opens maintenance menu
     def open_Maintenance(self):
         if self.maintenance is None:
-            self.maintenance = MaintenanceGUI(self.get_Track)
+            self.maintenance = MaintenanceGUI(self.get_Track, self.maintenance_set_switch, self.maintenance_set_light, self.maintenance_set_gate)
         
         self.in_Maintenance = True
         self.maintenance.show()
@@ -436,11 +436,36 @@ class TrackController(QMainWindow):
 #---------------------------------------------------------------
     #used to pass the track state to the debug and maintenance guis
     def get_Track_Block(self, block=""):
-        #refuses access to the track if it is locked
-        return self.current_Track_State[block]
+        return self.next_Track_State[block]
 
     def get_Track(self):
-        return self.current_Track_State
+        return self.next_Track_State
+
+#------------------------------------------------------------------
+# Maintenance bypass functions
+#------------------------------------------------------------------
+    #a function to bypass the tick function and force a switch signal
+    def maintenance_set_switch(self, block):
+        next_block = self.next_Track_State[block].get_switched_to()
+        self.current_Track_State[block].switches[0] = copy.copy(self.next_Track_State[block].switches[0])
+
+        d_block = decompose_block(block)
+        next_d_block = decompose_block(next_block)
+
+        signals.broadcast_switch.emit(d_block[0], d_block[1], next_d_block[1])
+
+    def maintenance_set_light(self, block):
+        self.current_Track_State[block].lights = copy.deepcopy(self.next_Track_State[block].lights)
+
+        d_block = decompose_block(block)
+        signals.broadcast_light.emit(d_block[0], d_block[1], self.next_Track_State[block].light_To_Str())
+
+    def maintenance_set_gate(self, block):
+        self.current_Track_State[block].gates = copy.deepcopy(self.next_Track_State[block].gates)
+
+        d_block = decompose_block(block)
+        signals.broadcast_gate.emit(d_block[0], d_block[1], self.next_Track_State[block].gate_To_Str())
+
 
 
 
