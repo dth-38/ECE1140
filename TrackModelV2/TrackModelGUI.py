@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QTableWidget, QTabWidget, QVBoxLayout, QTableWidgetItem
-from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtGui import QColor, QFont
 from Signals import signals
 
 HEIGHT = 1000
@@ -21,6 +22,7 @@ class TrackModelGUI(QMainWindow):
         self.GREEN = QColor(0,128,0)
         self.RED = QColor(128,0,32)
         self.WHITE = QColor(255,255,255)
+        self.text_font = QFont('Times', 14)
 
 
         self.setGeometry(X_POS, Y_POS, WIDTH, HEIGHT)
@@ -30,6 +32,8 @@ class TrackModelGUI(QMainWindow):
         #self.main_layout.addWidget(self.tabs)
         self.setCentralWidget(self.tabs)
 
+        #self.failure_tab = QWidget()
+
 
     def initialize_lines(self):
         self.table_widgets.clear()
@@ -38,6 +42,7 @@ class TrackModelGUI(QMainWindow):
         track = self.get_track()
         for line in track:
             new_line = QTableWidget()
+            new_line.setFont(self.text_font)
 
             new_line.setColumnCount(13)
             col_headers = ["Section","Occupied","Authority (Blocks)","Commanded Spd. (mph)","Station","Beacon","Switch","Light","Gate","Length (ft)","Grade","Underground","Max Speed"]
@@ -55,33 +60,50 @@ class TrackModelGUI(QMainWindow):
                     row_headers.append(str(block))
 
                 #sets the section for the block
-                new_line.setItem(block,0, QTableWidgetItem(track[line][block].SECTION))
+                sect = QTableWidgetItem(track[line][block].SECTION)
+                sect.setFont(self.text_font)
+                new_line.setItem(block,0, sect)
 
                 #create occupancy item
-                occ = QTableWidgetItem(str(track[line][block].occupied))
+                occ_val = track[line][block].occupied
+                if occ_val == -1:
+                    occ = QTableWidgetItem("")
+                else:
+                    occ = QTableWidgetItem(str(occ_val))
                 if self.get_track()[line][block].occupied != -1:
                     occ.setBackground(self.GREEN)
 
+                occ.setFont(self.text_font)
                 new_line.setItem(block,1, occ)
 
                 #create authority item
                 auth = track[line][block].authority
                 if auth == -1:
-                    new_line.setItem(block,2, QTableWidgetItem(""))
+                    auth_item = QTableWidgetItem("")
                 else:
-                    new_line.setItem(block,2, QTableWidgetItem(str(auth)))
+                    auth_item = QTableWidgetItem(str(auth))
+
+                auth_item.setFont(self.text_font)
+                new_line.setItem(block,2, auth_item)
 
                 #create commanded speed item
-                new_line.setItem(block,3, QTableWidgetItem(str(track[line][block].commanded_speed)))
+                spd_item = QTableWidgetItem(str(track[line][block].commanded_speed))
+                spd_item.setFont(self.text_font)
+                new_line.setItem(block,3, spd_item)
 
                 #create Station item
-                new_line.setItem(block,4, QTableWidgetItem(track[line][block].STATION))
+                station_item = QTableWidgetItem(track[line][block].STATION)
+                station_item.setFont(self.text_font)
+                new_line.setItem(block,4, station_item)
 
                 #create Beacon item
                 if track[line][block].BEACON[0] != "":
-                    new_line.setItem(block,5, QTableWidgetItem(track[line][block].BEACON[0] + ":" + track[line][block].BEACON[1]))
+                    beac = QTableWidgetItem(track[line][block].BEACON[0] + ":" + track[line][block].BEACON[1])
                 else:
-                    new_line.setItem(block,5,QTableWidgetItem())
+                    beac = QTableWidgetItem("")
+
+                beac.setFont(self.text_font)
+                new_line.setItem(block,5, beac)
 
                 #create switch item
                 sw_pos = track[line][block].get_switch_to()
@@ -92,6 +114,8 @@ class TrackModelGUI(QMainWindow):
                         sw = QTableWidgetItem(str(sw_pos))
                 else:
                     sw = QTableWidgetItem()
+
+                sw.setFont(self.text_font)
                 new_line.setItem(block,6, sw)
 
                 #create light item
@@ -104,6 +128,8 @@ class TrackModelGUI(QMainWindow):
                         l.setBackground(self.RED)
                 else:
                     l = QTableWidgetItem()
+
+                l.setFont(self.text_font)
                 new_line.setItem(block,7, l)
 
                 #create gate item
@@ -111,14 +137,18 @@ class TrackModelGUI(QMainWindow):
                     g = QTableWidgetItem(track[line][block].gate[0])
                 else:
                     g = QTableWidgetItem()
+
+                g.setFont(self.text_font)
                 new_line.setItem(block,8, g)
 
                 #create length item
                 l_b = QTableWidgetItem(str(round(track[line][block].LENGTH / 0.3408, 2)))
+                l_b.setFont(self.text_font)
                 new_line.setItem(block,9,l_b)
 
                 #create grade item
                 g_b = QTableWidgetItem(str(track[line][block].GRADE))
+                g_b.setFont(self.text_font)
                 new_line.setItem(block,10,g_b)
 
                 #create undergound item
@@ -126,10 +156,12 @@ class TrackModelGUI(QMainWindow):
                     u_b = QTableWidgetItem("Y")
                 else:
                     u_b = QTableWidgetItem("N")
+                u_b.setFont(self.text_font)
                 new_line.setItem(block,11,u_b)
 
                 #create max speed item
                 ms_b = QTableWidgetItem(str(track[line][block].MAX_SPEED))
+                ms_b.setFont(self.text_font)
                 new_line.setItem(block,12,ms_b)
 
             #set newly generated headers
@@ -144,8 +176,10 @@ class TrackModelGUI(QMainWindow):
         self.table_widgets[line].item(block,1).setText(str(occ))
         if occ != -1:
             self.table_widgets[line].item(block,1).setBackground(self.GREEN)
+            self.table_widgets[line].item(block,1).setText(str(occ))
         else:
             self.table_widgets[line].item(block,1).setBackground(self.WHITE)
+            self.table_widgets[line].item(block,1).setText("")
 
     def update_authority(self, line, block):
         auth = self.get_track()[line][block].authority

@@ -497,7 +497,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Schedule:</string>
+      <string>Scheduled Trains:</string>
      </property>
     </widget>
     <widget class="QListWidget" name="schedule_list">
