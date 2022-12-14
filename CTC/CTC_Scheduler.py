@@ -23,7 +23,7 @@ class CTC_Scheduler:
         self.red_throughput = 0
         self.green_throughput = 0
         #TODO: ASK HOW DISPATCH QUEUE WORKS
-        self.dispatch_queue = deque()
+        self.dispatch_queue = []
         self.train_table = Train_Table()
         self.block_table = Block_Table()
         self.train_id = 0

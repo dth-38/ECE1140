@@ -319,14 +319,18 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
 
     def tick(self):
         #checks all dispatch items
-        dispatches = 0
-        for scheduled_dispatch in list(self.schedule.dispatch_queue):
+        dispatches = []
+
+        for i in range(len(self.schedule.dispatch_queue)):
+            scheduled_dispatch = self.schedule.dispatch_queue[i]
+
             d_time = scheduled_dispatch.departure_time
 
             time = self.clock.get_time()
 
             #checks if the current time and departure time match
             if time[0] == d_time[0] and time[1] == d_time[1] and time[2] == d_time[2]:
+                dispatches.append(i)
                 #pops item off queue and gets variables
 
                 a_time = scheduled_dispatch.arrival_time
@@ -357,11 +361,10 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             
                 self.manual_trains += 1
 
-                dispatches += 1
 
         #pops the number of dispatches off
-        for i in range(dispatches):
-            self.schedule.dispatch_queue.popleft()
+        for j in dispatches:
+            self.schedule.dispatch_queue.pop(j)
 
 
         schedule_train = self.schedule.check_schedule(self.clock.get_time())
