@@ -26,6 +26,7 @@ class train_status:
         self.failure_flag = False
         #self.passenger_brake_flag = False
 
+        self.beacon = ""
         self.ki = 0.01
         self.kp = 1
         self.pid = PID(self.kp, self.ki, 0, setpoint=self.commanded_speed) # initialize pid with fixed values
@@ -131,6 +132,12 @@ class train_status:
         self.initialize_PID(self.get_kp(), self.get_ki())
         self.get_power_output()
 
+    def set_beacon(self, str):
+        self.beacon = str
+    
+    def get_beacon(self):
+        return self.beacon
+
 class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     def __init__(self) :
         super().__init__()
@@ -168,6 +175,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.automatic_mode()   #auto mode on by default
 
         self.train_speed_overexceed_flag = False
+        self.train_tunnel_flag = False
 
         self.ki_box.setPlainText(str(self.real_train.get_ki()))
         self.kp_box.setPlainText(str(self.real_train.get_kp()))
@@ -343,7 +351,10 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.train_internal.setPlainText(self.real_train.get_internal_light())
         self.train_external.setPlainText(self.real_train.get_external_light())
         self.train_temp.setPlainText(str(self.real_train.get_temp()))
-        self.train_annun.setPlainText(self.real_train.get_annun())
+        if self.real_train.get_annun() == "On":
+            self.train_annun.setPlainText(self.real_train.get_annun() + " - " + self.real_train.get_beacon())
+        else:
+            self.train_annun.setPlainText(self.real_train.get_annun())
         self.train_ad.setPlainText(self.real_train.get_ad())
         self.train_horn.setPlainText(self.real_train.get_horn())
 
@@ -389,14 +400,14 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.failure_output.clear()
             self.failure_output.append("N/A")
 
-        if self.auto_f == True and self.real_train.get_authority() > 0:
+        if self.auto_f == True and self.real_train.get_authority() > 0 and self.train_tunnel_flag == False:
             self.real_train.set_door_left("Closed")
             self.real_train.set_door_right("Closed")
             self.real_train.set_external_light("Off")
             self.real_train.set_internal_light("Off")
             self.real_train.set_annun("Off")
             self.real_train.set_horn("Off")
-            self.real_train.set_ad("Off")
+            self.real_train.set_ad("On")
 
         #if train came to stop (fully) in auto mode
         # if self.real_train.get_power() == 0 and self.auto_f == True:
@@ -432,9 +443,11 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             return
 
         if tunnel_status == True:
+            self.train_tunnel_flag = True
             self.real_train.set_external_light("On")
             self.real_train.set_internal_light("On")
         else:
+            self.train_tunnel_flag = False
             self.real_train.set_external_light("Off")
             self.real_train.set_internal_light("Off")
 

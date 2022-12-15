@@ -90,6 +90,7 @@ class CTC_Scheduler:
                     self.red_schedule.append([line,station,time_to_station,arrival_time])
                 elif line == "Green":
                     self.green_schedule.append([line,station,time_to_station,arrival_time])
+        return self.red_schedule, self.green_schedule
     def block_info(self):
         red_blocks = pd.read_excel("./CTC/block_info.xlsx", sheet_name="Red Line")
         for index, row in red_blocks.iterrows():
@@ -134,7 +135,7 @@ class CTC_Scheduler:
             schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
                 print("Red schedule train")
-                train = self.manual_dispatch_train(arrival_time=arrival_time,train_id=self.train_id,line=self.red_schedule[i][i],destinations=[self.red_schedule[i][1]])
+                train = self.manual_dispatch_train(arrival_time=arrival_time,train_id=self.train_id,line=self.red_schedule[i][i],destinations=[self.red_schedule[i][1],"0"])
         for i in range(len(self.green_schedule)):
             travel_time = self.green_schedule[i][2]
             travel_minutes = int(travel_time)
@@ -148,17 +149,24 @@ class CTC_Scheduler:
             #print("schedule_time: " + str(schedule_time))
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
                 print("Green schedule train")
-                train = self.manual_dispatch_train(arrival_time=arrival_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=[self.green_schedule[i][1]])
+                train = self.manual_dispatch_train(arrival_time=arrival_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=[self.green_schedule[i][1],"0"])
         return train
 
-    def calc_throughput(self,line,ticket_sales,hours):
-        if hours > 0:
+    def calc_throughput(self,line,ticket_sales,current_time):
+        if current_time[0] >= 0 and current_time[1] >= 0 and current_time[2] >= 0:
             if line == "Red":
                 self.red_sales += ticket_sales
-                self.red_throughput = self.red_sales/hours
+                mins = (current_time[1])/60
+                secs = (current_time[2])/3600
+                throughput_time = current_time[0] + mins + secs
+                self.red_throughput = self.red_sales/throughput_time
             elif line == "Green":
                 self.green_sales += ticket_sales
-                self.green_throughput = self.green_sales/hours
+                mins = (current_time[1])/60
+                secs = (current_time[2])/3600
+                throughput_time = current_time[0] + mins + secs
+                print("throughput time: " + str(throughput_time))
+                self.green_throughput = self.green_sales/throughput_time
         else:
             pass
 

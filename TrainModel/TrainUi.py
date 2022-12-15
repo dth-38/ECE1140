@@ -354,7 +354,7 @@ class TrainData_Ui(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.train_id_label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:36pt;\">Train #</span></p></body></html>"))
         self.velocity_label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Velocity (mph)</span></p></body></html>"))
-        self.suggsted_speed_label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Commanded Speed (mph)</span></p></body></html>"))
+        self.suggsted_speed_label.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Commanded Speed(mph)</span></p></body></html>"))
         self.velocity_line.setText(_translate("MainWindow", "0"))
         self.suggested_speed_line.setText(_translate("MainWindow", "0"))
         self.acceleration_line.setText(_translate("MainWindow", "0"))
