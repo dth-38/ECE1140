@@ -33,8 +33,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.block_entries = []
         self.destinations = []
 
-        self.schedule_trains = 0
-        self.manual_trains = 0
+        self.trains = 0
 
         self.dispatch_frame.hide()
         self.throughput_frame.hide()
@@ -160,7 +159,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 dispatch.arrival_time = arrival_time
                 dispatch.departure_time = departure_time
                 dispatch.destinations = copy.copy(self.destinations)
-                dispatch.manual_trains = copy.copy(self.manual_trains)
+                dispatch.manual_trains = copy.copy(self.trains)
                 dispatch.line_train_selection = copy.copy(self.line_train_selection.currentText())
 
                 self.schedule.dispatch_queue.append(dispatch)
@@ -191,15 +190,15 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             #    self.manual_trains += 1
     
     def schedule_output(self,train):
-        self.schedule_list.addItem("SCHEDULE TRAIN DISPATCHED!!!!!!!!!")
-        self.schedule_list.addItem("Train #: " + str(train[0]))
-        self.schedule_list.addItem("Position: " + str(train[1]))
-        self.schedule_list.addItem("Destinations: " + str(train[3]))
-        self.schedule_list.addItem("Authority: " + str(train[4]))
-        self.schedule_list.addItem("Line: " + str(train[5]))
-        self.schedule_list.addItem("Arrival Time: " + str(train[6]))
+        self.train_table_display.addItem("SCHEDULE TRAIN DISPATCHED!!!!!!!!!")
+        self.train_table_display.addItem("Train #: " + str(train[0]))
+        self.train_table_display.addItem("Position: " + str(train[1]))
+        self.train_table_display.addItem("Destinations: " + str(train[3]))
+        self.train_table_display.addItem("Authority: " + str(train[4]))
+        self.train_table_display.addItem("Line: " + str(train[5]))
+        self.train_table_display.addItem("Arrival Time: " + str(train[6]))
 
-        self.schedule_trains += 1
+        self.trains += 1
         
         
     #TODO GET TICKET SALES FROM TRACKMODEL
@@ -208,13 +207,17 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         #TODO: GET TICKET SALES FROM THE TRACKMODEL
         if self.current_hour.toPlainText() != "":
             throughput = self.schedule.get_throughput(line)
-            self.throughput_output.setText(str(throughput))
+            self.throughput_output.setText(str(round(throughput,3)))
     
     def add_schedule(self):
         file_name = QtWidgets.QFileDialog.getOpenFileName(self,"Open File", "", "All Files (*);;Xlsx Files(*.xlsx)")
         print("file_name: " + str(file_name[0]))
         if file_name[0] != "":
-            self.schedule.upload_schedule(file_name[0])
+            red_schedule, green_schedule = self.schedule.upload_schedule(file_name[0])
+            for i in range(len(red_schedule)):
+                self.schedule_list.addItem(str(red_schedule[i][0]) + ", " + str(red_schedule[i][1]) + ", " + str(red_schedule[i][2]) + ", (" + str(red_schedule[i][3]) + ")")
+            for i in range(len(green_schedule)):
+                self.schedule_list.addItem(str(green_schedule[i][0]) + ", " + str(green_schedule[i][1]) + ", " + str(green_schedule[i][2]) + ", (" + str(green_schedule[i][3]) + ")")
      
     def update_current_time(self):
         #updates time gui
@@ -224,7 +227,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.current_second.setText(str(self.clock.get_seconds()))
 
         #checks if any trains need to be sent a new authority
-        for i in range(self.manual_trains):
+        for i in range(self.trains):
 
             #checks for an authority of 1 since the authority isnt decrementing correctly
             if self.schedule.train_table.get_authority(i) == 0:
@@ -268,19 +271,19 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 self.train_table_display.takeItem((i*6) + (i + 4))
                 self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
 
-        for i in range(self.schedule_trains):
-            if self.schedule.train_table.get_authority(i) == 0:
-                authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),self.schedule.train_table.get_next_destination(i),self.schedule.train_table.get_position(i))
-                self.schedule.train_table.change_authority(i,authority)
-                self.schedule_list.takeItem((i*6) + (i + 2))
-                self.schedule_list.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
-                self.schedule_list.takeItem((i*6) + (i + 4))
-                self.schedule_list.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
-            else:
-                self.schedule_list.takeItem((i*6) + (i + 2))
-                self.schedule_list.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
-                self.schedule_list.takeItem((i*6) + (i + 4))
-                self.schedule_list.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
+        # for i in range(self.schedule_trains):
+        #     if self.schedule.train_table.get_authority(i) == 0:
+        #         authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),self.schedule.train_table.get_next_destination(i),self.schedule.train_table.get_position(i))
+        #         self.schedule.train_table.change_authority(i,authority)
+        #         self.schedule_list.takeItem((i*6) + (i + 2))
+        #         self.schedule_list.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
+        #         self.schedule_list.takeItem((i*6) + (i + 4))
+        #         self.schedule_list.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
+        #     else:
+        #         self.schedule_list.takeItem((i*6) + (i + 2))
+        #         self.schedule_list.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
+        #         self.schedule_list.takeItem((i*6) + (i + 4))
+        #         self.schedule_list.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
     
     def setup_signals(self):
         signals.ctc_update.connect(self.tick)
@@ -335,7 +338,11 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
     def update_gate(self,line,block_num,status):
         self.schedule.block_table.add_gate(line,block_num,status)
     def update_ticket_sales(self,line,ticket_sales):
-        self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
+        print("THROUGHPUT")
+        line = line[0].upper() + line[1:]
+        print("Line: " + str(line))
+        print("ticket sales: " + str(ticket_sales))
+        self.schedule.calc_throughput(line,ticket_sales,self.clock.get_time())
 
     def tick(self):
         #checks all dispatch items
@@ -371,7 +378,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 signals.send_tc_authority.emit(tc_block,self.train_entries[4])
 
                 #adds a new dwell time of 30 seconds to the tracker
-                key = self.manual_trains
+                key = self.trains
                 self.dwell_times[key] = 30
 
                 #adds to dispatch gui
@@ -383,7 +390,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
                 self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
             
-                self.manual_trains += 1
+                self.trains += 1
 
 
         #pops the number of dispatches off
@@ -393,11 +400,14 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
 
         schedule_train = self.schedule.check_schedule(self.clock.get_time())
         if len(schedule_train) > 0:
+            key = self.trains
+            print("KEY: " + str(key))
+            self.dwell_times[key] = 30
             self.schedule_output(schedule_train)
             line = str(schedule_train[5])
             line.upper()
             signals.send_tm_dispatch.emit(line)
-            tc_block = convert_to_block(self.train_entries[5],self.train_entries[1])
+            tc_block = convert_to_block(schedule_train[5],schedule_train[1])
             signals.send_tc_authority.emit(tc_block,schedule_train[4])
         self.update_current_time()
         for i in range(self.schedule.train_table.get_table_length()): 

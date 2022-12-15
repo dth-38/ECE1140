@@ -335,6 +335,8 @@ class TrackModel(QObject):
                     return 0
 
             else:
+                print("current block: " + str(current_block) + ", next direction: " + str(next_dir))
+                print("grabbed block: " + str(self.lines[line][next_block].get_previous(next_dir)))
                 #train has derailed
                 print("UH OH: TRAIN " + str(train_id) + " DERAILED ENTERING LINE: " + self.trains[train_id].line + ", BLOCK: " + str(next_block))
                 self.trains.pop(train_id)

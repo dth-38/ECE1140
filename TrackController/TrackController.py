@@ -551,8 +551,6 @@ class TrackController(QMainWindow):
             prev_block = self.next_Track_State[blk1].get_Previous_Block()
             moved = False
             
-            #print("TC: " + str(self.id))
-            #print("block1: " + blk1 + ", block2: " + blk2 + ", dir: " + str(dir))
 
             #train has moved since blk1 is no longer occupied
             if self.next_Track_State[blk1].occupied == False:
@@ -570,10 +568,12 @@ class TrackController(QMainWindow):
             if blk1 == "" and blk2 == "":
                 self.tracker.remove(train)
 
-                if dir == 1:
-                    before_end = self.next_Track_State[blk1_backup].get_Previous_Block()
+                prev_blk = self.next_Track_State[blk1_backup].get_Previous_Block()
+                next_blk = self.next_Track_State[blk1_backup].get_Next_Block()
+                if prev_blk == "START" or prev_blk == "END":
+                    before_end = next_blk
                 else:
-                    before_end = self.next_Track_State[blk1_backup].get_Next_Block()
+                    before_end = prev_blk
 
                 #need to remove 0 authority from last block the train was in
                 try:
@@ -583,6 +583,8 @@ class TrackController(QMainWindow):
                     self.current_Track_State[before_end].authority = -1
                 except:
                     print("ERROR occurred in track controller train tracking system")
+                    print("TC: " + str(self.id))
+                    print("Block: " + before_end)
 
                 continue
 
@@ -628,6 +630,20 @@ class TrackController(QMainWindow):
                     signals.send_track_authority.emit(n_n_block[0], n_n_block[1], -1)
                     self.next_Track_State[next_block].authority = -1
                     self.current_Track_State[next_block].authority = -1
+
+            if block == "red_H_26":
+                self.next_Track_State[block].authority = -1
+                self.current_Track_State[block].authority = -1
+                signals.send_track_authority.emit("red", 26, -1)
+            elif next_block == "red_H_26":
+                self.next_Track_State[next_block].authority = -1
+                self.current_Track_State[next_block].authority = -1
+                signals.send_track_authority.emit("red", 26, -1)
+            elif prev_block == "red_H_26":
+                self.next_Track_State[prev_block].authority = -1
+                self.current_Track_State[prev_block].authority = -1
+                signals.send_track_authority.emit("red", 26, -1)
+
 
 
         #runs vital safety logic then

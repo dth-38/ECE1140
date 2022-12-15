@@ -583,7 +583,7 @@ class Train:
         
 
         #set power to 0 if engine failed
-        if(self.engine_failure == True):
+        if(self.engine_failure == True or self.train_ctrl.get_emer_brake_flag() == True):
             power = 0.0
         
         #if power exceeds limit, set to limit of engine
