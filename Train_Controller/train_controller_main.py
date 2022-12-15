@@ -175,6 +175,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.automatic_mode()   #auto mode on by default
 
         self.train_speed_overexceed_flag = False
+        self.train_tunnel_flag = False
 
         self.ki_box.setPlainText(str(self.real_train.get_ki()))
         self.kp_box.setPlainText(str(self.real_train.get_kp()))
@@ -399,7 +400,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.failure_output.clear()
             self.failure_output.append("N/A")
 
-        if self.auto_f == True and self.real_train.get_authority() > 0:
+        if self.auto_f == True and self.real_train.get_authority() > 0 and self.train_tunnel_flag == False:
             self.real_train.set_door_left("Closed")
             self.real_train.set_door_right("Closed")
             self.real_train.set_external_light("Off")
@@ -442,9 +443,11 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             return
 
         if tunnel_status == True:
+            self.train_tunnel_flag = True
             self.real_train.set_external_light("On")
             self.real_train.set_internal_light("On")
         else:
+            self.train_tunnel_flag = False
             self.real_train.set_external_light("Off")
             self.real_train.set_internal_light("Off")
 
