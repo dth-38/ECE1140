@@ -150,7 +150,7 @@ class Train:
 
         #Tell track model that train is stopped so that it can calculate passengers and ticket sales
         if(self.actual_speed == 0 and self.in_station == True and self.sent_stopped_at_station_sig == False):
-            self.ui.station_line.setText("")
+            #self.ui.station_line.setText("")
             signals.send_tm_stopped_at_station.emit(self.id)
             self.sent_stopped_at_station_sig = True
 
@@ -348,14 +348,26 @@ class Train:
     #@pyqtSlot(int, str, int)
     def update_beacon(self, id, station, side):
         if(id == self.id):
-            if(station == "" and self.in_station == False):
-                self.next_station == ""
 
-            if(station == self.prev_station):
-                self.next_station = ""
+            in_beacon = station != ""
+
+            if(in_beacon == False and self.in_station == False):
+                self.next_station == ""
             else:
-                self.next_station = station
-                self.prev_station = station
+                if(station == self.prev_station):
+                    self.next_station = ""
+                else:
+                    self.next_station = station
+                    self.prev_station = station
+
+            # if(in_beacon == False and self.in_station == False):
+            #     self.next_station == ""
+
+            # if(station == self.prev_station):
+            #     self.next_station = ""
+            # else:
+            #     self.next_station = station
+            #     self.prev_station = station
 
             self.door_side = side
             self.ui.station_line.setText(str(self.next_station))
