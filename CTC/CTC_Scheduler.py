@@ -90,6 +90,8 @@ class CTC_Scheduler:
                     self.red_schedule.append([line,station,time_to_station,arrival_time])
                 elif line == "Green":
                     self.green_schedule.append([line,station,time_to_station,arrival_time])
+        print("red schedule: " + str(self.red_schedule))
+        print("green schedule: " + str(self.green_schedule))
         return self.red_schedule, self.green_schedule
     def block_info(self):
         red_blocks = pd.read_excel("./CTC/block_info.xlsx", sheet_name="Red Line")
@@ -126,25 +128,41 @@ class CTC_Scheduler:
         train = []
         for i in range(len(self.red_schedule)):
             travel_time = self.red_schedule[i][2]
+            travel_hours = 0
             travel_minutes = int(travel_time)
             travel_seconds = (travel_time*60) % 60
             arrival_time = self.red_schedule[i][3]
             arrival_time = str(arrival_time)
             hr, min, sec = arrival_time.split(':')
             arrival_time = (int(hr),int(min),int(sec))
-            schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
+            if current_time[2] + travel_seconds > 60:
+                travel_minutes += 1
+                travel_seconds = travel_seconds - 60
+            if current_time[1] + travel_minutes > 60:
+                travel_hours += 1
+                travel_minutes = travel_minutes - 60
+            schedule_time = (current_time[0] + travel_hours,current_time[1] + travel_minutes,current_time[2] + travel_seconds)
+            print("schedule arrival_time: " + str(arrival_time))
+            print("schedule_time: " + str(schedule_time))
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:
                 print("Red schedule train")
                 train = self.manual_dispatch_train(arrival_time=arrival_time,train_id=self.train_id,line=self.red_schedule[i][i],destinations=[self.red_schedule[i][1],"0"])
         for i in range(len(self.green_schedule)):
             travel_time = self.green_schedule[i][2]
+            travel_hours = 0
             travel_minutes = int(travel_time)
             travel_seconds = (travel_time*60) % 60
             arrival_time = self.green_schedule[i][3]
             arrival_time = str(arrival_time)
             hr, min, sec = arrival_time.split(':')
             arrival_time = (int(hr),int(min),int(sec))
-            schedule_time = (current_time[0],current_time[1] + travel_minutes,current_time[2] + travel_seconds)
+            if current_time[2] + travel_seconds > 60:
+                travel_minutes += 1
+                travel_seconds = travel_seconds - 60
+            if current_time[1] + travel_minutes > 60:
+                travel_hours += 1
+                travel_minutes = travel_minutes - 60
+            schedule_time = (current_time[0] + travel_hours,current_time[1] + travel_minutes,current_time[2] + travel_seconds)
             #print("schedule arrival_time: " + str(arrival_time))
             #print("schedule_time: " + str(schedule_time))
             if schedule_time[0] == arrival_time[0] and schedule_time[1] == arrival_time[1] and schedule_time[2] == arrival_time[2]:

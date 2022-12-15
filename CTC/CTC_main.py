@@ -290,7 +290,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         signals.send_ctc_ticket_sales.connect(self.update_ticket_sales)
         signals.send_ctc_occupancy.connect(self.update_occupancy)
         signals.send_ctc_failure.connect(self.update_failure)
-        signals.send_ctc_train_position.connect(self.update_position)
+        #signals.send_ctc_train_position.connect(self.update_position)
         signals.broadcast_switch.connect(self.update_switch)
         #signals.broadcast_light.connect(self.update_light)
         #signals.broadcast_gate.connect(self.update_gate)
@@ -327,7 +327,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 if contains == False:
                     self.schedule.block_table.add_occupancy(line,block_num,occ)
                     self.block_table_display.addItem("Train " + str(i) + ": " + str(self.schedule.block_table.get_last_entry()))
-            if contains == True:
+            if contains == True or self.block_table_display.count() > 10:
                 self.block_table_display.clear()
     def update_failure(self,line,block_num,failure):
         self.schedule.block_table.add_failure(line,block_num,failure)

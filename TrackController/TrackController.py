@@ -859,10 +859,10 @@ class TrackController(QMainWindow):
     def handle_occupancy(self, block, occ):
         for bl in self.current_Track_State:
             if block == bl:
-                #d_block = decompose_block(bl)
+                d_block = decompose_block(bl)
 
                 self.next_Track_State[bl].occupied = copy.copy(occ)
-                #signals.send_ctc_occupancy.emit(d_block[0], d_block[1], occ)
+                signals.send_ctc_occupancy.emit(d_block[0], d_block[1], occ)
                 break
 
     @pyqtSlot(str, int)
