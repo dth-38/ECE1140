@@ -7,7 +7,8 @@ sys.path.append(".")
 from TrainModel.TrainModelSignals import *
 from Train_Controller.train_controller_main import WindowClass
 from Signals import signals
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import QUrl
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
 class Train:
 
@@ -90,6 +91,9 @@ class Train:
         #what ad is being displayed
         self.adnum = 0
 
+        #initialize player for audio
+        self.player = QMediaPlayer()
+
         #Inputs from track model
         signals.send_tm_authority.connect(self.train_model_update_authority)
         signals.send_tm_grade.connect(self.update_grade)
@@ -140,6 +144,15 @@ class Train:
 # ----------------------------- Update Train ------------------------------------------------
 # ---------------------------------------------------------------------------------------------
 
+    #play horn sound
+    def play_horn(self):
+        #path = "TrainModel/horn_sound.mp3"
+        url = QUrl.fromLocalFile("TrainModel/horn_sound.mp3")
+        content = QMediaContent(url)
+
+        self.player.setMedia(content)
+        self.player.play()
+
     #show advertisements. switch every 60 seconds
     def show_ads(self):
         if(self.advertisement_cmd == "On"):
@@ -155,6 +168,7 @@ class Train:
                 self.ui.mcdonalds_pic.show()
                 self.ui.nike_pic.hide()
                 self.ui.disney_pic.hide()
+                #self.play_horn()
             elif(self.adnum == 120):
                 self.ui.coke_pic.hide()
                 self.ui.aerotech_pic.hide()
@@ -202,6 +216,8 @@ class Train:
             #self.ui.station_line.setText("")
             signals.send_tm_stopped_at_station.emit(self.id)
             self.sent_stopped_at_station_sig = True
+            if(self.train_model.isVisible()):
+                self.play_horn()
 
         #Reset stopped at station boolean when train starts moving again so signal can be sent again at next station
         if(self.actual_speed > 0):
@@ -259,6 +275,8 @@ class Train:
 
         #Obtain various commands from train controller
         self.horn = self.train_ctrl.real_train.get_horn()
+        #if(self.horn == "On"):
+        #    self.play_horn()
         self.sbrake = self.train_ctrl.get_norm_brake_flag()
         #Only turn off brakes if train isnt supposed to be stopped.
         if(self.brake_failure == True and self.authority >= 1):
