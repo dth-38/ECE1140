@@ -408,6 +408,15 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.failure_output.clear()
             self.failure_output.append("N/A")
 
+        if self.auto_f == True and self.real_train.get_authority() > 0:
+            self.real_train.set_door_left("Closed")
+            self.real_train.set_door_right("Closed")
+            self.real_train.set_external_light("Off")
+            self.real_train.set_internal_light("On")
+            self.real_train.set_annun("Off")
+            self.real_train.set_horn("Off")
+            self.real_train.set_ad("Off")
+
         #if train came to stop (fully) in auto mode
         # if self.real_train.get_power() == 0 and self.auto_f == True:
         #     self.auto_train_stopped()
