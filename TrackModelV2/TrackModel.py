@@ -302,6 +302,9 @@ class TrackModel(QObject):
                         station = ""
                         side = -2
 
+
+                    signals.send_tm_new_block.emit(train_id)
+
                     signals.send_tm_beacon.emit(train_id, station, side)
 
                     #send grade
@@ -317,7 +320,6 @@ class TrackModel(QObject):
                         signals.send_tm_authority.emit(train_id, self.lines[line][next_block].authority)
                     #Send new commanded speed to train.
                     signals.send_tm_commanded_speed.emit(train_id, self.lines[line][next_block].commanded_speed)
-                    signals.send_tm_new_block.emit(train_id)
 
                     
                 else:
