@@ -477,33 +477,31 @@ class TrackController(QMainWindow):
     #updates a value in current_Track_State
     def set_Track(self, block, var, val):
 
-        d_block = decompose_block(block)
-
         match var:
             case "spd":
-                self.current_Track_State[block].suggested_Speed = copy.copy(int(val))
+                val = int(val)
+                self.handle_suggested_speed(block, val)
             case "auth":
-                self.current_Track_State[block].forward_Authority = copy.copy(int(val))
+                val = int(val)
+                self.handle_authority(block, val)
             case "occ":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.current_Track_State[block].occupied = copy.copy(val)
-                signals.send_ctc_occupancy.emit(d_block[0], d_block[1], val)
+                self.handle_authority(block, val)
             case "cls":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.current_Track_State[block].closed = copy.copy(val)
+                self.handle_maintenance(block, val)
             case "fail":
                 if val == 'Y':
                     val = True
                 elif val == 'N':
                     val = False
-                self.current_Track_State[block].failed = copy.copy(val)
-                signals.send_ctc_failure.emit(d_block[0], d_block[1], val)
+                self.handle_failure(block, val)
             case _:
                 pass
 

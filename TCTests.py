@@ -10,16 +10,16 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from PyQt5.QtWidgets import QApplication
-from TrackController import TrackController
-from PLCInterpreter import PLCInterpreter
-import Block
+from TrackController.TrackController import TrackController
+from TrackController.PLCInterpreter.PLCInterpreter import PLCInterpreter
+from TrackController.Block import Block
 
 class TestTC(unittest.TestCase):
     def test_Tokenization(self):
-        interpreter = PLCInterpreter.PLCInterpreter()
+        interpreter = PLCInterpreter()
 
         current_path = str(pathlib.Path().absolute())
-        gf = current_path + "/Test_Programs/should_pass.txt"
+        gf = current_path + "/TrackController/Testing/Test_Programs/should_pass.txt"
 
         start_Time = time.perf_counter()
         self.assertTrue(interpreter.tokenize(gf))
@@ -57,30 +57,30 @@ class TestTC(unittest.TestCase):
         self.assertEqual(interpreter.logic[3].get_Var(2)[0], 1)
 
     def test_Tokenization_Fails(self):
-        interpreter = PLCInterpreter.PLCInterpreter()
+        interpreter = PLCInterpreter()
 
         #tests that an invalid DEFINE statement fails to tokenize
         current_path = str(pathlib.Path().absolute())
-        baddef = current_path + "/Test_Programs/bad_define.txt"
+        baddef = current_path + "/TrackController/Testing/Test_Programs/bad_define.txt"
         self.assertFalse(interpreter.tokenize(baddef))
 
         #tests that an invalid output variable fails to tokenize
-        badout = current_path + "/Test_Programs/bad_output.txt"
+        badout = current_path + "/TrackController/Testing/Test_Programs/bad_output.txt"
         self.assertFalse(interpreter.tokenize(badout))
 
     def test_Build_Track(self):
         track_Controller_App = QApplication([])
-        controller = TrackController()
+        controller = TrackController(-1)
 
         current_path = str(pathlib.Path().absolute())
-        badblock = current_path + "/Test_Programs/bad_block.txt"
+        badblock = current_path + "/TrackController/Testing/Test_Programs/bad_block.txt"
 
         #tests that an invalid track block causes there to be no track
         self.assertFalse(controller.build_Track(badblock))
         self.assertEqual(controller.current_Track_State, {})
         self.assertEqual(controller.next_Track_State, {})
 
-        gf = current_path + "/Test_Programs/should_pass.txt"
+        gf = current_path + "/TrackController/Testing/Test_Programs/should_pass.txt"
 
         #tests that a valid track block generates the correct track
         self.assertTrue(controller.build_Track(gf))
@@ -92,13 +92,11 @@ class TestTC(unittest.TestCase):
         track_Controller_App.exec()
 
     def test_Block(self):
-        testBlock = Block.Block()
+        testBlock = Block()
 
         #tests that lights colors are set properly
         testBlock.add_Light()
         self.assertEqual(len(testBlock.lights), 1)
-        testBlock.set_Light(0, "YELLOW")
-        self.assertEqual(testBlock.light_To_Str(0), "YELLOW")
         testBlock.set_Light(0, "GREEN")
         self.assertEqual(testBlock.light_To_Str(0), "GREEN")
         testBlock.set_Light(0, "RED")
@@ -107,10 +105,10 @@ class TestTC(unittest.TestCase):
 
     def test_Tick(self):
         tc_App = QApplication([])
-        controller = TrackController()
+        controller = TrackController(-1)
         
         current_path = str(pathlib.Path().absolute())
-        gf = current_path + "/Test_Programs/should_pass.txt"
+        gf = current_path + "/TrackController/Testing/Test_Programs/should_pass.txt"
 
         controller.build_Track(gf)
 
