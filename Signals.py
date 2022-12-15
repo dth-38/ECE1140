@@ -85,8 +85,8 @@ class Signals(QObject):
     send_tm_tunnel = pyqtSignal(int, bool)
     #(int id, bool station)
     send_tm_station = pyqtSignal(int, bool)
-    #()
-    send_tm_new_block = pyqtSignal()
+    #(int id)
+    send_tm_new_block = pyqtSignal(int)
 
     #-----------------------------------------
     # Train Model Signals

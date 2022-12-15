@@ -317,7 +317,7 @@ class TrackModel(QObject):
                         signals.send_tm_authority.emit(train_id, self.lines[line][next_block].authority)
                     #Send new commanded speed to train.
                     signals.send_tm_commanded_speed.emit(train_id, self.lines[line][next_block].commanded_speed)
-                    signals.send_tm_new_block.emit()
+                    signals.send_tm_new_block.emit(train_id)
 
                     
                 else:

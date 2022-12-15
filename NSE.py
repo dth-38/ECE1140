@@ -25,7 +25,7 @@ class NSE_Simulation(QMainWindow):
         self.HEIGHT = 400
 
         self.UPDATE_PERIOD = 1
-        self.MULTIPLIER_LIMIT = 31
+        self.MULTIPLIER_LIMIT = 51
         self.update_period_multiplier = 1
 
 
