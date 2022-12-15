@@ -131,6 +131,7 @@ class Train:
         self.ui.mcdonalds_pic.hide()
         self.ui.nike_pic.hide()
         self.ui.disney_pic.hide()
+        self.train_model.setWindowTitle("Train Model")
 
         #Initialize train controller
         self.train_ctrl = WindowClass()
@@ -350,7 +351,7 @@ class Train:
     def train_model_update_doors(self):
         #opens doors depending on the station door side
         #left side
-        print("door side: " , self.door_side)
+        #print("door side: " , self.door_side)
         if(self.door_side == 0):
             self.left_door_cmd = "Opened"
             self.right_door_cmd = "Closed"
@@ -574,10 +575,12 @@ class Train:
         power = self.power
         power *= 1000
 
-        if(self.track_fail == True):
+        if(self.track_fail == True and self.ebrake == False):
             power = 0.0
             self.ebrake = True
-
+        else:
+            self.ebrake = False
+        
 
         #set power to 0 if engine failed
         if(self.engine_failure == True):
