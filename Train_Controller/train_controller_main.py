@@ -441,6 +441,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         if self.real_train.get_authority() == 0:
             self.train_authority_stop_flag = True
+            self.real_train.set_power(0)
             self.set_norm_brake_flag(True)
         #if train moving & normal brake flag is on & train authority stop flag is still True then:
         elif self.real_train.get_authority != 0 and self.get_norm_brake_flag() == True and self.train_authority_stop_flag == True:

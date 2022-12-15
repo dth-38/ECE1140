@@ -212,8 +212,7 @@ class Train:
         
         #Passes information about block train is on to train controller
         self.train_ctrl.train_in_tunnel(self.in_tunnel)
-        #print(self.in_tunnel)
-        self.train_ctrl.train_in_station(self.in_station)
+        #self.train_ctrl.train_in_station(self.in_station)
 
         #Tell track model that train is stopped so that it can calculate passengers and ticket sales
         if(self.actual_speed == 0 and self.in_station == True and self.sent_stopped_at_station_sig == False):
@@ -327,7 +326,6 @@ class Train:
 
     #Display internal lights
     def train_model_display_internal_lights(self):
-        #print("Interior lights: ", self.interior_light_cmd)
         if(self.interior_light_cmd == "On"):
             self.ui.int_light_line.setText("On")
         else:
@@ -351,7 +349,6 @@ class Train:
     def train_model_update_doors(self):
         #opens doors depending on the station door side
         #left side
-        #print("door side: " , self.door_side)
         if(self.door_side == 0):
             self.left_door_cmd = "Opened"
             self.right_door_cmd = "Closed"
@@ -629,7 +626,6 @@ class Train:
         # #if(self.force < 0):
         # #   self.force = 0
 
-        # print("force: ", self.force)
 
          #----------------------------------------------   
 
@@ -668,18 +664,9 @@ class Train:
 
             #MOVE EBRAKE PASSENGER BRAKE
 
-        # pprint("Force: ")
-        # pprint(force)
         #self.ui.grade_line.setText(str(round(self.force,1)))
 
         #ACCELERATION CALCULATION
-        #pprint(self.passenger_ebrake)
-        #print("pass brake: ", self.passenger_ebrake)
-        #print("force: ", self.force)
-        #print("mass", self.mass)
-        #print("sbrake: ", self.sbrake)
-        #print("ebrake: ", self.ebrake)
-
         temp_acceleration = self.force/mass
         if(temp_acceleration > Train.ACCELERATION_LIMIT):
             temp_acceleration = Train.ACCELERATION_LIMIT
@@ -699,35 +686,21 @@ class Train:
                 temp_acceleration = 0
         
         
-        #pprint(temp_acceleration)
 
         #VELOCITY CALCULATION
-
-        #print("temp accel: ", temp_acceleration)
-        #print("prev accel: ", prev_acceleration)
         temp_velocity = temp_actual_speed + ((sample_period/2) * (temp_acceleration + prev_acceleration))
         if(temp_velocity > Train.VELOCITY_LIMIT):
             temp_velocity = Train.VELOCITY_LIMIT
         elif(temp_velocity < 0):
             temp_velocity = 0
 
-        #pprint(temp_velocity)
 
         #DISTANCE CALCULATION
-        #TODO: I think this is scuffed
         distance_moved = (1/2) * temp_acceleration * sample_period + temp_velocity * sample_period
-        #temp_distance = prev_distance + (temp_velocity * sample_period)
-        #temp_distance = prev_distance + (self.actual_speed + temp_velocity)/2 * sample_period
-        #self.distance = temp_distance
         signals.send_tm_distance.emit(self.id, distance_moved)
         
         self.actual_speed = temp_velocity * 2.237
-        #if (self.actual_speed > Train.VELOCITY_LIMIT):
-        #    self.actual_speed = Train.VELOCITY_LIMIT
-        #if (self.actual_speed > self.train_ctrl.real_train.get_commanded_speed()):
-        #    self.actual_speed = self.train_ctrl.real_train.get_commanded_speed()
 
-        #print("speed: ", self.actual_speed)
         self.ui.velocity_line.setText(str(round(self.actual_speed, 2)))
 
         self.acceleration = temp_acceleration * 3.28084
