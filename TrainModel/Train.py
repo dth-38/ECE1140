@@ -571,6 +571,7 @@ class Train:
                 #print("mass", self.mass)
                 #print("sbrake: ", self.sbrake)
                 #print("ebrake: ", self.ebrake)
+                
                 temp_acceleration = self.force/mass
                 if(temp_acceleration > Train.ACCELERATION_LIMIT):
                     temp_acceleration = Train.ACCELERATION_LIMIT
