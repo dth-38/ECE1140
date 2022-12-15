@@ -33,8 +33,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.block_entries = []
         self.destinations = []
 
-        self.schedule_trains = 0
-        self.manual_trains = 0
+        self.trains = 0
 
         self.dispatch_frame.hide()
         self.throughput_frame.hide()
@@ -160,7 +159,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 dispatch.arrival_time = arrival_time
                 dispatch.departure_time = departure_time
                 dispatch.destinations = copy.copy(self.destinations)
-                dispatch.manual_trains = copy.copy(self.manual_trains)
+                dispatch.manual_trains = copy.copy(self.trains)
                 dispatch.line_train_selection = copy.copy(self.line_train_selection.currentText())
 
                 self.schedule.dispatch_queue.append(dispatch)
@@ -199,7 +198,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.train_table_display.addItem("Line: " + str(train[5]))
         self.train_table_display.addItem("Arrival Time: " + str(train[6]))
 
-        self.schedule_trains += 1
+        self.trains += 1
         
         
     #TODO GET TICKET SALES FROM TRACKMODEL
@@ -228,7 +227,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.current_second.setText(str(self.clock.get_seconds()))
 
         #checks if any trains need to be sent a new authority
-        for i in range(self.manual_trains + self.schedule_trains):
+        for i in range(self.trains):
 
             #checks for an authority of 1 since the authority isnt decrementing correctly
             if self.schedule.train_table.get_authority(i) == 0:
@@ -379,7 +378,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 signals.send_tc_authority.emit(tc_block,self.train_entries[4])
 
                 #adds a new dwell time of 30 seconds to the tracker
-                key = self.manual_trains
+                key = self.trains
                 self.dwell_times[key] = 30
 
                 #adds to dispatch gui
@@ -391,7 +390,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 self.train_table_display.addItem("Line: " + str(self.train_entries[5]))
                 self.train_table_display.addItem("Arrival Time: " + str(self.train_entries[6]))
             
-                self.manual_trains += 1
+                self.trains += 1
 
 
         #pops the number of dispatches off
@@ -401,6 +400,9 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
 
         schedule_train = self.schedule.check_schedule(self.clock.get_time())
         if len(schedule_train) > 0:
+            key = self.trains
+            print("KEY: " + str(key))
+            self.dwell_times[key] = 30
             self.schedule_output(schedule_train)
             line = str(schedule_train[5])
             line.upper()
