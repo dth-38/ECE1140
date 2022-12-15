@@ -166,7 +166,7 @@ class Train:
         
         #Run kinematics calculation
         self.power = self.train_ctrl.real_train.get_power()
-        print("power after get",self.power)
+        #print("power after get",self.power)
 
         self.train_model_update_speed()
 
@@ -493,7 +493,7 @@ class Train:
         power = self.power
         power *= 1000
 
-        print("track fail ", self.track_fail)
+        #print("track fail ", self.track_fail)
         if(self.track_fail == True):
             power = 0.0
             self.ebrake = True
