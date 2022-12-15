@@ -991,7 +991,7 @@ p, li { white-space: pre-wrap; }
       </font>
      </property>
      <property name="text">
-      <string>Annunciation</string>
+      <string>Announcement</string>
      </property>
     </widget>
     <widget class="QLabel" name="AdvertisementLabel_2">
