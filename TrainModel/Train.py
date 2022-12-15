@@ -599,6 +599,7 @@ class Train:
         #imperial tons to kg
         mass = (self.mass * 1.01605)
 
+        #failed attempt at 100% accurate train physics calculation
         #----------------------------------------------
         # friction_force = (Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade))
         # gravity_xcomp = (mass * Train.GRAVITY * math.sin(self.grade))
