@@ -401,14 +401,15 @@ class Train:
 
     #Decrement authroity
     #@pyqtSlot()
-    def decrement_authority(self):
-        self.authority = self.authority - 1
+    def decrement_authority(self, trainnum):
+        if  (self.id == trainnum):
+            self.authority = self.authority - 1
 
-        #authority cannot go below 0
-        if self.authority < 0:
-            self.authority = 0
+            #authority cannot go below 0
+            if self.authority < 0:
+                self.authority = 0
 
-        self.ui.authority_line.setText(str(self.authority))
+            self.ui.authority_line.setText(str(self.authority))
 
     #Get beacon info: doorside, station name, others
     #@pyqtSlot(int, str, int)
