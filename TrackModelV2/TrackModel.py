@@ -200,7 +200,8 @@ class TrackModel(QObject):
 
     @pyqtSlot(int, float)
     def handle_train_update(self, train_id, delta_x):
-        self.update_queue.append((train_id, delta_x))
+        if delta_x > 0:
+            self.update_queue.append((train_id, delta_x))
 
 
     #not handling errors here since something is fundamentally wrong if it errors
@@ -214,8 +215,8 @@ class TrackModel(QObject):
         pos = self.trains[train_id].position_in_block
         length = self.trains[train_id].train_length
         blk = self.trains[train_id].block
-        if pos - length < 0 and blk != YARD:
-            prev_block = self.lines[line][blk].get_previous(self.trains[train_id].movement_direction)
+        prev_block = self.lines[line][blk].get_previous(self.trains[train_id].movement_direction)
+        if self.lines[line][prev_block].occupied == train_id and blk != YARD:
             self.lines[line][prev_block].occupied = -1
 
             self.gui.update_occupancy(line, prev_block)

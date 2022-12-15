@@ -212,6 +212,7 @@ class TrackModelGUI(QMainWindow):
     def update_occupancy(self, line, block):
         occ = self.get_track()[line][block].occupied
         self.table_widgets[line].item(block,1).setText(str(occ))
+
         if occ != -1:
             self.table_widgets[line].item(block,1).setBackground(self.GREEN)
             self.table_widgets[line].item(block,1).setText(str(occ))
@@ -276,14 +277,14 @@ class TrackModelGUI(QMainWindow):
         block = self.blocks_dropdown.currentText()
 
         try:
-            block = int(block)
+            block_num = int(block)
 
-            self.get_track()[line][block].failed = not self.get_track()[line][block].failed
+            self.get_track()[line][block_num].failed = not self.get_track()[line][block_num].failed
 
-            tc_block = convert_to_block(line, block)
-            signals.send_tc_failure.emit(tc_block, self.get_track()[line][block].failed)
+            tc_block = convert_to_block(line, block_num)
+            signals.send_tc_failure.emit(tc_block, self.get_track()[line][block_num].failed)
 
-            if self.get_track()[line][block].failed == True:
+            if self.get_track()[line][block_num].failed == True:
                 self.table_widgets[line].item(block, 0).setBackground(self.RED)
             else:
                 self.table_widgets[line].item(block, 0).setBackground(self.WHITE)
@@ -291,21 +292,20 @@ class TrackModelGUI(QMainWindow):
             self.check_label()
 
         except:
-            print("Conversion error in track model failure tab")
+            print("Conversion error in track model failure tab. (toggle_failure)")
 
     def check_label(self):
         line = self.lines_dropdown.currentText()
         block = self.blocks_dropdown.currentText()
         try:
-            block = int(block)
+            block_num = int(block)
 
-            if self.get_track()[line][block].failed == True:
+            if self.get_track()[line][block_num].failed == True:
                 self.failure_label.setText("Failed: True")
                 self.failure_label.setStyleSheet("color: red")
             else:
                 self.failure_label.setText("Failed: False")
                 self.failure_label.setStyleSheet("color: green")
         except:
-            print("Conversion error in track model failure tab.")
-
+            pass
         
