@@ -168,6 +168,7 @@ class CTC_Scheduler:
             return self.green_throughput
 
     def calc_authority(self,train_id,line,destination,position):
+
         print("DESTINATION: " + str(destination))
         destination = destination.strip()
         print("POSITION: " + str(position))

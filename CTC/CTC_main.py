@@ -24,6 +24,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         self.schedule = CTC_Scheduler()
         self.setup_signals()
         self.init_ui()
+        self.dwell_times = {}
         # self.show()
 
     #some temporarily function.
@@ -216,32 +217,51 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
             self.schedule.upload_schedule(file_name[0])
      
     def update_current_time(self):
+        #updates time gui
         self.clock.get_time()
         self.current_hour.setText(str(self.clock.get_hours()))
         self.current_minute.setText(str(self.clock.get_minutes()))
         self.current_second.setText(str(self.clock.get_seconds()))
+
+        #checks if any trains need to be sent a new authority
         for i in range(self.manual_trains):
+
+            #checks for an authority of 1 since the authority isnt decrementing correctly
             if self.schedule.train_table.get_authority(i) == 0:
-                next_destination = self.schedule.train_table.get_next_destination(i)
-                print("next destination: " + str(next_destination))
-                authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),next_destination,self.schedule.train_table.get_position(i))
-                print("next authority: " + str(authority))
 
-                #you forgot to set the new authority
-                self.schedule.train_table.set_authority(i, authority)
+                #decrements the dwell time if authority is 0
+                self.dwell_times[i] = self.dwell_times[i] - 1
 
-                tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
-                signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(i))
-                travel_time = self.schedule.calc_travel_time(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i),next_destination)
-                print("next travel_time: " + str(travel_time))
-                arrival_time = [int(travel_time[0] + int(self.current_hour.toPlainText())), int(travel_time[1] + int(self.current_minute.toPlainText())), int(travel_time[2] + int(self.current_second.toPlainText()))]
-                self.schedule.train_table.change_authority(i,authority)
-                self.train_table_display.takeItem((i*6) + (i + 2))
-                self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
-                self.train_table_display.takeItem((i*6) + (i + 4))
-                self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
-                self.train_table_display.takeItem((i*6) + (i + 6))
-                self.train_table_display.insertItem((i*6) + (i + 6),"Arrival Time: " + str(arrival_time))
+                if self.dwell_times[i] == 0:
+                    #sorts out new authority if dwell time has counted down to 0
+
+                    next_destination = self.schedule.train_table.get_next_destination(i)
+                    print("next destination: " + str(next_destination))
+                    authority = self.schedule.calc_authority(self.schedule.train_table.get_train_id(i),self.schedule.train_table.get_line(i),next_destination,self.schedule.train_table.get_position(i))
+                    print("next authority: " + str(authority))
+
+                    #resets or removes a dwell time depending on if there is another station to dispatch to
+                    #this might be completely wrong since idk what happens here if the yard is reached
+                    if authority > 0:
+                        self.dwell_times[i] = 30
+                    else:
+                        self.dwell_times.pop(i)
+
+                    #you forgot to set the new authority
+                    self.schedule.train_table.set_authority(i, authority)
+
+                    tc_block = convert_to_block(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i))
+                    signals.send_tc_authority.emit(tc_block,self.schedule.train_table.get_authority(i))
+                    travel_time = self.schedule.calc_travel_time(self.schedule.train_table.get_line(i),self.schedule.train_table.get_position(i),next_destination)
+                    print("next travel_time: " + str(travel_time))
+                    arrival_time = [int(travel_time[0] + int(self.current_hour.toPlainText())), int(travel_time[1] + int(self.current_minute.toPlainText())), int(travel_time[2] + int(self.current_second.toPlainText()))]
+                    self.schedule.train_table.change_authority(i,authority)
+                    self.train_table_display.takeItem((i*6) + (i + 2))
+                    self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
+                    self.train_table_display.takeItem((i*6) + (i + 4))
+                    self.train_table_display.insertItem((i*6) + (i + 4),"Authority: " + str(self.schedule.train_table.get_authority(i)))
+                    self.train_table_display.takeItem((i*6) + (i + 6))
+                    self.train_table_display.insertItem((i*6) + (i + 6),"Arrival Time: " + str(arrival_time))
             else:
                 self.train_table_display.takeItem((i*6) + (i + 2))
                 self.train_table_display.insertItem((i*6) + (i + 2),"Position: " + str(self.schedule.train_table.get_position(i)))
@@ -349,6 +369,10 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
                 #sends track controller new authority
                 tc_block = convert_to_block(self.train_entries[5],self.train_entries[1])
                 signals.send_tc_authority.emit(tc_block,self.train_entries[4])
+
+                #adds a new dwell time of 30 seconds to the tracker
+                key = self.manual_trains
+                self.dwell_times[key] = 30
 
                 #adds to dispatch gui
                 self.train_table_display.addItem("MANUAL TRAIN DISPATCHED!!!!!!!!!")
