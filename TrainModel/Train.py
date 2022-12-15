@@ -585,11 +585,43 @@ class Train:
         sample_period = 1
         #mph to m/s
         temp_actual_speed = self.actual_speed / 2.237
-        #imperial tons to metric tons
-        mass = self.mass * 1.01605
+        #imperial tons to kg
+        mass = (self.mass * 1.01605)
 
-        #self.force = (self.power * temp_actual_speed) / (temp_actual_speed * temp_actual_speed) + (1/2 * Train.FRICTION_COE * 1.204 * 85.33 * temp_actual_speed * temp_actual_speed) + mass * Train.GRAVITY * math.sin(self.grade)
+        #----------------------------------------------
+        # friction_force = (Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade))
+        # gravity_xcomp = (mass * Train.GRAVITY * math.sin(self.grade))
+        # sbrakeforce = Train.DECELERATION_SERVICE * mass * math.sin(self.grade)
+        # ebrakeforce = Train.DECELERATION_EMERGENCY * mass * math.sin(self.grade)
 
+        # #set force depending on train
+
+        # #if train moving and engine isnt sending power
+        # if (self.power == 0 and temp_actual_speed > 0):
+        #     #self.force = 0
+        #     self.force = -1 * (friction_force + gravity_xcomp)
+        # #else if train is at rest adnd no power is being sent
+        # elif (self.power == 0 and temp_actual_speed == 0):
+        #     self.force = 0
+        # #else power is greater than 0 and train isnt moving
+        # elif(temp_actual_speed == 0 and power > 0):
+        #     self.force = self.power * 1 * 1 * friction_force        
+        # elif(not(self.sbrake) and not(self.ebrake) and not(self.passenger_ebrake)):
+        # #else:
+        #     self.force = (power / temp_actual_speed)
+        #     self.force -= (friction_force + gravity_xcomp)
+        # #if service brake on
+        # elif(self.sbrake and not self.ebrake and not self.passenger_ebrake):
+        #     self.force = -(friction_force + gravity_xcomp) + sbrakeforce
+        # #if passenger ebrake or ebrake is on
+        # elif(self.ebrake or self.passenger_ebrake):
+        #     self.force = -(friction_force + gravity_xcomp) + ebrakeforce
+        # #if(self.force < 0):
+        # #   self.force = 0
+
+        # print("force: ", self.force)
+
+         #----------------------------------------------   
 
         #FORCE CALCULATION
         #if (self.sbrake or self.ebrake or self.passenger_ebrake or self.power == 0):
@@ -641,6 +673,8 @@ class Train:
         temp_acceleration = self.force/mass
         if(temp_acceleration > Train.ACCELERATION_LIMIT):
             temp_acceleration = Train.ACCELERATION_LIMIT
+        # if(temp_acceleration < Train.DECELERATION_EMERGENCY):
+        #     temp_acceleration = Train.DECELERATION_EMERGENCY
         elif(self.sbrake == True and not(self.ebrake or self.passenger_ebrake)):
             power = 0.0
             if(self.actual_speed > 0):
