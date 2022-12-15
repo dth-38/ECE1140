@@ -17,7 +17,7 @@ class train_status:
         self.authority = 0
         self.door_left = "Opened"
         self.door_right = "Opened"
-        self.internal_light = "On"
+        self.internal_light = "Off"
         self.external_light = "Off"
         self.annun = "On"
         self.ad = "On"
@@ -412,7 +412,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
             self.real_train.set_door_left("Closed")
             self.real_train.set_door_right("Closed")
             self.real_train.set_external_light("Off")
-            self.real_train.set_internal_light("On")
+            self.real_train.set_internal_light("Off")
             self.real_train.set_annun("Off")
             self.real_train.set_horn("Off")
             self.real_train.set_ad("Off")
@@ -446,9 +446,10 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         if tunnel_status == True:
             self.real_train.set_external_light("On")
-            #self.real_train.set_internal_light("On")
+            self.real_train.set_internal_light("On")
         else:
             self.real_train.set_external_light("Off")
+            self.real_train.set_internal_light("Off")
 
     def train_in_station(self, station_status):
 

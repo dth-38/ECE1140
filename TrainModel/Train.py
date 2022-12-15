@@ -9,8 +9,6 @@ from Train_Controller.train_controller_main import WindowClass
 from Signals import signals
 from PyQt5.QtCore import pyqtSlot
 
-
-
 class Train:
 
     #constants used in calculations
@@ -59,7 +57,7 @@ class Train:
         self.ac_command = 68              #degrees farenheight
         self.actual_temp = 68
         self.horn = "Off"
-        self.interior_light_cmd = "On"
+        self.interior_light_cmd = "Off"
         self.exterior_light_cmd = "Off"
         self.right_door_cmd = "Opened"
         self.left_door_cmd = "Opened"
@@ -88,6 +86,9 @@ class Train:
         #authority saved when a train must come to a stop
         #used to restart the train without sending a new authority
         self.saved_authority = 0
+        
+        #what ad is being displayed
+        self.adnum = 0
 
         #Inputs from track model
         signals.send_tm_authority.connect(self.train_model_update_authority)
@@ -122,6 +123,11 @@ class Train:
         #self.train_model.show()
         self.ui.train_id_line.setText(str(self.id))
 
+        self.ui.aerotech_pic.hide()
+        self.ui.mcdonalds_pic.hide()
+        self.ui.nike_pic.hide()
+        self.ui.disney_pic.hide()
+
         #Initialize train controller
         self.train_ctrl = WindowClass()
 
@@ -134,8 +140,50 @@ class Train:
 # ----------------------------- Update Train ------------------------------------------------
 # ---------------------------------------------------------------------------------------------
 
+    #show advertisements. switch every 60 seconds
+    def show_ads(self):
+        if(self.advertisement_cmd == "On"):
+            if(self.adnum == 0):
+                self.ui.coke_pic.show()
+                self.ui.aerotech_pic.hide()
+                self.ui.mcdonalds_pic.hide()
+                self.ui.nike_pic.hide()
+                self.ui.disney_pic.hide()
+            elif(self.adnum == 60):
+                self.ui.coke_pic.hide()
+                self.ui.aerotech_pic.hide()
+                self.ui.mcdonalds_pic.show()
+                self.ui.nike_pic.hide()
+                self.ui.disney_pic.hide()
+            elif(self.adnum == 120):
+                self.ui.coke_pic.hide()
+                self.ui.aerotech_pic.hide()
+                self.ui.mcdonalds_pic.hide()
+                self.ui.nike_pic.show()
+                self.ui.disney_pic.hide()
+            elif(self.adnum == 180):
+                self.ui.coke_pic.hide()
+                self.ui.aerotech_pic.hide()
+                self.ui.mcdonalds_pic.hide()
+                self.ui.nike_pic.hide()
+                self.ui.disney_pic.show()
+            elif(self.adnum == 240):
+                self.ui.coke_pic.hide()
+                self.ui.aerotech_pic.show()
+                self.ui.mcdonalds_pic.hide()
+                self.ui.nike_pic.hide()
+                self.ui.disney_pic.hide()
+
+            if (self.adnum == 300):
+                self.adnum = 0
+                self.ui.coke_pic.show()
+
     #Train Update function, runs every tick in an infinite loop.
     def update_values(self):
+        #increment ad shown
+        self.adnum = self.adnum + 1
+        self.show_ads()
+
         #Pass track circuit signals to train controller
         self.train_ctrl.real_train.set_authority(self.authority)    #authority
 
@@ -146,6 +194,7 @@ class Train:
         
         #Passes information about block train is on to train controller
         self.train_ctrl.train_in_tunnel(self.in_tunnel)
+        #print(self.in_tunnel)
         self.train_ctrl.train_in_station(self.in_station)
 
         #Tell track model that train is stopped so that it can calculate passengers and ticket sales
@@ -190,7 +239,7 @@ class Train:
         self.right_door_cmd = self.train_ctrl.real_train.get_right_door()
         if(self.in_station == True):
             #turn on annoucement, announce the station
-            self.train_ctrl.real_train.set_annun("On")
+            #self.train_ctrl.real_train.set_annun("On")
             self.train_model_update_doors()
         self.train_ctrl.real_train.set_door_left(self.left_door_cmd)
         self.train_ctrl.real_train.set_door_right(self.right_door_cmd)
@@ -198,7 +247,7 @@ class Train:
         #Obtain light and advertisement commands from train controller
         self.interior_light_cmd = self.train_ctrl.real_train.get_internal_light()
         self.exterior_light_cmd = self.train_ctrl.real_train.get_external_light()
-        self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
+        #self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
 
         #Temp from passenger override temperature set from driver
         if(self.temp_from_ui == False):
@@ -216,7 +265,7 @@ class Train:
             self.sbrake = False
         self.ebrake = self.train_ctrl.get_emer_brake_flag()
         self.announcement_cmd = self.train_ctrl.real_train.get_annun()
-        self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
+        #self.advertisement_cmd = self.train_ctrl.real_train.get_ad()
 
         #Update values displayed in ui
         self.train_model_display_announcement()
@@ -319,7 +368,7 @@ class Train:
 
     #Display advertisement
     def train_model_transfer_ads(self):
-        if(self.advertisement_cmd):
+        if(self.advertisement_cmd == "On"):
             self.ui.advertisement_line.setText("On")
         else:
             self.ui.advertisement_line.setText("Off")
@@ -334,13 +383,12 @@ class Train:
 
     #Decrement authroity
     #@pyqtSlot()
-    def decrement_authority(self, train_id):
-        if self.id == train_id:
-            self.authority = self.authority - 1
+    def decrement_authority(self):
+        self.authority = self.authority - 1
 
-            #authority cannot go below 0
-            if self.authority < 0:
-                self.authority = 0
+        #authority cannot go below 0
+        if self.authority < 0:
+            self.authority = 0
 
         self.ui.authority_line.setText(str(self.authority))
 
@@ -360,15 +408,6 @@ class Train:
                     self.next_station = station
                     self.prev_station = station
 
-            # if(in_beacon == False and self.in_station == False):
-            #     self.next_station == ""
-
-            # if(station == self.prev_station):
-            #     self.next_station = ""
-            # else:
-            #     self.next_station = station
-            #     self.prev_station = station
-
             self.door_side = side
             self.ui.station_line.setText(str(self.next_station))
 
@@ -379,7 +418,7 @@ class Train:
             self.grade = new_grade
             if(self.grade > Train.MAX_GRADIENT):
                 self.grade = Train.MAX_GRADIENT
-            self.ui.grade_line.setText(str(self.grade))        
+            self.ui.grade_line.setText(str(self.grade))
 
     #Update authority
     #@pyqtSlot(int, int)
@@ -406,9 +445,7 @@ class Train:
     #@pyqtSlot(int, int)
     def train_model_update_command_speed(self, trainnum, new_cmd_speed):
         if(self.id == trainnum):
-            if(self.signal_pickup_failure == True):
-                self.commanded_speed = 0
-            else:    
+            if(self.signal_pickup_failure == False):
                 self.commanded_speed = new_cmd_speed
 
             self.ui.suggested_speed_line.setText(str(self.commanded_speed))
@@ -515,140 +552,129 @@ class Train:
             power = 0.0
             self.ebrake = True
 
-        #if train is running
-        self.run_continuously = True
-        if (self.run_continuously):
 
-            #set power to 0 if engine failed
-            if(self.engine_failure == True):
-                power = 0.0
-            
-            #if power exceeds limit, set to limit of engine
-            if(power > Train.POWER_LIMIT):
-                power = Train.POWER_LIMIT
+        #set power to 0 if engine failed
+        if(self.engine_failure == True):
+            power = 0.0
+        
+        #if power exceeds limit, set to limit of engine
+        if(power > Train.POWER_LIMIT):
+            power = Train.POWER_LIMIT
 
-            #convert imperial to metric
-            #ft/s^2 to m/s^2
-            prev_acceleration = self.acceleration / 3.28084
-            sample_period = 1
-            prev_distance = self.distance
-            #mph to m/s
-            temp_actual_speed = self.actual_speed / 2.237
-            #imperial tons to metric tons
-            mass = self.mass * 1.01605
+        #convert imperial to metric
+        #ft/s^2 to m/s^2
+        prev_acceleration = self.acceleration / 3.28084
+        sample_period = 1
+        #mph to m/s
+        temp_actual_speed = self.actual_speed / 2.237
+        #imperial tons to metric tons
+        mass = self.mass * 1.01605
+
+        #self.force = (self.power * temp_actual_speed) / (temp_actual_speed * temp_actual_speed) + (1/2 * Train.FRICTION_COE * 1.204 * 85.33 * temp_actual_speed * temp_actual_speed) + mass * Train.GRAVITY * math.sin(self.grade)
 
 
-            run = True
+        #FORCE CALCULATION
+        #if (self.sbrake or self.ebrake or self.passenger_ebrake or self.power == 0):
+        #if power is 0 and train is moving
+        if (self.power == 0 and temp_actual_speed > 0):
+            self.force = 0
+            self.force -= Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
+        #else if power is 0 and train is not moving
+        elif (self.power == 0 and temp_actual_speed == 0):
+            self.force = 0
+        #else power is greater than 0 and train is moving
+        else:
+            if(temp_actual_speed == 0):
+                self.force = Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
+            # if brakes off
+            elif(not(self.sbrake) and not(self.ebrake) and not(self.passenger_ebrake)):
+            #else:
+                self.force = (power / temp_actual_speed)
+                self.force -= Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
+            else:
+                self.force = 0
+            #if service brake on
+            #elif(self.sbrake and not self.ebrake and not self.passenger_ebrake):
+            #    self.force = (power / temp_actual_speed)
+            #    self.force -= Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
+            #    self.force -= Train.DECELERATION_SERVICE * self.mass
+            #if passenger ebrake or ebrake is on
+            #elif(self.ebrake or self.passenger_ebrake):
+            #    self.force = (power / temp_actual_speed)
+            #    self.force -= Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
+            #    self.force -= Train.DECELERATION_EMERGENCY * self.mass
+            #if(self.force < 0):
+            #    self.force = 0
 
-            if (run):
-                #FORCE CALCULATION
-                #if (self.sbrake or self.ebrake or self.passenger_ebrake or self.power == 0):
-                #if power is 0 and train is moving
-                if (self.power == 0 and temp_actual_speed > 0):
-                    self.force = 0
-                    self.force -= Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
-                #else if power is 0 and train is not moving
-                elif (self.power == 0 and temp_actual_speed == 0):
-                    self.force = 0
-                #else power is greater than 0 and train is moving
-                else:
-                    if(temp_actual_speed == 0):
-                        self.force = Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
-                    # if brakes off
-                    elif(not(self.sbrake) and not(self.ebrake) and not(self.passenger_ebrake)):
-                    #else:
-                        self.force = (power / temp_actual_speed)
-                        self.force -= Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
-                    else:
-                        self.force = 0
-                    #if service brake on
-                    #elif(self.sbrake and not self.ebrake and not self.passenger_ebrake):
-                    #    self.force = (power / temp_actual_speed)
-                    #    self.force -= Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
-                    #    self.force -= Train.DECELERATION_SERVICE * self.mass
-                    #if passenger ebrake or ebrake is on
-                    #elif(self.ebrake or self.passenger_ebrake):
-                    #    self.force = (power / temp_actual_speed)
-                    #    self.force -= Train.FRICTION_COE * mass * Train.GRAVITY * math.cos(self.grade)
-                    #    self.force -= Train.DECELERATION_EMERGENCY * self.mass
-                    #if(self.force < 0):
-                    #    self.force = 0
+            #MOVE EBRAKE PASSENGER BRAKE
 
-                    #MOVE EBRAKE PASSENGER BRAKE
+        # pprint("Force: ")
+        # pprint(force)
+        #self.ui.grade_line.setText(str(round(self.force,1)))
 
-                # pprint("Force: ")
-                # pprint(force)
-                #self.ui.grade_line.setText(str(round(self.force,1)))
+        #ACCELERATION CALCULATION
+        #pprint(self.passenger_ebrake)
+        #print("pass brake: ", self.passenger_ebrake)
+        #print("force: ", self.force)
+        #print("mass", self.mass)
+        #print("sbrake: ", self.sbrake)
+        #print("ebrake: ", self.ebrake)
 
-                #ACCELERATION CALCULATION
-                #pprint(self.passenger_ebrake)
-                #print("pass brake: ", self.passenger_ebrake)
-                #print("force: ", self.force)
-                #print("mass", self.mass)
-                #print("sbrake: ", self.sbrake)
-                #print("ebrake: ", self.ebrake)
+        temp_acceleration = self.force/mass
+        if(temp_acceleration > Train.ACCELERATION_LIMIT):
+            temp_acceleration = Train.ACCELERATION_LIMIT
+        elif(self.sbrake == True and not(self.ebrake or self.passenger_ebrake)):
+            power = 0.0
+            if(self.actual_speed > 0):
+                temp_acceleration = Train.DECELERATION_SERVICE
+            else:
+                temp_acceleration = 0
+        elif(self.ebrake == True or self.passenger_ebrake == True):
+            power = 0.0
+            if(self.actual_speed > 0):
+                temp_acceleration = Train.DECELERATION_EMERGENCY
+            else:
+                temp_acceleration = 0
+        
+        
+        #pprint(temp_acceleration)
 
-                temp_acceleration = self.force/mass
-                if(temp_acceleration > Train.ACCELERATION_LIMIT):
-                    temp_acceleration = Train.ACCELERATION_LIMIT
-                elif(self.sbrake == True and not(self.ebrake or self.passenger_ebrake)):
-                    power = 0.0
-                    if(self.actual_speed > 0):
-                        temp_acceleration = Train.DECELERATION_SERVICE
-                    else:
-                        temp_acceleration = 0
-                elif(self.ebrake == True or self.passenger_ebrake == True):
-                    power = 0.0
-                    if(self.actual_speed > 0):
-                        temp_acceleration = Train.DECELERATION_EMERGENCY
-                    else:
-                        temp_acceleration = 0
-                
-                
-                #pprint(temp_acceleration)
+        #VELOCITY CALCULATION
 
-                #VELOCITY CALCULATION
+        #print("temp accel: ", temp_acceleration)
+        #print("prev accel: ", prev_acceleration)
+        temp_velocity = temp_actual_speed + ((sample_period/2) * (temp_acceleration + prev_acceleration))
+        if(temp_velocity > Train.VELOCITY_LIMIT):
+            temp_velocity = Train.VELOCITY_LIMIT
+        elif(temp_velocity < 0):
+            temp_velocity = 0
 
-                #print("temp accel: ", temp_acceleration)
-                #print("prev accel: ", prev_acceleration)
-                temp_velocity = temp_actual_speed + ((sample_period/2) * (temp_acceleration + prev_acceleration))
-                if(temp_velocity > Train.VELOCITY_LIMIT):
-                    temp_velocity = Train.VELOCITY_LIMIT
-                elif(temp_velocity < 0):
-                    temp_velocity = 0
+        #pprint(temp_velocity)
 
-                #pprint(temp_velocity)
+        #DISTANCE CALCULATION
+        #TODO: I think this is scuffed
+        distance_moved = (1/2) * temp_acceleration * sample_period + temp_velocity * sample_period
+        #temp_distance = prev_distance + (temp_velocity * sample_period)
+        #temp_distance = prev_distance + (self.actual_speed + temp_velocity)/2 * sample_period
+        #self.distance = temp_distance
+        signals.send_tm_distance.emit(self.id, distance_moved)
+        
+        self.actual_speed = temp_velocity * 2.237
+        #if (self.actual_speed > Train.VELOCITY_LIMIT):
+        #    self.actual_speed = Train.VELOCITY_LIMIT
+        #if (self.actual_speed > self.train_ctrl.real_train.get_commanded_speed()):
+        #    self.actual_speed = self.train_ctrl.real_train.get_commanded_speed()
 
-                #DISTANCE CALCULATION
-                #TODO: I think this is scuffed
-                distance_moved = (1/2) * temp_acceleration * sample_period + temp_velocity * sample_period
-                #temp_distance = prev_distance + (temp_velocity * sample_period)
-                #temp_distance = prev_distance + (self.actual_speed + temp_velocity)/2 * sample_period
-                #self.distance = temp_distance
-                signals.send_tm_distance.emit(self.id, distance_moved)
-                
-                self.actual_speed = temp_velocity * 2.237
-                #if (self.actual_speed > Train.VELOCITY_LIMIT):
-                #    self.actual_speed = Train.VELOCITY_LIMIT
-                #if (self.actual_speed > self.train_ctrl.real_train.get_commanded_speed()):
-                #    self.actual_speed = self.train_ctrl.real_train.get_commanded_speed()
+        #print("speed: ", self.actual_speed)
+        self.ui.velocity_line.setText(str(round(self.actual_speed, 2)))
 
-                #print("speed: ", self.actual_speed)
-                self.ui.velocity_line.setText(str(round(self.actual_speed, 2)))
+        self.acceleration = temp_acceleration * 3.28084
+        self.ui.acceleration_line.setText(str(round(self.acceleration,2)))
 
-                self.acceleration = temp_acceleration * 3.28084
-                self.ui.acceleration_line.setText(str(round(self.acceleration,2)))
+        #send speed to train ctrl, get new power
+        self.power = power / 1000
 
-                #send speed to train ctrl, get new power
-                self.power = power / 1000
-
-                #print("power:" , self.power)
-                #pprint("-------------------------------")
-                self.train_ctrl.real_train.set_power(self.power)
-                #print("power at end of update_speed ", self.power)
-                #print("sbrake: ", self.sbrake)
-                #print("ebrake: ", self.ebrake)
-                #print("---------------")
+        self.train_ctrl.real_train.set_power(self.power)
 
 
 if __name__ == "__main__":
