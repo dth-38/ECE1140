@@ -552,6 +552,9 @@ class TrackController(QMainWindow):
             next_block = self.next_Track_State[blk1].get_Next_Block()
             prev_block = self.next_Track_State[blk1].get_Previous_Block()
             moved = False
+            
+            #print("TC: " + str(self.id))
+            #print("block1: " + blk1 + ", block2: " + blk2 + ", dir: " + str(dir))
 
             #train has moved since blk1 is no longer occupied
             if self.next_Track_State[blk1].occupied == False:
@@ -668,10 +671,6 @@ class TrackController(QMainWindow):
                     new_train = [1, block, ""]
                     self.tracker.append(new_train)
                     
-
-            #failures appear as occupations in the track controller
-            if self.next_Track_State[block].failed == True:
-                self.next_Track_State[block].occupied = True
 
             #switch interlock safety check: occupied blocks cannot change switch positions
             if self.next_Track_State[block].occupied == True:
@@ -856,7 +855,8 @@ class TrackController(QMainWindow):
     def handle_failure(self, block, fail):
         for bl in self.current_Track_State:
             if block == bl:
-                self.next_Track_State[bl].failed = fail
+                self.next_Track_State[block].failed = fail
+                self.next_Track_State[block].occupied = fail
                 d_block = decompose_block(block)
                 signals.send_ctc_failure.emit(d_block[0], d_block[1], fail)
 
