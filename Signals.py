@@ -108,4 +108,6 @@ class Signals(QObject):
     #(int id)
     open_tc_gui = pyqtSignal(int)
 
+    update_main = pyqtSignal()
+
 signals = Signals()
