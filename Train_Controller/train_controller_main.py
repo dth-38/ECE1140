@@ -104,27 +104,6 @@ class train_status:
     def get_kp(self):
         return self.kp
 
-    def reset_all_train(self):
-
-        self.authority = 0
-        self.commanded_speed = 100
-        self.speed = 0
-        self.door_left = "Opened"
-        self.door_right = "Opened"
-        self.internal_light = "On"
-        self.external_light = "On"
-        self.ad = "On"
-        self.annun = "On"
-        self.temp = 68
-        self.horn = "On"
-
-        self.failure_flag = False
-        # self.passenger_brake_flag = False
-
-        self.ki = 0.01
-        self.kp = 1.0
-        self.power = 0.0
-
     def train_running(self):
         self.door_left = "Closed"
         self.door_right = "Closed"
@@ -187,6 +166,8 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.train_authority_stop_flag = False
 
         self.automatic_mode()   #auto mode on by default
+
+        self.train_speed_overexceed_flag = False
 
         self.ki_box.setPlainText(str(self.real_train.get_ki()))
         self.kp_box.setPlainText(str(self.real_train.get_kp()))
@@ -425,10 +406,16 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         self.real_train.update_power() 
 
         #if train reaches the end of track (authority = 0), set power = 0
+        if self.real_train.get_speed() > self.real_train.get_commanded_speed() + 3:
+            self.train_speed_overexceed_flag = True
+            self.set_norm_brake_flag(True)
+        elif self.get_norm_brake_flag() == True and self.train_speed_overexceed_flag == True and self.real_train.get_speed() < self.real_train.get_commanded_speed() + 3:
+            self.set_norm_brake_flag(False)
+            self.train_speed_overexceed_flag = False
+
         if self.real_train.get_authority() == 0:
             self.train_authority_stop_flag = True
             self.set_norm_brake_flag(True)
-
         #if train moving & normal brake flag is on & train authority stop flag is still True then:
         elif self.real_train.get_authority != 0 and self.get_norm_brake_flag() == True and self.train_authority_stop_flag == True:
             self.set_norm_brake_flag(False)
