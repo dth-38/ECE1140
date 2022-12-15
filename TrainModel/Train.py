@@ -216,8 +216,8 @@ class Train:
             #self.ui.station_line.setText("")
             signals.send_tm_stopped_at_station.emit(self.id)
             self.sent_stopped_at_station_sig = True
-            if(self.train_model.isVisible()):
-                self.play_horn()
+            #if(self.train_model.isVisible()):
+                #self.play_horn()
 
         #Reset stopped at station boolean when train starts moving again so signal can be sent again at next station
         if(self.actual_speed > 0):
@@ -255,7 +255,10 @@ class Train:
         self.right_door_cmd = self.train_ctrl.real_train.get_right_door()
         if(self.in_station == True):
             #turn on annoucement, announce the station
-            #self.train_ctrl.real_train.set_annun("On")
+            self.train_ctrl.real_train.set_horn("On")
+            self.train_ctrl.real_train.set_annun("On")
+            if(self.train_model.isVisible() and self.actual_speed == 0):
+                self.play_horn()
             self.train_model_update_doors()
         self.train_ctrl.real_train.set_door_left(self.left_door_cmd)
         self.train_ctrl.real_train.set_door_right(self.right_door_cmd)
@@ -399,7 +402,7 @@ class Train:
 # ----------------------------- Track Model Inputs --------------------------------------------
 # ---------------------------------------------------------------------------------------------
 
-    #Decrement authroity
+    #Decrement authority
     #@pyqtSlot()
     def decrement_authority(self, trainnum):
         if  (self.id == trainnum):
