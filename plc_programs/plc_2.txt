@@ -47,6 +47,12 @@ DEFINE TRACK
     BLOCK green_M_75
         M 25
         P green_M_74
+        N green_M_76
+    END BLOCK
+
+    BLOCK green_M_76
+        M 25
+        P green_M_75
         N END
     END BLOCK
 END TRACK
