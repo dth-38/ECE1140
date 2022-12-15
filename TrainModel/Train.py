@@ -334,12 +334,13 @@ class Train:
 
     #Decrement authroity
     #@pyqtSlot()
-    def decrement_authority(self):
-        self.authority = self.authority - 1
+    def decrement_authority(self, train_id):
+        if self.id == train_id:
+            self.authority = self.authority - 1
 
-        #authority cannot go below 0
-        if self.authority < 0:
-            self.authority = 0
+            #authority cannot go below 0
+            if self.authority < 0:
+                self.authority = 0
 
         self.ui.authority_line.setText(str(self.authority))
 
