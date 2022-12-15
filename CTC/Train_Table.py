@@ -17,9 +17,10 @@ class Train_Table:
     def get_next_destination(self,position):
         destinations = self.table[position][3]
         print("destination index: " + str(self.table[position][7]))
+        print("destination amount: " + str(len(destinations)))
         if len(destinations) > self.table[position][7]:
             self.table[position][7] += 1
-            return destinations[self.table[position][7] - 1]
+            return destinations[self.table[position][7]]
         else:
             return "0"
     def get_train_destinations(self,position):

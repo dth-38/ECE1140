@@ -203,25 +203,33 @@ class DebugGUI(QWidget):
         if redraw is True:
             self.outputs_Drawn = True
 
+            #max speed label
+            max_speed_label = QLabel("Max Speed(mph):")
+            max_speed = QLabel(str(self.get_Track()[block].max_Speed))
+            max_speed_label.setFont(self.text_font)
+            max_speed.setFont(self.text_font)
+            self.grid_Layout.addWidget(max_speed_label, 2, 2)
+            self.grid_Layout.addWidget(max_speed, 2, 3)
+
             #Commanded speed label
             com_Speed_Label = QLabel("Commanded Speed(mph):")
             com_Speed = QLabel(str(self.get_Track()[block].commanded_Speed))
             com_Speed_Label.setFont(self.text_font)
             com_Speed.setFont(self.text_font)
-            self.grid_Layout.addWidget(com_Speed_Label, 2, 2)
-            self.grid_Layout.addWidget(com_Speed, 2, 3)
+            self.grid_Layout.addWidget(com_Speed_Label, 3, 2)
+            self.grid_Layout.addWidget(com_Speed, 3, 3)
 
             #authority label
             auth_label = QLabel("Authority(blocks):")
             auth = QLabel(str(self.get_Track()[block].authority))
             auth_label.setFont(self.text_font)
             auth.setFont(self.text_font)
-            self.grid_Layout.addWidget(auth_label, 3, 2)
-            self.grid_Layout.addWidget(auth, 3, 3)
+            self.grid_Layout.addWidget(auth_label, 4, 2)
+            self.grid_Layout.addWidget(auth, 4, 3)
 
             #switches Labels
             #absolute_Row_Pos handles tracking rows for adding widgets
-            absolute_Row_Pos = 3
+            absolute_Row_Pos = 4
             for i in range(len(self.get_Track()[block].switches)):
                 absolute_Row_Pos = absolute_Row_Pos + 1
                 sw_Label = QLabel("Switch #" + str(i) + ":")

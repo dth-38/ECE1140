@@ -100,11 +100,21 @@ class NSE_Simulation(QMainWindow):
         self.track_model_button.setMinimumWidth(min_width)
         self.track_model_button.setMinimumHeight(min_height)
 
-        self.num_select_textbox = QLineEdit()
-        self.num_select_textbox.setMaxLength(2)
-        self.num_select_textbox.setMinimumWidth(min_width)
-        self.num_select_textbox.setFont(widget_font)
+        self.tc_textbox = QLineEdit()
+        self.tc_textbox.setMaxLength(2)
+        self.tc_textbox.setMinimumWidth(min_width)
+        self.tc_textbox.setFont(widget_font)
         #self.num_select_textbox.setMinimumHeight(self.HEIGHT // 4)
+
+        self.tm_textbox = QLineEdit()
+        self.tm_textbox.setMaxLength(2)
+        self.tm_textbox.setMinimumWidth(min_width)
+        self.tm_textbox.setFont(widget_font)
+
+        self.tmc_textbox = QLineEdit()
+        self.tmc_textbox.setMaxLength(2)
+        self.tmc_textbox.setMinimumWidth(min_width)
+        self.tmc_textbox.setFont(widget_font)
 
         self.track_controller_button = QPushButton("Open Track Controller", self)
         self.track_controller_button.clicked.connect(self.open_track_controller)
@@ -155,7 +165,9 @@ class NSE_Simulation(QMainWindow):
         self.nse_layout.addWidget(self.multiplier_input, 1, 1)
         self.nse_layout.addWidget(self.ctc_button, 2, 0)
         self.nse_layout.addWidget(self.track_model_button, 2, 1)
-        self.nse_layout.addWidget(self.num_select_textbox, 4, 0)
+        self.nse_layout.addWidget(self.tc_textbox, 3, 0)
+        self.nse_layout.addWidget(self.tm_textbox, 4, 0)
+        self.nse_layout.addWidget(self.tmc_textbox, 5, 0)
         self.nse_layout.addWidget(self.track_controller_button, 3, 1)
         self.nse_layout.addWidget(self.train_model_button, 4, 1)
         self.nse_layout.addWidget(self.train_controller_button, 5, 1)
@@ -187,7 +199,7 @@ class NSE_Simulation(QMainWindow):
 
     def open_track_controller(self):
         try:
-            num = int(self.num_select_textbox.text())
+            num = int(self.tc_textbox.text())
 
             if num > -1 and num < self.NUM_CONTROLLERS:
                 self.track_controllers[num].show()
@@ -201,7 +213,7 @@ class NSE_Simulation(QMainWindow):
 
     def open_train_model(self):
         try:
-            num = int(self.num_select_textbox.text())
+            num = int(self.tm_textbox.text())
             #check num is in valid range
             #open corresponding train model
             if num > -1:
@@ -214,7 +226,7 @@ class NSE_Simulation(QMainWindow):
         
     def open_train_controller(self):
         try:
-            num = int(self.num_select_textbox.text())
+            num = int(self.tmc_textbox.text())
 
             #check num is in valid range
             #open corresponding train controller
