@@ -632,6 +632,7 @@ class TrackController(QMainWindow):
         #runs vital safety logic then
         #copies newly generated outputs back to track state
         for block in self.current_Track_State:
+            fail_check = self.next_Track_State[block].failed
 
             #speed safety check: commanded speed cannot exceed block maximum
             self.next_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].suggested_Speed)
@@ -672,12 +673,6 @@ class TrackController(QMainWindow):
             if self.next_Track_State[block].failed == True:
                 self.next_Track_State[block].occupied = True
 
-            #failure/closure safety check: shuts down block if it has failed or is closed
-            if self.next_Track_State[block].closed == True or self.next_Track_State[block].failed == True:
-                self.next_Track_State[block].authority = 0
-                for light in range(len(self.next_Track_State[block].lights)):
-                    self.next_Track_State[block].set_Light(light, "RED")
-
             #switch interlock safety check: occupied blocks cannot change switch positions
             if self.next_Track_State[block].occupied == True:
                 for switch in range(len(self.next_Track_State[block].switches)):
@@ -688,17 +683,17 @@ class TrackController(QMainWindow):
             d_block = decompose_block(block)
 
             #signals only sent if there is a change of state
-            if self.current_Track_State[block].commanded_Speed != self.next_Track_State[block].commanded_Speed:
+            if self.current_Track_State[block].commanded_Speed != self.next_Track_State[block].commanded_Speed and fail_check == False:
                 signals.send_track_speed.emit(d_block[0], d_block[1], self.next_Track_State[block].commanded_Speed)
                 self.current_Track_State[block].commanded_Speed = copy.copy(self.next_Track_State[block].commanded_Speed)
 
-            if self.current_Track_State[block].authority != self.next_Track_State[block].authority:
+            if self.current_Track_State[block].authority != self.next_Track_State[block].authority and fail_check == False:
                 signals.send_track_authority.emit(d_block[0], d_block[1], self.next_Track_State[block].authority)
                 self.current_Track_State[block].authority = copy.copy(self.next_Track_State[block].authority)
 
                 
             #probably shouldnt be able to run logic on switches when the block is closed
-            switch_check = self.current_Track_State[block].closed == False and self.current_Track_State[block].switches != []
+            switch_check = self.current_Track_State[block].closed == False and self.current_Track_State[block].switches != [] and fail_check == False
 
             if switch_check == True:
                 if self.current_Track_State[block].switches[0] != self.next_Track_State[block].switches[0] or self.init == True:
@@ -726,13 +721,13 @@ class TrackController(QMainWindow):
 
             #check for light change and signal if so
             if self.current_Track_State[block].lights != []:
-                if self.current_Track_State[block].lights[0] != self.next_Track_State[block].lights[0]:
+                if self.current_Track_State[block].lights[0] != self.next_Track_State[block].lights[0] and fail_check == False:
                     signals.broadcast_light.emit(d_block[0], d_block[1], self.next_Track_State[block].light_To_Str())
                     self.current_Track_State[block].lights[0] = copy.copy(self.next_Track_State[block].lights[0])
 
             #check for gate change and signal if so
             if self.current_Track_State[block].gates != []:
-                if self.current_Track_State[block].gates[0] != self.next_Track_State[block].gates[0]:
+                if self.current_Track_State[block].gates[0] != self.next_Track_State[block].gates[0] and fail_check == False:
                     signals.broadcast_gate.emit(d_block[0], d_block[1], self.next_Track_State[block].gate_To_Str())
                     self.current_Track_State[block].gates[0] = copy.copy(self.next_Track_State[block].gates[0])
 
@@ -792,6 +787,22 @@ class TrackController(QMainWindow):
         for bl in self.current_Track_State:
             if block == bl:
                 self.next_Track_State[block].closed = maintenance
+
+                #remove authority from previous and next blocks
+                next_block = self.next_Track_State[block].get_Next_Block()
+                previous_block = self.next_Track_State[block].get_Previous_Block()
+
+                if maintenance == True:
+                    new_auth = 0
+                else:
+                    new_auth = -1
+
+                if next_block != "START" and next_block != "END":
+                    self.next_Track_State[next_block].authority = new_auth
+
+                if previous_block != "START" and previous_block != "END":
+                    self.next_Track_State[previous_block].authority = new_auth
+
                 break
 
     @pyqtSlot(str, str)
@@ -848,6 +859,22 @@ class TrackController(QMainWindow):
                 self.next_Track_State[bl].failed = fail
                 d_block = decompose_block(block)
                 signals.send_ctc_failure.emit(d_block[0], d_block[1], fail)
+
+                #remove authority from previous and next blocks
+                next_block = self.next_Track_State[block].get_Next_Block()
+                previous_block = self.next_Track_State[block].get_Previous_Block()
+
+                if fail == True:
+                    new_auth = 0
+                else:
+                    new_auth = -1
+
+                if next_block != "START" and next_block != "END":
+                    self.next_Track_State[next_block].authority = new_auth
+
+                if previous_block != "START" and previous_block != "END":
+                    self.next_Track_State[previous_block].authority = new_auth
+
                 break
 
 
