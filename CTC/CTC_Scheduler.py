@@ -151,14 +151,21 @@ class CTC_Scheduler:
                 train = self.manual_dispatch_train(arrival_time=arrival_time,train_id=self.train_id,line=self.green_schedule[i][0],destinations=[self.green_schedule[i][1],"0"])
         return train
 
-    def calc_throughput(self,line,ticket_sales,hours):
-        if hours > 0:
+    def calc_throughput(self,line,ticket_sales,current_time):
+        if current_time[0] >= 0 and current_time[1] >= 0 and current_time[2] >= 0:
             if line == "Red":
                 self.red_sales += ticket_sales
-                self.red_throughput = self.red_sales/hours
+                mins = (current_time[1])/60
+                secs = (current_time[2])/3600
+                throughput_time = current_time[0] + mins + secs
+                self.red_throughput = self.red_sales/throughput_time
             elif line == "Green":
                 self.green_sales += ticket_sales
-                self.green_throughput = self.green_sales/hours
+                mins = (current_time[1])/60
+                secs = (current_time[2])/3600
+                throughput_time = current_time[0] + mins + secs
+                print("throughput time: " + str(throughput_time))
+                self.green_throughput = self.green_sales/throughput_time
         else:
             pass
 

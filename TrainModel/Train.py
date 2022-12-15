@@ -201,6 +201,9 @@ class Train:
         #Pass track circuit signals to train controller
         self.train_ctrl.real_train.set_authority(self.authority)    #authority
 
+        #pass next station to train cntroller
+        self.train_ctrl.real_train.set_beacon(self.next_station)
+
         if self.train_ctrl.auto_f == True:
             self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
@@ -253,7 +256,7 @@ class Train:
         #Configure door signal from train controller to correct door side
         self.left_door_cmd = self.train_ctrl.real_train.get_left_door()
         self.right_door_cmd = self.train_ctrl.real_train.get_right_door()
-        if(self.in_station == True):
+        if(self.in_station == True and self.actual_speed == 0):
             #turn on annoucement, announce the station
             self.train_ctrl.real_train.set_horn("On")
             self.train_ctrl.real_train.set_annun("On")
@@ -299,8 +302,8 @@ class Train:
         self.train_model_display_right_door()
 
         #Reset door side
-        if(self.actual_speed == 0 and self.in_station == True and self.sent_stopped_at_station_sig == False):
-            self.door_side = 3
+        #if(self.actual_speed == 0 and self.in_station == True and self.sent_stopped_at_station_sig == False):
+        #    self.door_side = 3
 
 
 # ---------------------------------------------------------------------------------------------
@@ -347,6 +350,7 @@ class Train:
     def train_model_update_doors(self):
         #opens doors depending on the station door side
         #left side
+        print("door side: " , self.door_side)
         if(self.door_side == 0):
             self.left_door_cmd = "Opened"
             self.right_door_cmd = "Closed"
@@ -429,8 +433,8 @@ class Train:
                 else:
                     self.next_station = station
                     self.prev_station = station
-
-            self.door_side = side
+            if(side != -2):
+                self.door_side = side
             self.ui.station_line.setText(str(self.next_station))
 
     #Get grade from track model

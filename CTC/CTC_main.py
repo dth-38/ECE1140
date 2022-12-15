@@ -208,7 +208,7 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
         #TODO: GET TICKET SALES FROM THE TRACKMODEL
         if self.current_hour.toPlainText() != "":
             throughput = self.schedule.get_throughput(line)
-            self.throughput_output.setText(str(throughput))
+            self.throughput_output.setText(str(round(throughput,3)))
     
     def add_schedule(self):
         file_name = QtWidgets.QFileDialog.getOpenFileName(self,"Open File", "", "All Files (*);;Xlsx Files(*.xlsx)")
@@ -339,7 +339,11 @@ class CTCWindowClass(QtWidgets.QMainWindow, form_mainWindow):
     def update_gate(self,line,block_num,status):
         self.schedule.block_table.add_gate(line,block_num,status)
     def update_ticket_sales(self,line,ticket_sales):
-        self.schedule.calc_throughput(line,ticket_sales,self.clock.get_hours())
+        print("THROUGHPUT")
+        line = line[0].upper() + line[1:]
+        print("Line: " + str(line))
+        print("ticket sales: " + str(ticket_sales))
+        self.schedule.calc_throughput(line,ticket_sales,self.clock.get_time())
 
     def tick(self):
         #checks all dispatch items

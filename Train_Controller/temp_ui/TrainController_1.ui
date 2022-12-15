@@ -311,7 +311,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Annunciation</string>
+      <string>Announcement</string>
      </property>
     </widget>
     <widget class="QTextBrowser" name="train_annun">
