@@ -575,11 +575,9 @@ class Train:
         power = self.power
         power *= 1000
 
-        if(self.track_fail == True and self.ebrake == False):
+        if(self.track_fail == True):
             power = 0.0
             self.ebrake = True
-        else:
-            self.ebrake = False
         
 
         #set power to 0 if engine failed
