@@ -139,12 +139,13 @@ class Train:
         #Pass track circuit signals to train controller
         self.train_ctrl.real_train.set_authority(self.authority)    #authority
 
-        self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
+        if self.train_ctrl.auto_f == True:
+            self.train_ctrl.real_train.set_commanded_speed(self.commanded_speed) #desired speed
         self.train_ctrl.real_train.set_speed(self.actual_speed)       #actual speed
         #self.train_ctrl.provide_speed(self.commanded_speed, self.actual_speed)
         
         #Passes information about block train is on to train controller
-        #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
+        self.train_ctrl.real_train.train_in_tunnel(self.in_tunnel)
         #self.train_ctrl.real_train.set_station(self.in_station)
 
         #Tell track model that train is stopped so that it can calculate passengers and ticket sales
