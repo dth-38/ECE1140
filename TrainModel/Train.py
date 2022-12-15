@@ -190,6 +190,8 @@ class Train:
         self.left_door_cmd = self.train_ctrl.real_train.get_left_door()
         self.right_door_cmd = self.train_ctrl.real_train.get_right_door()
         if(self.in_station == True):
+            #turn on annoucement, announce the station
+            self.train_ctrl.real_train.set_annun("On")
             self.train_model_update_doors()
         self.train_ctrl.real_train.set_door_left(self.left_door_cmd)
         self.train_ctrl.real_train.set_door_right(self.right_door_cmd)
