@@ -145,7 +145,7 @@ class Train:
         #self.train_ctrl.provide_speed(self.commanded_speed, self.actual_speed)
         
         #Passes information about block train is on to train controller
-        #self.train_ctrl.real_train.set_tunnel(self.in_tunnel)
+        self.train_ctrl.real_train.train_in_tunnel(self.in_tunnel)
         #self.train_ctrl.real_train.set_station(self.in_station)
 
         #Tell track model that train is stopped so that it can calculate passengers and ticket sales
