@@ -33,6 +33,14 @@ class train_status:
         self.pid.outer_limits = (0, 120000)                                  # clamp at max power output specified in datasheet 120kW
         self.power = 0.0
 
+        #-------------------------------
+        self.normal_brake_flag = False 
+        self.commanded_left_door_state = False
+        self.normal_brake_flag = False
+        self.tunnel_state = False
+        self.commanded_right_door_state = False
+        self.commanded_external_light = False
+
     #set methods
     def set_authority(self, num):
         self.authority = num
@@ -137,6 +145,74 @@ class train_status:
     
     def get_beacon(self):
         return self.beacon
+
+    def apply_change(self):
+        if self.commanded_speed != 0:
+            self.speed = self.commanded_speed if self.commanded_speed < self.speed_limit else self.speed_limit
+        self.door_left = self.commanded_left_door_state
+        self.door_right = self.commanded_right_door_state
+
+        if self.authority > 0:
+            self.commanded_left_door_state = False
+            self.commanded_right_door_state = False
+            self.door_left = self.commanded_left_door_state
+            self.door_right = self.commanded_right_door_state
+        else:
+            self.normal_brake_flag = True
+
+        if self.tunnel_state == True:
+            self.commanded_external_light = True
+            self.external_light = self.commanded_external_light
+    
+    def set_norm_deaccel_rate(self, value):
+        self.norm_deaccel_rate = value
+
+    def get_norm_deaccel_rate(self):
+        return self.norm_deaccel_rate
+
+    def set_speed_limit(self, value):
+        self.speed_limit = value
+
+    def set_commanded_speed(self, value):
+        self.commanded_speed = value
+        
+    def press_norm_brake(self):
+        self.normal_brake_flag = True
+        if self.normal_brake_flag == True:
+            self.speed -= self.norm_deaccel_rate
+            if self.speed < 0:
+                self.speed = 0
+
+    def set_left_door(self, state):
+        self.commanded_left_door_state = True if state == "On" else False
+    
+    def set_right_door(self, state):
+        self.commanded_right_door_state = True if state == "On" else False
+
+    def set_commanded_external_light(self, state):
+        self.commanded_external_light = True if state == "Off" else False
+
+    def get_commanded_speed(self):
+        return self.commanded_speed
+
+    def get_norm_brake_state(self):
+        return self.normal_brake_flag
+
+    def get_external_train_light(self):
+        if self.external_light == True: return "On"
+        else: return "Off"
+
+    def get_commanded_left_door(self):
+        return self.commanded_left_door_state
+
+    def get_commanded_right_door(self):
+        return self.commanded_right_door_state
+
+    def get_commanded_external_light(self):
+        return self.commanded_external_light
+
+    def set_tunnel_state(self, state):
+        self.tunnel_state = state
 
 class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
     def __init__(self) :
