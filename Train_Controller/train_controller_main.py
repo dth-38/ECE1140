@@ -176,6 +176,7 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
 
         self.train_speed_overexceed_flag = False
         self.train_tunnel_flag = False
+        self.auto_emergency_brake_flag = False
 
         self.ki_box.setPlainText(str(self.real_train.get_ki()))
         self.kp_box.setPlainText(str(self.real_train.get_kp()))
@@ -391,11 +392,24 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         #if failure occurs
         if self.real_train.get_failure_flag() == True:
             #decrease speed
-            #self.emergency_slow()
+            if self.auto_f == True: 
+                self.emer_brake_flag = True
+                self.emergency_brake.setStyleSheet("background-color: red")
+                self.emergency_brake.setText("Emergency Brake On")
+                self.auto_emergency_brake_flag = True
+
             self.failure_frame.setStyleSheet("background-color: red")
             self.failure_output.clear()
             self.failure_output.append("Exists!")
         else:
+            #if failure doesn't exist, but auto_emergency_brake_flag is still on
+            if self.auto_emergency_brake_flag == True and self.auto_f == True:
+                self.auto_emergency_brake_flag = False
+                self.emer_brake_flag = False
+                self.emergency_brake.setStyleSheet("background-color: light gray")
+                self.emergency_brake.setText("Emergency Brake")
+            
+            #changes the interface of the button back to original color
             self.failure_frame.setStyleSheet("background-color: white")
             self.failure_output.clear()
             self.failure_output.append("N/A")
