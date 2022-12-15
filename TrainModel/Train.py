@@ -166,8 +166,6 @@ class Train:
         
         #Run kinematics calculation
         self.power = self.train_ctrl.real_train.get_power()
-        print("power after get",self.power)
-
         self.train_model_update_speed()
 
         #Send Train controller actual speed and power
@@ -280,12 +278,12 @@ class Train:
             self.right_door_cmd = "Closed"
         #right side
         elif(self.door_side == 1):
-            self.right_door_cmd = "Closed"
-            self.left_door_cmd = "Opened"
+            self.left_door_cmd = "Closed"
+            self.right_door_cmd = "Opened"
         #both sides
         elif(self.door_side == 2):
-            self.left_door_cmd = "Closed"
-            self.right_door_cmd = "Closed"
+            self.left_door_cmd = "Opened"
+            self.right_door_cmd = "Opened"
 
     #Display left door
     def train_model_display_left_door(self):
@@ -493,7 +491,6 @@ class Train:
         power = self.power
         power *= 1000
 
-        print("track fail ", self.track_fail)
         if(self.track_fail == True):
             power = 0.0
             self.ebrake = True
@@ -629,7 +626,7 @@ class Train:
                 self.train_ctrl.real_train.set_power(self.power)
                 #print("power at end of update_speed ", self.power)
                 #print("sbrake: ", self.sbrake)
-                #rint("ebrake: ", self.ebrake)
+                #print("ebrake: ", self.ebrake)
                 #print("---------------")
 
 
