@@ -450,15 +450,15 @@ class WindowClass(QtWidgets.QMainWindow, form_mainWindow) :
         else:
             self.real_train.set_external_light("Off")
 
-    def train_in_station(self, station_status, left_door, right_door):
+    def train_in_station(self, station_status):
 
         #if in manual mode, reject
         if self.manual_f == True:
             return
 
-        if station_status == True:
-            if left_door == True: self.real_train.set_door_left("Opened")
-            if right_door == True: self.real_train.set_door_right("Closed")
+        if station_status == True and self.real_train.speed == 0:
+            self.real_train.set_door_left("Opened")
+            self.real_train.set_door_right("Opened")
         else:
             self.real_train.set_door_left("Closed")
             self.real_train.set_door_right("Closed")

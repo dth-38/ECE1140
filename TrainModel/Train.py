@@ -146,7 +146,7 @@ class Train:
         
         #Passes information about block train is on to train controller
         self.train_ctrl.train_in_tunnel(self.in_tunnel)
-        self.train_ctrl.real_train.set_station(self.in_station)
+        self.train_ctrl.train_in_station(self.in_station)
 
         #Tell track model that train is stopped so that it can calculate passengers and ticket sales
         if(self.actual_speed == 0 and self.in_station == True and self.sent_stopped_at_station_sig == False):
@@ -348,16 +348,16 @@ class Train:
     def update_beacon(self, id, station, side):
         if(id == self.id):
             if(station == "" and self.in_station == False):
-                self.station_name == ""
+                self.next_station == ""
 
             if(station == self.prev_station):
-                self.station_name = ""
+                self.next_station = ""
             else:
-                self.station_name = station
+                self.next_station = station
                 self.prev_station = station
 
             self.door_side = side
-            self.ui.station_line.setText(str(self.station_name))
+            self.ui.station_line.setText(str(self.next_station))
 
     #Get grade from track model
     #@pyqtSlot(int, float)
